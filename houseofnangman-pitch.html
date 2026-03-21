@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>낭만 저장소 — HOUSE OF NANGMAN 인스타그램 브랜딩 영상 기획안</title>
+<link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+/* ─────────────────────────────────────────
+   CSS VARIABLES — 하우스오브낭만 팔레트
+   Tone: editorial (잡지, 절제, 타입 주인공)
+───────────────────────────────────────── */
+:root {
+  --cream:       #F5EFE6;
+  --cream-deep:  #EDE3D6;
+  --navy:        #1A2744;
+  --navy-dark:   #0F1A30;
+  --navy-deeper: #080F1E;
+  --cherry:      #E8638A;
+  --cherry-deep: #C94870;
+  --sage:        #7A8C78;
+  --stone:       #8C7B68;
+  --text-dark:   #1A1A1A;
+  --text-mid:    #4A4035;
+  --text-muted:  #9A8E82;
+
+  --font: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --t-xs:  clamp(0.8rem,  1.2vw, 1rem);
+  --t-sm:  clamp(0.95rem, 1.5vw, 1.15rem);
+  --t-base:clamp(1.1rem,  1.7vw, 1.35rem);
+  --t-md:  clamp(1.1rem,  2vw,   1.6rem);
+  --t-lg:  clamp(1.5rem,  3vw,   2.4rem);
+  --t-xl:  clamp(2rem,    5vw,   4rem);
+  --t-2xl: clamp(3rem,    7vw,   6rem);
+  --t-3xl: clamp(4rem,    10vw,  8.5rem);
+
+  --total-slides: 11;
+}
+
+/* ─────────────────────────────────────────
+   RESET & BASE
+───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--cream);
+  color: var(--text-dark);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+em { font-style: normal; color: var(--cherry); }
+strong { font-weight: 700; }
+
+/* ─────────────────────────────────────────
+   SLIDE ENGINE — 방향성 전환
+───────────────────────────────────────── */
+#presentation {
+  position: relative;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(var(--enter-x, 60px));
+  transition:
+    opacity 0.5s cubic-bezier(0.22,1,0.36,1),
+    transform 0.5s cubic-bezier(0.22,1,0.36,1);
+  overflow: hidden;
+}
+
+.slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+}
+
+.slide.exiting {
+  opacity: 0;
+  transform: translateX(var(--exit-x, -60px));
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────
+   ANIMATIONS
+───────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(1.8rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes lineGrow {
+  from { width: 0; }
+  to   { width: 3rem; }
+}
+
+.slide.active .anim-eyebrow   { animation: fadeUp  0.5s 0.05s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-headline  { animation: fadeUp  0.65s 0.15s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-sub       { animation: fadeUp  0.5s 0.30s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-body      { animation: fadeUp  0.5s 0.38s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-visual    { animation: scaleIn 0.7s 0.18s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-stagger-1 { animation: fadeUp  0.5s 0.15s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-stagger-2 { animation: fadeUp  0.5s 0.27s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-stagger-3 { animation: fadeUp  0.5s 0.39s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-stagger-4 { animation: fadeUp  0.5s 0.51s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-line      { animation: lineGrow 0.6s 0.2s both cubic-bezier(0.22,1,0.36,1); }
+
+/* ─────────────────────────────────────────
+   COMMON COMPONENTS
+───────────────────────────────────────── */
+.eyebrow {
+  display: inline-block;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--cherry);
+  margin-bottom: 0.8rem;
+}
+
+.eyebrow-navy {
+  color: var(--navy);
+  opacity: 0.5;
+}
+
+.eyebrow-cream {
+  color: var(--cream);
+  opacity: 0.6;
+}
+
+.divider-line {
+  height: 2px;
+  background: var(--cherry);
+  margin: 1.2rem 0;
+}
+
+/* Grain overlay for cream slides */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─────────────────────────────────────────
+   UI CHROME
+───────────────────────────────────────── */
+#ui-chrome {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0 2.5rem 1.4rem;
+}
+
+.progress-track {
+  flex: 1;
+  height: 1px;
+  background: rgba(26,39,68,0.15);
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--cherry);
+  transition: width 0.4s cubic-bezier(0.22,1,0.36,1);
+}
+
+.slide-counter {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+/* dark slide일 때 chrome 색상 반전 */
+.slide-dark ~ #ui-chrome .progress-track,
+body.dark-chrome .progress-track {
+  background: rgba(255,255,255,0.15);
+}
+body.dark-chrome .slide-counter {
+  color: rgba(255,255,255,0.4);
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 01 — COVER (hero-full)
+   배경: 딥네이비 + 크림 타입
+───────────────────────────────────────── */
+#slide-1 {
+  background:
+    radial-gradient(ellipse 80% 70% at 15% 85%, rgba(232,99,138,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 90% 10%, rgba(245,239,230,0.06) 0%, transparent 50%),
+    linear-gradient(150deg, #0F1A30 0%, #1A2744 60%, #0F1A30 100%);
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: flex-end;
+  padding: 0 10vw 12vh;
+  position: relative;
+}
+
+#slide-1 .cover-bg-text {
+  position: absolute;
+  top: 50%;
+  right: -2vw;
+  transform: translateY(-50%);
+  font-size: clamp(8rem, 22vw, 22rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: rgba(245,239,230,0.04);
+  line-height: 0.85;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+}
+
+#slide-1 .cover-content {
+  position: relative;
+  z-index: 2;
+  max-width: 70%;
+}
+
+#slide-1 .cover-tag {
+  display: inline-block;
+  padding: 0.4em 1em;
+  border: 1px solid rgba(232,99,138,0.5);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cherry);
+  margin-bottom: 2.5rem;
+}
+
+#slide-1 h1 {
+  font-size: var(--t-2xl);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--cream);
+  margin-bottom: 1.5rem;
+}
+
+#slide-1 h1 .x-mark {
+  color: rgba(245,239,230,0.25);
+  font-weight: 300;
+  margin: 0 0.15em;
+}
+
+#slide-1 .cover-sub {
+  font-size: var(--t-sm);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: rgba(245,239,230,0.45);
+  line-height: 1.7;
+}
+
+#slide-1 .cover-year {
+  position: absolute;
+  top: 8vh;
+  right: 10vw;
+  font-size: var(--t-xs);
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: rgba(245,239,230,0.25);
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 02 — 브랜드 파악 (two-column 70/30)
+───────────────────────────────────────── */
+#slide-2 {
+  background:
+    radial-gradient(ellipse 90% 60% at 5% 50%, rgba(232,99,138,0.07) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 80% at 95% 20%, rgba(122,140,120,0.06) 0%, transparent 50%),
+    linear-gradient(135deg, #F5EFE6 0%, #EDE3D6 100%);
+  display: grid;
+  grid-template-columns: 7fr 3fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+#slide-2 .col-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8vh 6vw 8vh 10vw;
+  position: relative;
+  border-right: 1px solid rgba(26,39,68,0.08);
+}
+
+#slide-2 .brand-quote {
+  font-size: var(--t-xl);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+  margin-bottom: 3rem;
+}
+
+#slide-2 .brand-quote .line-break {
+  display: block;
+}
+
+#slide-2 .brand-quote .accent {
+  color: var(--cherry);
+}
+
+#slide-2 .brand-meta {
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+
+#slide-2 .meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+#slide-2 .meta-label {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+#slide-2 .meta-value {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--navy);
+}
+
+#slide-2 .col-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 8vh 4vw 8vh 3vw;
+  gap: 2.5rem;
+}
+
+#slide-2 .side-pill {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--stone);
+  opacity: 0.5;
+  transform: rotate(180deg);
+}
+
+#slide-2 .side-slogan {
+  font-size: var(--t-md);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+#slide-2 .side-slogan .slash {
+  color: var(--cherry);
+  font-weight: 300;
+}
+
+#slide-2 .side-product {
+  padding: 0.8em 1.2em;
+  background: var(--navy);
+  color: var(--cream);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1.7;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 03 — 우리의 과제 (title-content)
+───────────────────────────────────────── */
+#slide-3 {
+  background:
+    radial-gradient(ellipse 70% 70% at 80% 20%, rgba(26,39,68,0.05) 0%, transparent 55%),
+    linear-gradient(160deg, #F5EFE6 0%, #EDE3D6 100%);
+  display: grid;
+  grid-template-columns: 5fr 5fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+#slide-3 .left-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8vh 4vw 8vh 10vw;
+  border-right: 1px solid rgba(26,39,68,0.08);
+}
+
+#slide-3 .section-num {
+  font-size: clamp(8rem, 18vw, 16rem);
+  font-weight: 900;
+  color: rgba(26,39,68,0.04);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  position: absolute;
+  left: 6vw;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+#slide-3 h2 {
+  font-size: var(--t-lg);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+#slide-3 .brief-line {
+  font-size: var(--t-sm);
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--text-mid);
+  position: relative;
+  z-index: 2;
+}
+
+#slide-3 .right-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8vh 10vw 8vh 5vw;
+}
+
+#slide-3 .question-box {
+  padding: 2.5rem 3rem;
+  background: var(--navy);
+  color: var(--cream);
+  position: relative;
+}
+
+#slide-3 .question-box::before {
+  content: '"';
+  position: absolute;
+  top: -0.3em;
+  left: 2rem;
+  font-size: 6rem;
+  font-weight: 900;
+  color: var(--cherry);
+  line-height: 1;
+  opacity: 0.6;
+}
+
+#slide-3 .question-text {
+  font-size: var(--t-md);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--cream);
+  position: relative;
+  z-index: 2;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 04 — 질문 (title-only, 대형 타이포)
+───────────────────────────────────────── */
+#slide-4 {
+  background:
+    radial-gradient(ellipse 60% 60% at 30% 50%, rgba(232,99,138,0.08) 0%, transparent 60%),
+    linear-gradient(170deg, #F5EFE6 0%, #EAE0D5 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 10vw;
+}
+
+#slide-4 .big-number {
+  position: absolute;
+  right: 6vw;
+  bottom: 8vh;
+  font-size: clamp(10rem, 28vw, 24rem);
+  font-weight: 900;
+  color: rgba(26,39,68,0.04);
+  line-height: 1;
+  letter-spacing: -0.06em;
+  pointer-events: none;
+  user-select: none;
+}
+
+#slide-4 h2 {
+  font-size: var(--t-2xl);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  color: var(--navy);
+  max-width: 80%;
+}
+
+#slide-4 h2 em {
+  display: block;
+  color: var(--cherry);
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 11 — HOW TO (콘셉트 실행 방식)
+───────────────────────────────────────── */
+#slide-11 {
+  background:
+    radial-gradient(ellipse 70% 50% at 10% 80%, rgba(232,99,138,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 90% 20%, rgba(26,39,68,0.05) 0%, transparent 50%),
+    linear-gradient(160deg, #F5EFE6 0%, #EDE3D6 100%);
+  display: grid;
+  grid-template-columns: 4fr 6fr;
+  height: 100%;
+}
+
+#slide-11 .how-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8vh 4vw 8vh 10vw;
+  border-right: 1px solid rgba(26,39,68,0.08);
+}
+
+#slide-11 .how-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8vh 10vw 8vh 5vw;
+  gap: 2.5rem;
+}
+
+#slide-11 .how-title {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--navy);
+}
+
+#slide-11 .how-title em {
+  display: block;
+  font-size: var(--t-md);
+  font-weight: 300;
+  color: var(--cherry);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  font-style: normal;
+}
+
+#slide-11 .how-item {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: 1.2rem;
+  align-items: flex-start;
+}
+
+#slide-11 .how-num {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--cherry);
+  padding-top: 0.25em;
+}
+
+#slide-11 .how-text {
+  font-size: var(--t-base);
+  font-weight: 400;
+  line-height: 1.75;
+  color: var(--text-mid);
+}
+
+#slide-11 .how-text strong {
+  display: block;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.01em;
+  margin-bottom: 0.3rem;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 05 — 각자의 낭만 (diagonal-split cases)
+───────────────────────────────────────── */
+#slide-5 {
+  background:
+    radial-gradient(ellipse 50% 80% at 90% 50%, rgba(122,140,120,0.08) 0%, transparent 55%),
+    linear-gradient(150deg, #F5EFE6 0%, #EDE3D6 100%);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 1fr;
+  padding: 6vh 10vw 10vh;
+  gap: 3rem;
+}
+
+#slide-5 .slide-header {
+  display: flex;
+  flex-direction: column;
+}
+
+#slide-5 .cases-grid {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr 1px 1fr;
+  gap: 0;
+  align-items: start;
+}
+
+#slide-5 .case-divider {
+  background: rgba(26,39,68,0.1);
+  align-self: stretch;
+}
+
+#slide-5 .case-item {
+  padding: 0 2.5vw;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#slide-5 .case-item:first-child {
+  padding-left: 0;
+}
+
+#slide-5 .case-item:last-child {
+  padding-right: 0;
+}
+
+#slide-5 .case-num {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--cherry);
+  opacity: 0.7;
+}
+
+#slide-5 .case-scene {
+  font-size: var(--t-base);
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--text-mid);
+}
+
+#slide-5 .case-scene strong {
+  font-weight: 700;
+  color: var(--navy);
+  display: block;
+  font-size: var(--t-md);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+#slide-5 .conclusion-bar {
+  padding: 1.5rem 2rem;
+  background: var(--navy);
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+#slide-5 .conclusion-bar .bar-arrow {
+  color: var(--cherry);
+  font-size: var(--t-md);
+  font-weight: 300;
+  flex-shrink: 0;
+}
+
+#slide-5 .conclusion-bar .bar-text {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--cream);
+  line-height: 1.1;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 06 — 낭만의 공통점 (stat-grid 강조)
+───────────────────────────────────────── */
+#slide-6 {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 20%, rgba(232,99,138,0.1) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 80% at 85% 80%, rgba(26,39,68,0.05) 0%, transparent 50%),
+    linear-gradient(160deg, #F5EFE6 0%, #EDE3D6 100%);
+  display: grid;
+  grid-template-columns: 5fr 5fr;
+  height: 100%;
+}
+
+#slide-6 .left-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8vh 4vw 8vh 10vw;
+  border-right: 1px solid rgba(26,39,68,0.08);
+  gap: 1.5rem;
+}
+
+#slide-6 .discovery-label {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--cherry);
+}
+
+#slide-6 .discovery-text {
+  font-size: var(--t-base);
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--text-mid);
+}
+
+#slide-6 .equation-block {
+  padding: 2.5rem;
+  background: var(--navy);
+  color: var(--cream);
+  margin-top: 0.5rem;
+}
+
+#slide-6 .equation-line {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--cream);
+}
+
+#slide-6 .equation-line .eq-sign {
+  font-weight: 300;
+  color: rgba(245,239,230,0.4);
+  margin: 0 0.2em;
+}
+
+#slide-6 .equation-line .eq-cherry {
+  color: var(--cherry);
+}
+
+#slide-6 .equation-sub {
+  margin-top: 1rem;
+  font-size: var(--t-xs);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: rgba(245,239,230,0.45);
+  line-height: 1.7;
+}
+
+#slide-6 .right-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8vh 10vw 8vh 5vw;
+  gap: 2.5rem;
+}
+
+#slide-6 .example-item {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+#slide-6 .example-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(26,39,68,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--navy);
+  margin-top: 0.2rem;
+}
+
+#slide-6 .example-text {
+  font-size: var(--t-base);
+  font-weight: 400;
+  line-height: 1.8;
+  color: var(--text-mid);
+}
+
+#slide-6 .example-text strong {
+  display: block;
+  font-size: var(--t-md);
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 0.4rem;
+  letter-spacing: -0.02em;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 07 — 위기 선언 (다크, 임팩트)
+───────────────────────────────────────── */
+#slide-7 {
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 100%, rgba(232,99,138,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 40% at 50% -10%, rgba(26,39,68,0.8) 0%, transparent 60%),
+    linear-gradient(180deg, #0F1A30 0%, #080F1E 60%, #050A15 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 0 10vw 12vh;
+  color: var(--cream);
+}
+
+#slide-7 .bg-words {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  gap: 1.5rem 3rem;
+  padding: 8vh 10vw;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.07;
+}
+
+#slide-7 .bg-word {
+  font-size: var(--t-md);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--cream);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+#slide-7 .crisis-content {
+  position: relative;
+  z-index: 2;
+  max-width: 75%;
+}
+
+#slide-7 .crisis-context {
+  font-size: var(--t-sm);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: rgba(245,239,230,0.4);
+  line-height: 1.8;
+  margin-bottom: 2rem;
+}
+
+#slide-7 .crisis-question {
+  font-size: var(--t-lg);
+  font-weight: 300;
+  color: rgba(245,239,230,0.55);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+#slide-7 .crisis-statement {
+  font-size: var(--t-2xl);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--cream);
+}
+
+#slide-7 .crisis-statement em {
+  color: var(--cherry);
+  display: block;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 08 — 씨앗 금고 (insight bridge)
+───────────────────────────────────────── */
+#slide-8 {
+  background:
+    radial-gradient(ellipse 60% 70% at 10% 50%, rgba(232,99,138,0.06) 0%, transparent 55%),
+    linear-gradient(160deg, #F5EFE6 0%, #EDE3D6 100%);
+  display: grid;
+  grid-template-columns: 6fr 4fr;
+  height: 100%;
+}
+
+#slide-8 .vault-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8vh 5vw 8vh 10vw;
+  border-right: 1px solid rgba(26,39,68,0.08);
+  gap: 2rem;
+}
+
+#slide-8 .vault-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.5em 1.2em 0.5em 0.8em;
+  background: rgba(26,39,68,0.06);
+  border-left: 3px solid var(--sage);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sage);
+  width: fit-content;
+}
+
+#slide-8 .vault-title {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--navy);
+}
+
+#slide-8 .vault-desc {
+  font-size: var(--t-base);
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--text-mid);
+  padding-left: 1.5rem;
+  border-left: 2px solid rgba(26,39,68,0.1);
+}
+
+#slide-8 .vault-question {
+  padding: 1.8rem 2rem;
+  background: rgba(26,39,68,0.05);
+  border: 1px solid rgba(26,39,68,0.1);
+}
+
+#slide-8 .vault-question p {
+  font-size: var(--t-md);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--navy);
+  line-height: 1.4;
+}
+
+#slide-8 .vault-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 8vh 5vw;
+  gap: 2.5rem;
+  background: rgba(26,39,68,0.03);
+}
+
+#slide-8 .vault-visual {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#slide-8 .vault-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(26,39,68,0.12);
+}
+
+#slide-8 .vault-ring-1 { width: 100%; height: 100%; }
+#slide-8 .vault-ring-2 { width: 75%;  height: 75%;  border-color: rgba(26,39,68,0.08); }
+#slide-8 .vault-ring-3 { width: 50%;  height: 50%;  border-color: rgba(26,39,68,0.1); }
+
+#slide-8 .vault-center {
+  width: 28%;
+  height: 28%;
+  background: var(--navy);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  position: relative;
+  z-index: 2;
+}
+
+#slide-8 .vault-seed-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+#slide-8 .seed-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  background: rgba(26,39,68,0.04);
+  border-right: 2px solid transparent;
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--navy);
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+
+#slide-8 .seed-item.highlight {
+  background: var(--navy);
+  color: var(--cream);
+  border-right-color: var(--cherry);
+  opacity: 1;
+}
+
+#slide-8 .seed-count {
+  font-weight: 700;
+  color: var(--cherry);
+  font-size: var(--t-xs);
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 09 — 빅 아이디어 선언 (hero-full dark)
+───────────────────────────────────────── */
+#slide-9 {
+  background:
+    radial-gradient(ellipse 70% 60% at 80% 90%, rgba(232,99,138,0.22) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 50% at 10% 10%, rgba(26,39,68,0.4) 0%, transparent 55%),
+    linear-gradient(160deg, #0A0F1E 0%, #1A2744 50%, #0A0F1E 100%);
+  background-color: #0A0F1E;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10vh 10vw 10vh;
+  color: var(--cream);
+}
+
+#slide-9 .idea-center {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5vw;
+  align-items: center;
+  flex: 1;
+}
+
+#slide-9 .idea-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+#slide-9 .idea-premise {
+  font-size: var(--t-base);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: rgba(245,239,230,0.45);
+  line-height: 1.5;
+}
+
+#slide-9 h2 {
+  font-size: var(--t-2xl);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: var(--cream);
+}
+
+#slide-9 h2 em {
+  color: var(--cherry);
+}
+
+#slide-9 .idea-bridge {
+  font-size: var(--t-base);
+  font-weight: 500;
+  color: rgba(245,239,230,0.65);
+  line-height: 1.9;
+  border-left: 2px solid rgba(232,99,138,0.35);
+  padding-left: 2rem;
+}
+
+#slide-9 .idea-cta {
+  padding: 1.8rem 0 0;
+  border-top: 1px solid rgba(245,239,230,0.1);
+  display: flex;
+  align-items: baseline;
+  gap: 2rem;
+}
+
+#slide-9 .cta-arrow {
+  font-size: var(--t-lg);
+  font-weight: 300;
+  color: var(--cherry);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+#slide-9 .cta-text {
+  font-size: var(--t-2xl);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--cream);
+  line-height: 1.05;
+}
+
+#slide-9 .cta-sub {
+  font-size: var(--t-sm);
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: rgba(245,239,230,0.35);
+  margin-top: 0.6rem;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 10 — 컨셉 네이밍 (title-only + 포인트)
+───────────────────────────────────────── */
+#slide-10 {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 50%, rgba(232,99,138,0.1) 0%, transparent 60%),
+    linear-gradient(170deg, #F5EFE6 0%, #EAE0D5 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 10vw;
+  overflow: hidden;
+}
+
+#slide-10 .naming-bg {
+  position: absolute;
+  bottom: -0.15em;
+  right: -0.05em;
+  font-size: clamp(12rem, 30vw, 28rem);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  color: rgba(26,39,68,0.04);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+#slide-10 .brand-line {
+  font-size: var(--t-sm);
+  font-weight: 400;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--navy);
+  opacity: 0.4;
+  margin-bottom: 1.5rem;
+}
+
+#slide-10 .project-name {
+  font-size: var(--t-3xl);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--navy);
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+#slide-10 .project-name .name-cherry {
+  display: block;
+  color: var(--cherry);
+}
+
+#slide-10 .project-subtitle {
+  font-size: var(--t-base);
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--text-mid);
+  max-width: 50%;
+  position: relative;
+  z-index: 2;
+}
+
+#slide-10 .project-tag {
+  margin-top: 3rem;
+  display: inline-flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+}
+
+#slide-10 .tag-item {
+  padding: 0.5em 1.2em;
+  border: 1px solid rgba(26,39,68,0.2);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+
+#slide-10 .tag-item.tag-cherry {
+  background: var(--cherry);
+  border-color: var(--cherry);
+  color: white;
+}
+
+/* ─────────────────────────────────────────
+   PRINT
+───────────────────────────────────────── */
+@media print {
+  #ui-chrome { display: none !important; }
+  .slide {
+    position: relative !important;
+    display: block !important;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: all !important;
+    page-break-after: always;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="presentation">
+
+  <!-- ─────────────────────────────────────
+       SLIDE 01 — COVER
+  ───────────────────────────────────────── -->
+  <section class="slide grain" id="slide-1">
+    <div class="cover-bg-text" aria-hidden="true">낭만</div>
+    <span class="cover-year">Instagram Branding — 2026</span>
+    <div class="cover-content">
+      <div class="cover-tag anim-eyebrow">Creative Pitch Deck</div>
+      <h1 class="anim-headline">
+        HOUSE OF NANGMAN
+        <span class="x-mark">×</span>
+        Instagram<br>Branding Film
+      </h1>
+      <p class="cover-sub anim-body">
+        인스타그램 브랜딩 영상 시리즈 기획안<br>
+        낭만이 사라지기 전에, 우리가 먼저 저장합니다.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────
+       SLIDE 02 — 브랜드 파악
+  ───────────────────────────────────────── -->
+  <section class="slide grain" id="slide-2">
+    <div class="col-main">
+      <span class="eyebrow anim-eyebrow">Section 01 — Brand</span>
+      <div class="divider-line anim-line"></div>
+      <p class="brand-quote anim-headline">
+        <span class="line-break">"남이 아닌</span>
+        <span class="line-break">온전한 나로서</span>
+        <span class="line-break accent">미소 지을 수 있는 순간"</span>
+      </p>
+      <div class="brand-meta anim-body">
+        <div class="meta-item">
+          <span class="meta-label">슬로건</span>
+          <span class="meta-value">FROM SMILE TO SMILE</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">제품</span>
+          <span class="meta-value">한글 자수 볼캡</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">키워드</span>
+          <span class="meta-value">'행복' · '낭만'</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-side">
+      <span class="side-pill anim-stagger-1">From Smile to Smile</span>
+      <div class="side-slogan anim-stagger-2">
+        감성<span class="slash"> / </span><br>
+        진정성<span class="slash"> / </span><br>
+        낭만
+      </div>
+      <div class="side-product anim-stagger-3">
+        20-30대<br>감성 소비층<br>문화 감수성 높은 타겟
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────
+       SLIDE 03 — 우리의 과제
+  ───────────────────────────────────────── -->
+  <section class="slide grain" id="slide-3">
+    <div class="left-col" style="position:relative;">
+      <span class="eyebrow anim-eyebrow">Section 02 — Brief</span>
+      <h2 class="anim-headline">하우스오브낭만다운<br>인스타그램 영상이란?</h2>
+      <p class="brief-line anim-body">
+        수많은 브랜드들이 인스타그램에서 영상을 올린다.<br>
+        그러나 하우스오브낭만은 다르다.<br>
+        '낭만'을 말하는 브랜드가 어떤 방식으로 존재해야 하는가를<br>
+        우리는 먼저 질문해야 한다.
+      </p>
+    </div>
+    <div class="right-col">
+      <div class="question-box anim-visual">
+        <p class="question-text">
+          브랜드가 말하는 '낭만'을<br>
+          어떻게 영상으로<br>
+          표현할 것인가
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────
+       SLIDE 04 — 질문 (임팩트 단독)
+  ───────────────────────────────────────── -->
+  <section class="slide grain" id="slide-4">
+    <div class="big-number" aria-hidden="true">?</div>
+    <span class="eyebrow anim-eyebrow">Section 03 — Insight</span>
+    <h2 class="anim-headline">
+      그렇다면 사람들에게<br>
+      <em>'낭만'은</em><br>
+      무엇일까요?
+    </h2>
+  </section>
+
+  <!-- ─────────────────────────────────────
+       SLIDE 05 — 각자의 낭만
+  ───────────────────────────────────────── -->
+  <section class="slide grain" id="slide-5">
+    <div class="slide-header">
+      <span class="eyebrow anim-eyebrow">각자의 낭만</span>
+    </div>
+    <div class="cases-grid">
+      <div class="case-item anim-stagger-1">
+        <span class="case-num">Case 01</span>
+        <div class="case-scene">
+          <strong>걷는 길</strong>
+          버스로 15분이면<br>갈 거리를<br>40분 동안 걸어서 가는 것
+        </div>
+      </div>
+      <div class="case-divider" aria-hidden="true"></div>
+      <div class="case-item anim-stagger-2">
+        <span class="case-num">Case 02</span>
+        <div class="case-scene">
+          <strong>우연한 술자리</strong>
+          낯선 동네, 우연히 들어간 술집에서<br>초면 사람들과<br>밤을 함께 보내는 것
+        </div>
+      </div>
+      <div class="case-divider" aria-hidden="true"></div>
+      <div class="case-item anim-stagger-3">
+        <span class="case-num">Case 03</span>
+        <div class="case-scene">
+          <strong>혼자만의 카페</strong>
+          아무도 모르는 골목 카페를 발견하고<br>아무에게도<br>알려주지 않는 것
+        </div>
+      </div>
+    </div>
+    <div class="conclusion-bar anim-stagger-4">
+      <span class="bar-arrow">→</span>
+      <span class="bar-text">낭만의 정의는 사람마다 다르다</span>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────
+       SLIDE 06 — 낭만의 공통점
+  ───────────────────────────────────────── -->
+  <section class="slide grain" id="slide-6">
+    <div class="left-panel">
+      <span class="discovery-label anim-eyebrow">그런데, 발견했다</span>
+      <p class="discovery-text anim-headline">
+        각자의 낭만은 모두 다르지만<br>
+        단 하나의 공통점이 있다.
+      </p>
+      <div class="equation-block anim-visual">
+        <div class="equation-line">
+          낭만<span class="eq-sign">=</span><em class="eq-cherry">비효율</em>
+        </div>
+        <p class="equation-sub">
+          더 빠른 길이 있는데 걷는 것<br>
+          알고리즘 추천 대신 우연을 따르는 것<br>
+          아무도 없는 시간에 혼자 요리하는 것
+        </p>
+      </div>
+    </div>
+    <div class="right-panel">
+      <div class="example-item anim-stagger-1">
+        <div class="example-icon">→</div>
+        <div class="example-text">
+          <strong>최단 경로 대신 먼 길</strong>
+          목적지보다 여정에 집중한다.<br>
+          시간을 낭비하는 것처럼 보이지만,<br>그 시간이 낭만이 된다.
+        </div>
+      </div>
+      <div class="example-item anim-stagger-2">
+        <div class="example-icon">→</div>
+        <div class="example-text">
+          <strong>알고리즘 대신 우연</strong>
+          추천을 무시하고 직접 발견한 것에 설렌다.<br>
+          효율적이지 않지만,<br>그 발견이 낭만이 된다.
+        </div>
+      </div>
+      <div class="example-item anim-stagger-3">
+        <div class="example-icon">→</div>
+        <div class="example-text">
+          <strong>자동화 대신 손수</strong>
+          훨씬 빠른 방법이 있는데<br>
+          손으로 직접 한다.<br>그 비효율이 낭만이 된다.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────
+       SLIDE 07 — 위기 선언 (다크)
+  ───────────────────────────────────────── -->
+  <section class="slide" id="slide-7">
+    <div class="bg-words" aria-hidden="true">
+      <span class="bg-word">배달</span>
+      <span class="bg-word">알고리즘</span>
+      <span class="bg-word">자동화</span>
+      <span class="bg-word">최단경로</span>
+      <span class="bg-word">AI 추천</span>
+      <span class="bg-word">효율</span>
+      <span class="bg-word">최적화</span>
+      <span class="bg-word">즉시배송</span>
+      <span class="bg-word">무인화</span>
+      <span class="bg-word">자동화</span>
+      <span class="bg-word">데이터</span>
+      <span class="bg-word">초연결</span>
+    </div>
+    <div class="crisis-content">
+      <p class="crisis-context anim-eyebrow">
+        배달, 알고리즘, 최단경로, 자동화, AI 추천...<br>
+        세상은 점점 더 효율적으로 변해간다.
+      </p>
+      <p class="crisis-question anim-headline">그렇다면 낭만은?</p>
+      <h2 class="crisis-statement anim-body">
+        낭만이
+        <em>멸종위기에</em>
+        처했다.
+      </h2>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────
+       SLIDE 08 — 씨앗 금고 (insight bridge)
+  ───────────────────────────────────────── -->
+  <section class="slide grain" id="slide-8">
+    <div class="vault-left">
+      <div class="vault-badge anim-eyebrow">
+        <span>🌱</span>
+        <span>Svalbard Global Seed Vault</span>
+      </div>
+      <h2 class="vault-title anim-headline">
+        백두대간<br>글로벌 씨드볼트
+      </h2>
+      <p class="vault-desc anim-body">
+        전 세계 야생식물 종자를 보관하는 최첨단 시설.<br>
+        지구 멸망을 대비한 최후의 보루.<br>
+        지금 이 순간에도 130만 개의 씨앗이 잠들어 있다.
+      </p>
+      <div class="vault-question anim-stagger-3">
+        <p>우리는 왜 씨앗을 저장하는가?</p>
+      </div>
+    </div>
+    <div class="vault-right">
+      <div class="vault-visual anim-visual">
+        <div class="vault-ring vault-ring-1"></div>
+        <div class="vault-ring vault-ring-2"></div>
+        <div class="vault-ring vault-ring-3"></div>
+        <div class="vault-center">🌱</div>
+      </div>
+      <div class="vault-seed-list anim-stagger-2">
+        <div class="seed-item">밀 · 옥수수 · 쌀 <span class="seed-count">1,300,000+</span></div>
+        <div class="seed-item">야생식물 <span class="seed-count">80,000+</span></div>
+        <div class="seed-item highlight">낭만 <span class="seed-count">???</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────
+       SLIDE 09 — 빅 아이디어 선언 (다크)
+  ───────────────────────────────────────── -->
+  <section class="slide" id="slide-9">
+    <div class="idea-center">
+      <div class="idea-left">
+        <p class="idea-premise anim-eyebrow">만약 낭만이 멸종된다면...</p>
+        <h2 class="anim-headline">
+          후세에<br>
+          <em>"이것이 낭만이야"</em>라고<br>
+          알려주기 위해
+        </h2>
+      </div>
+      <p class="idea-bridge anim-body">
+        씨드볼트가 식물의 종자를 보관하듯,<br>
+        우리는 낭만의 순간들을 저장한다.<br>
+        사라지기 전에. 잊혀지기 전에.
+      </p>
+    </div>
+    <div class="idea-cta">
+      <div class="cta-arrow anim-stagger-2">→</div>
+      <div>
+        <p class="cta-text anim-stagger-3">낭만을 저장하기 시작한다.</p>
+        <p class="cta-sub anim-stagger-4">HOUSE OF NANGMAN Instagram Branding Film Series</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────
+       SLIDE 10 — 컨셉 네이밍
+  ───────────────────────────────────────── -->
+  <section class="slide grain" id="slide-10">
+    <div class="naming-bg" aria-hidden="true">저장</div>
+    <p class="brand-line anim-eyebrow">House of Nangman × Instagram Branding</p>
+    <h2 class="project-name anim-headline">
+      낭만
+      <span class="name-cherry">저장소</span>
+    </h2>
+    <p class="project-subtitle anim-body">
+      낭만 멸망을 대비한<br>
+      인스타그램 브랜딩 영상 시리즈
+    </p>
+    <div class="project-tag anim-stagger-3">
+      <span class="tag-item tag-cherry">낭만 저장소</span>
+      <span class="tag-item">Instagram Film Series</span>
+      <span class="tag-item">Branding Campaign 2026</span>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────
+       SLIDE 11 — HOW TO
+  ───────────────────────────────────────── -->
+  <section class="slide grain" id="slide-11">
+    <div class="how-left">
+      <span class="eyebrow anim-eyebrow">How To</span>
+      <div class="divider-line anim-line"></div>
+      <h2 class="how-title anim-headline">
+        <em>낭만 저장소</em>
+        HOW TO
+      </h2>
+    </div>
+    <div class="how-right">
+      <div class="how-item anim-stagger-1">
+        <span class="how-num">01</span>
+        <div class="how-text">
+          <strong>순간 포착</strong>
+          사람들이 낭만을 느끼는 순간을 포착한다.<br>
+          기획된 장면이 아닌, 일상 속 진짜 순간.
+        </div>
+      </div>
+      <div class="how-item anim-stagger-2">
+        <span class="how-num">02</span>
+        <div class="how-text">
+          <strong>'아 이게 낭만이지'</strong>
+          영상을 다 보고 나면 시청자 스스로<br>
+          '아 이게 낭만이지'라고 이야기할 수 있는 영상.
+        </div>
+      </div>
+      <div class="how-item anim-stagger-3">
+        <span class="how-num">03</span>
+        <div class="how-text">
+          <strong>관찰자 경험</strong>
+          인스타그램에서 넘기다가 포착한 하나의 영상.<br>
+          시청자가 '관찰자'가 되어 그 상황 속 낭만을 직접 찾게 한다.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- #presentation -->
+
+<!-- UI Chrome -->
+<div id="ui-chrome">
+  <div class="progress-track">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+  <span class="slide-counter" id="slide-counter">1 / 10</span>
+</div>
+
+<script>
+/* ─────────────────────────────────────────
+   SLIDE ENGINE
+───────────────────────────────────────── */
+let currentSlide = 0;
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+
+// dark slides (크롬 색상 반전)
+const darkSlides = new Set([6, 8]); // 0-indexed: slide 7 = idx 6, slide 9 = idx 8
+
+function goTo(n) {
+  if (n < 0 || n >= totalSlides || n === currentSlide) return;
+
+  const dir = n > currentSlide ? 1 : -1;
+  const prev = slides[currentSlide];
+  const next = slides[n];
+
+  prev.style.setProperty('--exit-x', `${-dir * 60}px`);
+  prev.classList.remove('active');
+  prev.classList.add('exiting');
+  setTimeout(() => prev.classList.remove('exiting'), 500);
+
+  next.style.setProperty('--enter-x', `${dir * 60}px`);
+  currentSlide = n;
+  next.classList.add('active');
+
+  updateChrome();
+}
+
+function updateChrome() {
+  const pct = ((currentSlide + 1) / totalSlides) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('slide-counter').textContent =
+    `${currentSlide + 1} / ${totalSlides}`;
+
+  if (darkSlides.has(currentSlide)) {
+    document.body.classList.add('dark-chrome');
+    document.getElementById('ui-chrome').style.setProperty('--chrome-text', 'rgba(245,239,230,0.35)');
+    document.querySelector('.progress-track').style.background = 'rgba(245,239,230,0.15)';
+    document.querySelector('.progress-bar').style.background = '#E8638A';
+    document.getElementById('slide-counter').style.color = 'rgba(245,239,230,0.35)';
+  } else {
+    document.body.classList.remove('dark-chrome');
+    document.querySelector('.progress-track').style.background = 'rgba(26,39,68,0.15)';
+    document.querySelector('.progress-bar').style.background = '#E8638A';
+    document.getElementById('slide-counter').style.color = '#9A8E82';
+  }
+}
+
+/* 키보드 */
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault(); goTo(currentSlide + 1);
+  }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault(); goTo(currentSlide - 1);
+  }
+  if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+  if (e.key === 'End')  { e.preventDefault(); goTo(totalSlides - 1); }
+  if (e.key === 'f' || e.key === 'F') {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  }
+});
+
+/* 터치 스와이프 */
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) goTo(dx < 0 ? currentSlide + 1 : currentSlide - 1);
+}, { passive: true });
+
+/* 초기화 */
+slides[0].classList.add('active');
+updateChrome();
+</script>
+</body>
+</html>

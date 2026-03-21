@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>고양이 계산기</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at top, #2d1b69 0%, #11092e 60%);
+      font-family: 'Segoe UI', sans-serif;
+      perspective: 1000px;
+    }
+
+    /* 배경 별 */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 50%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 15%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 85%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 35%, rgba(255,255,255,0.4) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .wrapper {
+      transform-style: preserve-3d;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotateX(2deg) rotateY(-2deg); }
+      50%       { transform: translateY(-12px) rotateX(-2deg) rotateY(2deg); }
+    }
+
+    .calculator {
+      background: linear-gradient(145deg, #2a1f5e, #1a1240);
+      border-radius: 24px;
+      padding: 24px;
+      width: 320px;
+      position: relative;
+      /* 3D 본체 그림자 레이어 */
+      box-shadow:
+        0 2px 0 #110a35,
+        0 4px 0 #0e0830,
+        0 6px 0 #0b062b,
+        0 8px 0 #080426,
+        0 10px 0 #060321,
+        0 20px 40px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        inset 0 -1px 0 rgba(0,0,0,0.4);
+      border: 1px solid rgba(150, 120, 255, 0.25);
+    }
+
+    /* 상단 광택 */
+    .calculator::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      border-radius: 24px 24px 60% 60%;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.07), transparent);
+      pointer-events: none;
+    }
+
+    /* 고양이 헤더 */
+    .cat-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(150, 120, 255, 0.2);
+    }
+
+    .cat-icon {
+      font-size: 28px;
+      filter: drop-shadow(0 0 8px rgba(200, 150, 255, 0.7));
+      animation: blink 4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 90%, 100% { transform: scaleY(1); }
+      95%            { transform: scaleY(0.1); }
+    }
+
+    .cat-title {
+      color: rgba(200, 180, 255, 0.9);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(180, 130, 255, 0.6);
+    }
+
+    /* 디스플레이 */
+    .display {
+      background: linear-gradient(145deg, #0d0a2e, #150f40);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      text-align: right;
+      box-shadow:
+        inset 0 4px 12px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(0,0,0,0.8),
+        0 1px 0 rgba(255,255,255,0.08);
+      border: 1px solid rgba(100, 80, 200, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 디스플레이 스캔라인 효과 */
+    .display::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      border-radius: 16px;
+    }
+
+    .display .expression {
+      color: rgba(160, 140, 255, 0.7);
+      font-size: 13px;
+      min-height: 20px;
+      margin-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .display .current {
+      color: #d4c8ff;
+      font-size: 38px;
+      font-weight: 300;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-shadow: 0 0 20px rgba(180, 150, 255, 0.5);
+    }
+
+    /* 버튼 그리드 */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 18px;
+      position: relative;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      transform-style: preserve-3d;
+    }
+
+    /* 버튼 눌림 효과 */
+    button:active {
+      transform: translateY(4px);
+    }
+
+    /* 숫자 버튼 */
+    .btn-number {
+      background: linear-gradient(145deg, #2e2460, #1e1848);
+      color: #d8d0ff;
+      box-shadow:
+        0 6px 0 #100c30,
+        0 8px 12px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      border: 1px solid rgba(120,100,220,0.3);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .btn-number:hover {
+      background: linear-gradient(145deg, #3a2e78, #281f60);
+      box-shadow:
+        0 6px 0 #100c30,
+        0 8px 16px rgba(100,80,200,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+
+    .btn-number:active {
+      box-shadow:
+        0 2px 0 #100c30,
+        0 3px 6px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    /* 연산자 버튼 */
+    .btn-operator {
+      background: linear-gradient(145deg, #c8305a, #9e2045);
+      color: #fff;
+      box-shadow:
+        0 6px 0 #5a0f22,
+        0 8px 12px rgba(180,30,70,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+      border: 1px solid rgba(220,80,120,0.4);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .btn-operator:hover {
+      background: linear-gradient(145deg, #e03a68, #b82850);
+      box-shadow:
+        0 6px 0 #5a0f22,
+        0 8px 20px rgba(220,50,100,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+
+    .btn-operator:active {
+      box-shadow:
+        0 2px 0 #5a0f22,
+        0 3px 8px rgba(180,30,70,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+
+    /* 특수 버튼 */
+    .btn-special {
+      background: linear-gradient(145deg, #1e3870, #142858);
+      color: #90c8ff;
+      box-shadow:
+        0 6px 0 #081530,
+        0 8px 12px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      border: 1px solid rgba(60,120,220,0.3);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .btn-special:hover {
+      background: linear-gradient(145deg, #264880, #1a3268);
+      box-shadow:
+        0 6px 0 #081530,
+        0 8px 18px rgba(40,100,200,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+
+    .btn-special:active {
+      box-shadow:
+        0 2px 0 #081530,
+        0 3px 6px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    /* = 버튼 */
+    .btn-equals {
+      background: linear-gradient(145deg, #d43868, #a82250);
+      color: #fff;
+      box-shadow:
+        0 6px 0 #5a0f22,
+        0 8px 16px rgba(200,40,90,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.25);
+      border: 1px solid rgba(230,90,130,0.5);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .btn-equals:hover {
+      background: linear-gradient(145deg, #ee4478, #c02860);
+      box-shadow:
+        0 6px 0 #5a0f22,
+        0 8px 24px rgba(220,60,110,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+
+    .btn-equals:active {
+      box-shadow:
+        0 2px 0 #5a0f22,
+        0 3px 10px rgba(180,30,70,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+
+    .btn-zero {
+      grid-column: span 2;
+    }
+
+    /* 하단 발바닥 장식 */
+    .cat-footer {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 16px;
+      opacity: 0.4;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="calculator">
+      <div class="cat-header">
+        <span class="cat-icon">🐱</span>
+        <span class="cat-title">Nyan Calc</span>
+      </div>
+      <div class="display">
+        <div class="expression" id="expression"></div>
+        <div class="current" id="current">0</div>
+      </div>
+      <div class="buttons">
+        <button class="btn-special" onclick="clearAll()">AC</button>
+        <button class="btn-special" onclick="toggleSign()">+/-</button>
+        <button class="btn-special" onclick="percent()">%</button>
+        <button class="btn-operator" onclick="setOperator('/')">÷</button>
+
+        <button class="btn-number" onclick="inputDigit('7')">7</button>
+        <button class="btn-number" onclick="inputDigit('8')">8</button>
+        <button class="btn-number" onclick="inputDigit('9')">9</button>
+        <button class="btn-operator" onclick="setOperator('*')">×</button>
+
+        <button class="btn-number" onclick="inputDigit('4')">4</button>
+        <button class="btn-number" onclick="inputDigit('5')">5</button>
+        <button class="btn-number" onclick="inputDigit('6')">6</button>
+        <button class="btn-operator" onclick="setOperator('-')">−</button>
+
+        <button class="btn-number" onclick="inputDigit('1')">1</button>
+        <button class="btn-number" onclick="inputDigit('2')">2</button>
+        <button class="btn-number" onclick="inputDigit('3')">3</button>
+        <button class="btn-operator" onclick="setOperator('+')">+</button>
+
+        <button class="btn-number btn-zero" onclick="inputDigit('0')">0</button>
+        <button class="btn-number" onclick="inputDot()">.</button>
+        <button class="btn-equals" onclick="calculate()">=</button>
+      </div>
+      <div class="cat-footer">
+        <span>🐾</span><span>🐾</span><span>🐾</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let current = '0';
+    let previous = '';
+    let operator = null;
+    let shouldReset = false;
+
+    const currentEl = document.getElementById('current');
+    const expressionEl = document.getElementById('expression');
+
+    function updateDisplay() {
+      currentEl.textContent = current;
+    }
+
+    function inputDigit(digit) {
+      if (shouldReset) {
+        current = digit;
+        shouldReset = false;
+      } else {
+        current = current === '0' ? digit : current + digit;
+      }
+      if (current.length > 12) current = current.slice(0, 12);
+      updateDisplay();
+    }
+
+    function inputDot() {
+      if (shouldReset) {
+        current = '0.';
+        shouldReset = false;
+      } else if (!current.includes('.')) {
+        current += '.';
+      }
+      updateDisplay();
+    }
+
+    function setOperator(op) {
+      if (operator && !shouldReset) calculate(true);
+      previous = current;
+      operator = op;
+      shouldReset = true;
+      const symbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+      expressionEl.textContent = `${previous} ${symbols[op]}`;
+    }
+
+    function calculate(chained = false) {
+      if (!operator || !previous) return;
+      const a = parseFloat(previous);
+      const b = parseFloat(current);
+      let result;
+      switch (operator) {
+        case '+': result = a + b; break;
+        case '-': result = a - b; break;
+        case '*': result = a * b; break;
+        case '/':
+          if (b === 0) { current = '오류'; operator = null; previous = ''; updateDisplay(); return; }
+          result = a / b;
+          break;
+      }
+      const symbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+      if (!chained) expressionEl.textContent = `${previous} ${symbols[operator]} ${current} =`;
+      current = parseFloat(result.toFixed(10)).toString();
+      if (current.length > 12) current = parseFloat(result.toExponential(4)).toString();
+      operator = chained ? operator : null;
+      previous = '';
+      shouldReset = true;
+      updateDisplay();
+    }
+
+    function clearAll() {
+      current = '0';
+      previous = '';
+      operator = null;
+      shouldReset = false;
+      expressionEl.textContent = '';
+      updateDisplay();
+    }
+
+    function toggleSign() {
+      current = (parseFloat(current) * -1).toString();
+      updateDisplay();
+    }
+
+    function percent() {
+      current = (parseFloat(current) / 100).toString();
+      updateDisplay();
+    }
+
+    /* 마우스 기울기 효과 */
+    const wrapper = document.querySelector('.wrapper');
+    document.addEventListener('mousemove', (e) => {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const rx = ((e.clientY - cy) / cy) * -8;
+      const ry = ((e.clientX - cx) / cx) * 8;
+      wrapper.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    });
+    document.addEventListener('mouseleave', () => {
+      wrapper.style.transform = '';
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9') inputDigit(e.key);
+      else if (e.key === '.') inputDot();
+      else if (e.key === '+') setOperator('+');
+      else if (e.key === '-') setOperator('-');
+      else if (e.key === '*') setOperator('*');
+      else if (e.key === '/') { e.preventDefault(); setOperator('/'); }
+      else if (e.key === 'Enter' || e.key === '=') calculate();
+      else if (e.key === 'Escape') clearAll();
+      else if (e.key === 'Backspace') {
+        if (current.length > 1) current = current.slice(0, -1);
+        else current = '0';
+        updateDisplay();
+      }
+    });
+  </script>
+</body>
+</html>

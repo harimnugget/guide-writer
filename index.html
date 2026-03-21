@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영상 편집 가이드 작성기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; }
+
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 24px;
+  }
+
+  /* 설정 영역 */
+  .settings {
+    background: #16213e;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .settings label {
+    font-size: 13px;
+    color: #aaa;
+    white-space: nowrap;
+  }
+  .settings input {
+    flex: 1;
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+  }
+  .settings input:focus { border-color: #e94560; }
+  .settings input::placeholder { color: #556; }
+  .settings .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #555;
+    flex-shrink: 0;
+  }
+  .settings .status-dot.connected { background: #4ade80; }
+
+  /* 입력 영역 */
+  .input-area {
+    background: #16213e;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .input-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .input-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .mode-toggle {
+    display: flex;
+    gap: 4px;
+    background: #0f3460;
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .mode-toggle button {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 12px;
+    font-family: inherit;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mode-toggle button.active {
+    background: #e94560;
+    color: #fff;
+  }
+
+  .input-hint {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  .input-hint code {
+    background: #0f3460;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #e94560;
+    font-size: 11px;
+  }
+
+  #singleInput {
+    width: 100%;
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+  }
+  #singleInput:focus { border-color: #e94560; }
+  #singleInput::placeholder { color: #445; }
+
+  #multiInput {
+    width: 100%;
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    resize: vertical;
+    min-height: 120px;
+    display: none;
+  }
+  #multiInput:focus { border-color: #e94560; }
+  #multiInput::placeholder { color: #445; }
+
+  .multi-submit {
+    display: none;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+
+  /* 자동완성 추천 */
+  .suggestions {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 0;
+  }
+  .suggestions.visible { display: flex; }
+  .suggestions-label {
+    width: 100%;
+    font-size: 11px;
+    color: #556;
+    margin-bottom: 2px;
+  }
+  .suggest-chip {
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    color: #aac;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .suggest-chip:hover {
+    background: #1a4a7a;
+    border-color: #e94560;
+    color: #fff;
+  }
+  .suggest-chip .chip-match {
+    color: #e94560;
+    font-weight: 600;
+  }
+
+  /* 미리보기 테이블 */
+  .preview-area {
+    background: #16213e;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .preview-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .preview-scroll::-webkit-scrollbar { width: 6px; }
+  .preview-scroll::-webkit-scrollbar-track { background: transparent; }
+  .preview-scroll::-webkit-scrollbar-thumb { background: #2a2a4e; border-radius: 3px; }
+  .preview-scroll::-webkit-scrollbar-thumb:hover { background: #3a3a5e; }
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .preview-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .preview-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .entry-count {
+    font-size: 12px;
+    color: #888;
+  }
+  .sort-btn {
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    color: #aaa;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: none;
+  }
+  .sort-btn:hover { background: #1a4a7a; color: #fff; }
+  .sort-btn.sorted { border-color: #4ade80; color: #4ade80; }
+  .sort-btn.sorted:hover { background: #0a2a1a; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead th {
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: #f0a030;
+    background: #16213e;
+    padding: 8px 12px;
+    border-bottom: 2px solid #2a2a4e;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  thead th:first-child { width: 120px; border-radius: 8px 0 0 0; }
+  thead th:last-child { width: 70px; border-radius: 0 8px 0 0; text-align: center; }
+  tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #1e2a4a;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  tbody td[rowspan] {
+    vertical-align: top;
+    border-bottom: 2px solid #2a2a4e;
+  }
+  tbody tr:hover td:not([rowspan]) { background: #1a2548; }
+  .section-cell {
+    font-weight: 600;
+    color: #f0a030;
+  }
+  .content-cell {
+    white-space: pre-wrap;
+    line-height: 1.7;
+  }
+  .action-btns {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+  }
+  .delete-btn, .edit-btn {
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .delete-btn:hover { color: #e94560; background: #2a1525; }
+  .edit-btn:hover { color: #60a5fa; background: #152a3a; }
+
+  /* 인라인 편집 */
+  .edit-row td { background: #1a2548; }
+  .edit-inputs {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .edit-inputs input {
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+  }
+  .edit-inputs input:focus { border-color: #60a5fa; }
+  .edit-inputs .edit-section { width: 80px; }
+  .edit-inputs .edit-tc { width: 70px; }
+  .edit-inputs .edit-content { flex: 1; }
+  .edit-actions {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+  }
+  .edit-save, .edit-cancel {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .edit-save { color: #4ade80; }
+  .edit-save:hover { background: #1a2a1a; }
+  .edit-cancel { color: #888; }
+  .edit-cancel:hover { color: #e94560; background: #2a1525; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #555;
+    font-size: 13px;
+  }
+
+  /* 버튼 */
+  .actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .btn {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: #e94560;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #d63851; }
+  .btn-primary:disabled { background: #553040; color: #886; cursor: not-allowed; }
+  .btn-secondary {
+    background: #2a2a4e;
+    color: #aaa;
+  }
+  .btn-secondary:hover { background: #3a3a5e; color: #fff; }
+  .btn-danger {
+    background: #3a1525;
+    color: #e94560;
+  }
+  .btn-danger:hover { background: #4a1a30; }
+
+  /* 토스트 */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #4ade80;
+    color: #1a1a2e;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 100;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  .toast.error { background: #e94560; color: #fff; }
+
+  /* 가이드 안내 */
+  .guide-info {
+    background: #0f3460;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #778;
+    line-height: 1.8;
+  }
+  .guide-info strong { color: #aab; }
+  .guide-info + .guide-info { margin-top: 10px; }
+  .guide-info summary {
+    cursor: pointer;
+    user-select: none;
+  }
+  .guide-info summary strong { color: #aab; }
+  .guide-info details[open] summary { margin-bottom: 8px; }
+  .guide-info ol {
+    padding-left: 20px;
+    margin: 0;
+  }
+  .guide-info ol li { margin-bottom: 6px; }
+  .guide-info ol li:last-child { margin-bottom: 0; }
+  .guide-info a {
+    color: #60a5fa;
+    text-decoration: none;
+  }
+  .guide-info a:hover { text-decoration: underline; }
+  .guide-info .step-sub {
+    padding-left: 16px;
+    margin-top: 4px;
+    color: #667;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🎬 영상 편집 가이드 작성기</h1>
+  <p class="subtitle">간편 입력 → 자동 포맷팅 → 구글 시트 전송</p>
+
+  <!-- 설정 -->
+  <div class="settings">
+    <div class="status-dot" id="statusDot"></div>
+    <label>Apps Script URL</label>
+    <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/..." />
+  </div>
+
+  <!-- 입력 -->
+  <div class="input-area">
+    <div class="input-header">
+      <h2>입력</h2>
+      <div class="mode-toggle">
+        <button class="active" onclick="setMode('single')">한 줄</button>
+        <button onclick="setMode('multi')">여러 줄</button>
+      </div>
+    </div>
+    <p class="input-hint">
+      형식: <code>섹션/타임코드/내용</code> &nbsp;|&nbsp; 섹션 생략 시 이전 섹션 자동 계승: <code>/타임코드/내용</code>
+    </p>
+    <input type="text" id="singleInput" placeholder="예: 인트로/0011/2분할로 넣어주세요" autofocus />
+    <div class="suggestions" id="suggestions">
+      <div class="suggestions-label">💡 이전에 입력한 내용</div>
+    </div>
+    <textarea id="multiInput" placeholder="여러 줄을 한번에 입력하세요. 줄바꿈으로 구분됩니다.&#10;&#10;예:&#10;인트로/0011/2분할로 넣어주세요&#10;/0035/풀샷으로 전환&#10;본편/0530/자막 추가"></textarea>
+    <div class="multi-submit" id="multiSubmit">
+      <button class="btn btn-primary" onclick="processMultiInput()">추가하기</button>
+    </div>
+  </div>
+
+  <!-- 미리보기 -->
+  <div class="preview-area">
+    <div class="preview-header">
+      <h2>미리보기</h2>
+      <div class="preview-controls">
+        <button class="sort-btn" id="sortBtn" onclick="sortByTC()" title="각 섹션 내 항목을 타임코드 순으로 정렬">⏱ TC순 정렬</button>
+        <span class="entry-count" id="entryCount">0개 섹션</span>
+      </div>
+    </div>
+    <div class="preview-scroll">
+      <div id="previewContent">
+        <div class="empty-state">아직 입력된 가이드가 없습니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 액션 -->
+  <div class="actions">
+    <button class="btn btn-danger" onclick="clearAll()" id="clearBtn" style="display:none">전체 삭제</button>
+    <button class="btn btn-secondary" onclick="copyToClipboard()" id="copyBtn" style="display:none">클립보드 복사</button>
+    <button class="btn btn-primary" onclick="sendToSheet()" id="sendBtn" disabled>구글 시트 전송</button>
+  </div>
+
+  <!-- 안내 -->
+  <div class="guide-info">
+    <strong>타임코드 입력 팁</strong><br>
+    · <code>0011</code> → 00:11 &nbsp;
+    · <code>130</code> → 01:30 &nbsp;
+    · <code>10530</code> → 01:05:30<br>
+    <strong>섹션 생략</strong>: 같은 섹션에 연속 입력 시 <code>/0035/내용</code> 으로 섹션명 생략 가능
+  </div>
+
+  <div class="guide-info">
+    <details>
+      <summary><strong>📋 구글 시트 연결 방법 (Apps Script)</strong></summary>
+      <ol>
+        <li>가이드를 기록할 <strong>구글 스프레드시트</strong>를 열고, B1에 <code>#S</code>, C1에 <code>내용</code> 헤더를 입력</li>
+        <li>상단 메뉴 → <strong>확장 프로그램</strong> → <strong>Apps Script</strong> 클릭</li>
+        <li>기본 <code>Code.gs</code> 파일의 내용을 모두 지우고, 아래 코드를 붙여넣기:
+          <div class="step-sub">
+            → <a href="guide-apps-script.js" target="_blank">guide-apps-script.js</a> 파일 열기 → 전체 복사 → Code.gs에 붙여넣기
+          </div>
+        </li>
+        <li>상단 <strong>배포</strong> → <strong>새 배포</strong> 클릭
+          <div class="step-sub">
+            · 유형: <strong>웹 앱</strong> 선택<br>
+            · 다음 계정으로 실행: <strong>나</strong><br>
+            · 액세스 권한: <strong>모든 사용자</strong>
+          </div>
+        </li>
+        <li><strong>배포</strong> 클릭 → 나오는 웹 앱 URL(<code>https://script.google.com/macros/s/...</code>)을 복사</li>
+        <li>위 <strong>Apps Script URL</strong> 칸에 붙여넣기 → 왼쪽 초록 점이 켜지면 연결 완료!</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── 상태 ───
+let entries = []; // { section, tc, content }
+let lastSection = '';
+let mode = 'single';
+
+// ─── 로컬 저장 ───
+const STORAGE_KEY = 'guide-writer';
+function saveState() {
+  const url = document.getElementById('scriptUrl').value;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ entries, lastSection, scriptUrl: url }));
+}
+function loadState() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (data) {
+      entries = data.entries || [];
+      lastSection = data.lastSection || '';
+      if (data.scriptUrl) document.getElementById('scriptUrl').value = data.scriptUrl;
+      renderPreview();
+      updateUrlStatus();
+    }
+  } catch(e) {}
+}
+
+// ─── URL 상태 ───
+document.getElementById('scriptUrl').addEventListener('input', () => {
+  updateUrlStatus();
+  saveState();
+});
+function updateUrlStatus() {
+  const url = document.getElementById('scriptUrl').value.trim();
+  const dot = document.getElementById('statusDot');
+  const btn = document.getElementById('sendBtn');
+  if (url.startsWith('https://script.google.com/')) {
+    dot.classList.add('connected');
+    btn.disabled = entries.length === 0;
+  } else {
+    dot.classList.remove('connected');
+    btn.disabled = true;
+  }
+}
+
+// ─── 모드 전환 ───
+function setMode(m) {
+  mode = m;
+  const btns = document.querySelectorAll('.mode-toggle button');
+  btns.forEach(b => b.classList.remove('active'));
+  if (m === 'single') {
+    btns[0].classList.add('active');
+    document.getElementById('singleInput').style.display = '';
+    document.getElementById('multiInput').style.display = 'none';
+    document.getElementById('multiSubmit').style.display = 'none';
+  } else {
+    btns[1].classList.add('active');
+    document.getElementById('singleInput').style.display = 'none';
+    document.getElementById('multiInput').style.display = '';
+    document.getElementById('multiSubmit').style.display = 'flex';
+  }
+}
+
+// ─── 타임코드 포맷팅 ───
+function formatTC(raw) {
+  // 숫자만 추출
+  const digits = raw.replace(/[^0-9]/g, '');
+  if (!digits) return raw;
+
+  const len = digits.length;
+  if (len <= 2) {
+    // 11 → 00:11
+    return '00:' + digits.padStart(2, '0');
+  } else if (len <= 4) {
+    // 130 → 01:30, 0011 → 00:11
+    const sec = digits.slice(-2);
+    const min = digits.slice(0, -2).padStart(2, '0');
+    return min + ':' + sec;
+  } else {
+    // 10530 → 01:05:30
+    const sec = digits.slice(-2);
+    const min = digits.slice(-4, -2).padStart(2, '0');
+    const hr = digits.slice(0, -4).padStart(2, '0');
+    return hr + ':' + min + ':' + sec;
+  }
+}
+
+// ─── 입력 파싱 ───
+function parseLine(line) {
+  line = line.trim();
+  if (!line) return null;
+
+  // /타임코드/내용 (섹션 생략)
+  if (line.startsWith('/')) {
+    const parts = line.substring(1).split('/');
+    if (parts.length < 2) return null;
+    const tc = formatTC(parts[0].trim());
+    const content = parts.slice(1).join('/').trim();
+    if (!content) return null;
+    return { section: lastSection || '미지정', tc, content };
+  }
+
+  // 섹션/타임코드/내용
+  const parts = line.split('/');
+  if (parts.length < 3) return null;
+  let section = parts[0].trim();
+  // # 자동 추가
+  if (section && !section.startsWith('#')) section = '#' + section;
+  const tc = formatTC(parts[1].trim());
+  const content = parts.slice(2).join('/').trim();
+  if (!content) return null;
+  lastSection = section;
+  return { section, tc, content };
+}
+
+// ─── 엔트리 추가 ───
+function addEntry(entry) {
+  if (!entry) return;
+  entries.push(entry);
+  saveState();
+  renderPreview();
+  updateUrlStatus();
+}
+
+// ─── 자동완성 추천 ───
+function getUniqueContents() {
+  const seen = new Set();
+  const result = [];
+  // 최신 입력이 위로 오도록 역순
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const c = entries[i].content;
+    if (!seen.has(c)) {
+      seen.add(c);
+      result.push(c);
+    }
+  }
+  return result;
+}
+
+function updateSuggestions() {
+  const input = document.getElementById('singleInput');
+  const container = document.getElementById('suggestions');
+  const val = input.value;
+
+  // 슬래시로 분리해서 마지막 파트(내용 부분) 추출
+  const parts = val.split('/');
+  // 최소 섹션/TC/ 까지 입력된 상태에서만 (또는 /TC/ 형태)
+  const hasStructure = (parts.length >= 3) || (val.startsWith('/') && parts.length >= 2);
+
+  if (!hasStructure || entries.length === 0) {
+    container.classList.remove('visible');
+    return;
+  }
+
+  // 내용 부분 추출
+  let contentPart = '';
+  if (val.startsWith('/')) {
+    contentPart = parts.slice(2).join('/').trim();
+  } else {
+    contentPart = parts.slice(2).join('/').trim();
+  }
+
+  const allContents = getUniqueContents();
+  let matches;
+
+  if (contentPart === '') {
+    // 내용이 비어있으면 전체 추천 (최근 5개)
+    matches = allContents.slice(0, 5);
+  } else {
+    // 입력 중인 내용과 부분 매칭
+    const keyword = contentPart.toLowerCase();
+    matches = allContents.filter(c => c.toLowerCase().includes(keyword)).slice(0, 5);
+    // 정확히 같은 건 제외 안 함 — 동일 내용 반복 입력이 목적이므로
+  }
+
+  if (matches.length === 0) {
+    container.classList.remove('visible');
+    return;
+  }
+
+  // 칩 렌더링
+  let html = '<div class="suggestions-label">💡 이전에 입력한 내용</div>';
+  matches.forEach(m => {
+    html += '<button class="suggest-chip" data-content="' + escapeAttr(m) + '">'
+         + escapeHtml(m) + '</button>';
+  });
+  container.innerHTML = html;
+  container.classList.add('visible');
+
+  // 클릭 이벤트
+  container.querySelectorAll('.suggest-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      const content = this.dataset.content;
+      applySuggestion(content);
+    });
+  });
+}
+
+function applySuggestion(content) {
+  const input = document.getElementById('singleInput');
+  const val = input.value;
+  const parts = val.split('/');
+
+  if (val.startsWith('/')) {
+    // /TC/내용 형태 — 앞 2파트 유지하고 내용 교체
+    input.value = parts.slice(0, 2).join('/') + '/' + content;
+  } else if (parts.length >= 3) {
+    // 섹션/TC/내용 형태 — 앞 2파트 유지하고 내용 교체
+    input.value = parts.slice(0, 2).join('/') + '/' + content;
+  } else {
+    input.value = val + content;
+  }
+
+  input.focus();
+  document.getElementById('suggestions').classList.remove('visible');
+}
+
+// ─── 한 줄 입력 ───
+const singleInput = document.getElementById('singleInput');
+
+singleInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.isComposing) {
+    const entry = parseLine(this.value);
+    if (entry) {
+      addEntry(entry);
+      this.value = '';
+      document.getElementById('suggestions').classList.remove('visible');
+      showToast('추가됨: ' + entry.section);
+    } else if (this.value.trim()) {
+      showToast('형식 오류: 섹션/타임코드/내용', true);
+    }
+  }
+});
+
+singleInput.addEventListener('input', function() {
+  if (!this.isComposing) updateSuggestions();
+});
+singleInput.addEventListener('compositionend', updateSuggestions);
+// 포커스 벗어나면 추천 숨기기 (약간의 딜레이로 클릭 처리 가능하게)
+singleInput.addEventListener('blur', function() {
+  setTimeout(() => document.getElementById('suggestions').classList.remove('visible'), 200);
+});
+singleInput.addEventListener('focus', updateSuggestions);
+
+// ─── 여러 줄 입력 ───
+function processMultiInput() {
+  const textarea = document.getElementById('multiInput');
+  const lines = textarea.value.split('\n');
+  let count = 0;
+  lines.forEach(line => {
+    const entry = parseLine(line);
+    if (entry) {
+      addEntry(entry);
+      count++;
+    }
+  });
+  if (count > 0) {
+    textarea.value = '';
+    showToast(count + '개 항목 추가됨');
+  } else {
+    showToast('유효한 입력이 없습니다', true);
+  }
+}
+
+// ─── 그룹핑 & 렌더 ───
+function getGrouped() {
+  const groups = [];
+  const sectionMap = {};
+  entries.forEach((e, idx) => {
+    if (!(e.section in sectionMap)) {
+      sectionMap[e.section] = groups.length;
+      groups.push({ section: e.section, items: [] });
+    }
+    groups[sectionMap[e.section]].items.push({ tc: e.tc, content: e.content, idx });
+  });
+  return groups;
+}
+
+function renderPreview() {
+  const container = document.getElementById('previewContent');
+  const countEl = document.getElementById('entryCount');
+  const clearBtn = document.getElementById('clearBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const sortBtn = document.getElementById('sortBtn');
+
+  if (entries.length === 0) {
+    container.innerHTML = '<div class="empty-state">아직 입력된 가이드가 없습니다.</div>';
+    countEl.textContent = '0개 섹션';
+    clearBtn.style.display = 'none';
+    copyBtn.style.display = 'none';
+    sortBtn.style.display = 'none';
+    return;
+  }
+
+  clearBtn.style.display = '';
+  copyBtn.style.display = '';
+  sortBtn.style.display = entries.length >= 2 ? 'inline-block' : 'none';
+  const groups = getGrouped();
+  countEl.textContent = groups.length + '개 섹션, ' + entries.length + '개 항목';
+
+  let html = '<table><thead><tr><th>#S</th><th>내용</th><th></th></tr></thead><tbody>';
+  groups.forEach(g => {
+    g.items.forEach((item, i) => {
+      html += '<tr>';
+      if (i === 0) {
+        html += '<td class="section-cell" rowspan="' + g.items.length + '">' + escapeHtml(g.section) + '</td>';
+      }
+      html += '<td class="content-cell">- ' + escapeHtml(item.tc + ' ' + item.content) + '</td>';
+      html += '<td><div class="action-btns">'
+           + '<button class="edit-btn" onclick="editEntry(' + item.idx + ')" title="수정">✎</button>'
+           + '<button class="delete-btn" onclick="deleteEntry(' + item.idx + ')" title="삭제">×</button>'
+           + '</div></td>';
+      html += '</tr>';
+    });
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  // 새 항목 추가 시 스크롤을 맨 아래로
+  const scrollArea = container.closest('.preview-scroll');
+  if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ─── 타임코드 → 초 변환 (정렬용) ───
+function tcToSeconds(tc) {
+  const parts = tc.split(':').map(Number);
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return parts[0] || 0;
+}
+
+// ─── TC순 정렬 ───
+function sortByTC() {
+  if (entries.length < 2) return;
+
+  // 섹션 등장 순서 보존
+  const sectionOrder = [];
+  entries.forEach(e => {
+    if (!sectionOrder.includes(e.section)) sectionOrder.push(e.section);
+  });
+
+  // 섹션별로 그룹핑 후 각 그룹 내부를 TC순 정렬
+  const groups = {};
+  entries.forEach(e => {
+    if (!groups[e.section]) groups[e.section] = [];
+    groups[e.section].push(e);
+  });
+
+  Object.values(groups).forEach(items => {
+    items.sort((a, b) => tcToSeconds(a.tc) - tcToSeconds(b.tc));
+  });
+
+  // 다시 flat 배열로
+  entries = [];
+  sectionOrder.forEach(sec => {
+    if (groups[sec]) entries.push(...groups[sec]);
+  });
+
+  saveState();
+  renderPreview();
+  showToast('타임코드 순으로 정렬됨');
+
+  // 정렬 완료 시각적 피드백
+  const btn = document.getElementById('sortBtn');
+  btn.classList.add('sorted');
+  setTimeout(() => btn.classList.remove('sorted'), 1500);
+}
+
+// ─── 인라인 수정 ───
+let editingIdx = -1;
+
+function editEntry(idx) {
+  editingIdx = idx;
+  const entry = entries[idx];
+  const groups = getGrouped();
+  const container = document.getElementById('previewContent');
+
+  // 해당 항목의 행을 찾아서 인라인 편집 모드로 전환
+  const rows = container.querySelectorAll('tbody tr');
+  let rowIndex = 0;
+  for (const g of groups) {
+    for (const item of g.items) {
+      if (item.idx === idx) {
+        const row = rows[rowIndex];
+        if (!row) return;
+        // 내용 셀을 편집 입력으로 교체
+        const contentCell = row.querySelector('.content-cell');
+        const actionCell = row.querySelector('.action-btns');
+        if (contentCell) {
+          // 섹션도 수정 가능하도록 (rowspan이 있는 경우 섹션 셀 포함)
+          const tcRaw = entry.tc;
+          row.classList.add('edit-row');
+          contentCell.innerHTML =
+            '<div class="edit-inputs">' +
+            '<input class="edit-section" value="' + escapeAttr(entry.section) + '" placeholder="#S" />' +
+            '<input class="edit-tc" value="' + escapeAttr(tcRaw) + '" placeholder="TC" />' +
+            '<input class="edit-content" value="' + escapeAttr(entry.content) + '" placeholder="내용" />' +
+            '</div>';
+          // 포커스를 내용 입력에
+          const contentInput = contentCell.querySelector('.edit-content');
+          contentInput.focus();
+          contentInput.selectionStart = contentInput.value.length;
+
+          // Enter로 저장, Escape로 취소
+          const inputs = contentCell.querySelectorAll('input');
+          inputs.forEach(input => {
+            input.addEventListener('keydown', function(e) {
+              if (e.key === 'Enter' && !e.isComposing) {
+                e.preventDefault();
+                saveEdit(idx);
+              } else if (e.key === 'Escape') {
+                cancelEdit();
+              }
+            });
+          });
+        }
+        if (actionCell) {
+          actionCell.innerHTML =
+            '<button class="edit-save" onclick="saveEdit(' + idx + ')" title="저장">✓</button>' +
+            '<button class="edit-cancel" onclick="cancelEdit()" title="취소">✕</button>';
+        }
+        return;
+      }
+      rowIndex++;
+    }
+  }
+}
+
+function saveEdit(idx) {
+  const container = document.getElementById('previewContent');
+  const editRow = container.querySelector('.edit-row');
+  if (!editRow) return;
+
+  let section = editRow.querySelector('.edit-section').value.trim();
+  const tc = editRow.querySelector('.edit-tc').value.trim();
+  const content = editRow.querySelector('.edit-content').value.trim();
+
+  if (!content) {
+    showToast('내용을 입력해주세요', true);
+    return;
+  }
+
+  // # 자동 추가
+  if (section && !section.startsWith('#')) section = '#' + section;
+
+  entries[idx] = {
+    section: section || entries[idx].section,
+    tc: tc ? formatTC(tc) : entries[idx].tc,
+    content: content
+  };
+
+  editingIdx = -1;
+  saveState();
+  renderPreview();
+  showToast('수정 완료');
+}
+
+function cancelEdit() {
+  editingIdx = -1;
+  renderPreview();
+}
+
+function escapeAttr(str) {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ─── 삭제 ───
+function deleteEntry(idx) {
+  entries.splice(idx, 1);
+  saveState();
+  renderPreview();
+  updateUrlStatus();
+}
+
+function clearAll() {
+  if (!confirm('전체 삭제하시겠습니까?')) return;
+  entries = [];
+  lastSection = '';
+  saveState();
+  renderPreview();
+  updateUrlStatus();
+}
+
+// ─── 클립보드 복사 (탭 구분) ───
+function copyToClipboard() {
+  const groups = getGrouped();
+  const lines = [];
+  groups.forEach(g => {
+    const contentLines = g.items.map(item => '- ' + item.tc + ' ' + item.content);
+    const contentText = contentLines.join('\n\n');
+    lines.push(g.section + '\t' + contentText);
+  });
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    showToast('클립보드에 복사됨');
+  });
+}
+
+// ─── 구글 시트 전송 ───
+async function sendToSheet() {
+  const url = document.getElementById('scriptUrl').value.trim();
+  if (!url) return;
+
+  const groups = getGrouped();
+  const payload = groups.map(g => ({
+    section: g.section,
+    content: g.items.map(item => '- ' + item.tc + ' ' + item.content).join('\n\n')
+  }));
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.textContent = '전송 중...';
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ data: payload })
+    });
+    showToast('구글 시트로 전송 완료!');
+    // 전송 후 초기화
+    entries = [];
+    lastSection = '';
+    saveState();
+    renderPreview();
+  } catch (err) {
+    showToast('전송 실패: ' + err.message, true);
+  } finally {
+    btn.textContent = '구글 시트 전송';
+    updateUrlStatus();
+  }
+}
+
+// ─── 토스트 ───
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ─── 초기화 ───
+loadState();
+</script>
+</body>
+</html>

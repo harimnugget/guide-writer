@@ -1,0 +1,2444 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIDIZ — GX & GC PRO</title>
+<link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+/* ─────────────────────────────────────────
+   CSS VARIABLES
+───────────────────────────────────────── */
+:root {
+  /* Tone: Dark Luxury + Gaming Energy */
+  --bg:         #08080F;
+  --bg-alt:     #0F0F1A;
+  --bg-card:    rgba(255,255,255,0.04);
+  --primary:    #FF4D1C;   /* 시디즈 에너지 — 레드 오렌지 */
+  --secondary:  #00D4FF;   /* GC PRO 테크 틸 */
+  --gold:       #C9A84C;   /* 럭셔리 골드 */
+  --text:       #F0EDE8;
+  --muted:      #6B6B80;
+  --line:       rgba(255,255,255,0.07);
+
+  /* Typography */
+  --font:   'Pretendard', -apple-system, sans-serif;
+  --t-xs:   clamp(0.65rem, 1vw,   0.8rem);
+  --t-sm:   clamp(0.8rem,  1.2vw, 0.95rem);
+  --t-base: clamp(0.95rem, 1.5vw, 1.15rem);
+  --t-md:   clamp(1.1rem,  2vw,   1.5rem);
+  --t-lg:   clamp(1.5rem,  3vw,   2.2rem);
+  --t-xl:   clamp(2rem,    5vw,   4rem);
+  --t-2xl:  clamp(3rem,    8vw,   6.5rem);
+  --t-3xl:  clamp(4rem,    10vw,  9rem);
+
+  --total-slides: 13;
+}
+
+/* ─────────────────────────────────────────
+   RESET & BASE
+───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+em { font-style: normal; color: var(--primary); }
+strong { font-weight: 700; }
+
+/* ─────────────────────────────────────────
+   SLIDE ENGINE
+───────────────────────────────────────── */
+#presentation {
+  position: relative;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(var(--enter-x, 60px));
+  transition:
+    opacity 0.5s cubic-bezier(0.22,1,0.36,1),
+    transform 0.5s cubic-bezier(0.22,1,0.36,1);
+  overflow: hidden;
+}
+
+.slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+}
+
+.slide.exiting {
+  opacity: 0;
+  transform: translateX(var(--exit-x, -60px));
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────
+   ENTRY ANIMATIONS
+───────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(1.8rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-2rem); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+
+.slide.active .anim-eyebrow  { animation: fadeUp  0.5s 0.05s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-headline { animation: fadeUp  0.6s 0.15s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-sub      { animation: fadeUp  0.5s 0.28s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-body     { animation: fadeUp  0.5s 0.35s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-visual   { animation: scaleIn 0.7s 0.18s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-cta      { animation: fadeUp  0.5s 0.45s both cubic-bezier(0.22,1,0.36,1); }
+
+.slide.active .anim-stagger-1 { animation: fadeUp 0.5s 0.15s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-stagger-2 { animation: fadeUp 0.5s 0.25s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-stagger-3 { animation: fadeUp 0.5s 0.35s both cubic-bezier(0.22,1,0.36,1); }
+.slide.active .anim-stagger-4 { animation: fadeUp 0.5s 0.45s both cubic-bezier(0.22,1,0.36,1); }
+
+/* ─────────────────────────────────────────
+   COMMON COMPONENTS
+───────────────────────────────────────── */
+.eyebrow {
+  display: inline-block;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 0.8rem;
+}
+
+.eyebrow-teal {
+  color: var(--secondary);
+}
+
+.section-label {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.divider-line {
+  width: 3rem;
+  height: 2px;
+  background: var(--primary);
+  margin: 1.2rem 0;
+}
+
+.divider-line-teal {
+  background: var(--secondary);
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.3em 0.8em;
+  border: 1px solid rgba(255,77,28,0.4);
+  border-radius: 2px;
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+.tag-teal {
+  border-color: rgba(0,212,255,0.4);
+  color: var(--secondary);
+}
+
+.tag-gold {
+  border-color: rgba(201,168,76,0.4);
+  color: var(--gold);
+}
+
+/* Grain overlay */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Glass card */
+.glass {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 4px;
+}
+
+/* ─────────────────────────────────────────
+   UI CHROME
+───────────────────────────────────────── */
+#ui-chrome {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0 2rem 1.2rem;
+}
+
+.progress-track {
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.4s cubic-bezier(0.22,1,0.36,1);
+}
+
+.slide-counter {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 1 — HERO FULL
+   "앉음의 새로운 기준"
+───────────────────────────────────────── */
+#slide-1 {
+  background:
+    radial-gradient(ellipse 70% 80% at 80% 50%, rgba(255,77,28,0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 60% at 10% 80%, rgba(0,212,255,0.07) 0%, transparent 60%),
+    linear-gradient(160deg, #0A0A14 0%, #08080F 100%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  align-items: center;
+  padding: 0 8vw;
+  gap: 4vw;
+}
+
+.s1-text {
+  z-index: 2;
+  padding-top: 2rem;
+}
+
+.s1-brand {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+
+.s1-headline {
+  font-size: var(--t-2xl);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+}
+
+.s1-headline em {
+  display: block;
+  color: var(--primary);
+}
+
+.s1-sub {
+  font-size: var(--t-base);
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 36ch;
+}
+
+.s1-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.s1-circle-outer {
+  position: absolute;
+  width: 55vmin;
+  height: 55vmin;
+  border-radius: 50%;
+  border: 1px solid rgba(255,77,28,0.15);
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.s1-circle-inner {
+  position: absolute;
+  width: 42vmin;
+  height: 42vmin;
+  border-radius: 50%;
+  border: 1px solid rgba(255,77,28,0.25);
+  background: radial-gradient(circle, rgba(255,77,28,0.08) 0%, transparent 70%);
+}
+
+.s1-logo-mark {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.s1-logo-s {
+  font-size: clamp(5rem, 12vw, 10rem);
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,77,28,0.5);
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.s1-logo-name {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.s1-year {
+  position: absolute;
+  bottom: 8vh;
+  right: 8vw;
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+}
+
+.s1-model-tags {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 2rem;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 2 — STAT GRID
+   브랜드 파워
+───────────────────────────────────────── */
+#slide-2 {
+  background:
+    radial-gradient(ellipse 60% 60% at 15% 20%, rgba(201,168,76,0.06) 0%, transparent 60%),
+    linear-gradient(180deg, #08080F 0%, #0A0A16 100%);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 7vh 8vw 10vh;
+  gap: 4vh;
+}
+
+.s2-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.s2-title-block {}
+
+.s2-headline {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-top: 0.5rem;
+}
+
+.s2-desc {
+  font-size: var(--t-sm);
+  font-weight: 300;
+  color: var(--muted);
+  max-width: 30ch;
+  line-height: 1.7;
+  margin-top: 1rem;
+}
+
+.s2-badge {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.s2-badge-text {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: block;
+}
+
+.s2-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5vw;
+  align-items: end;
+}
+
+.s2-stat {
+  padding: 2.5vh 2vw;
+  border-left: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+
+.s2-stat::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--primary) 0%, transparent 100%);
+  opacity: 0.3;
+}
+
+.s2-num {
+  display: block;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.s2-num em {
+  font-size: 0.55em;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  vertical-align: super;
+}
+
+.s2-label {
+  display: block;
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  margin-top: 0.6rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.s2-stat.highlight .s2-num {
+  color: var(--primary);
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 3 — DIAGONAL SPLIT (GX 소개)
+───────────────────────────────────────── */
+#slide-3 {
+  display: grid;
+  grid-template-columns: 60fr 40fr;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.s3-left {
+  position: relative;
+  padding: 8vh 6vw 10vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background:
+    radial-gradient(ellipse 80% 60% at 0% 80%, rgba(0,212,255,0.08) 0%, transparent 60%),
+    linear-gradient(135deg, #0A0A14 0%, #08080F 100%);
+  clip-path: polygon(0 0, 95% 0, 100% 100%, 0 100%);
+  z-index: 2;
+}
+
+.s3-left::before {
+  content: 'GX';
+  position: absolute;
+  top: 6vh;
+  right: -2vw;
+  font-size: clamp(6rem, 15vw, 13rem);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(0,212,255,0.12);
+  pointer-events: none;
+  z-index: 0;
+  line-height: 1;
+}
+
+.s3-content { position: relative; z-index: 1; }
+
+.s3-badge {
+  display: inline-block;
+  padding: 0.35em 1em;
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 2px;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--secondary);
+  margin-bottom: 1.5rem;
+}
+
+.s3-headline {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  color: var(--text);
+  margin-bottom: 1.2rem;
+}
+
+.s3-tagline {
+  font-size: var(--t-md);
+  font-weight: 700;
+  color: var(--secondary);
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+.s3-body {
+  font-size: var(--t-sm);
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 42ch;
+  margin-bottom: 2rem;
+}
+
+.s3-price {
+  font-size: var(--t-base);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.s3-price span {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+}
+
+.s3-right {
+  position: relative;
+  background:
+    radial-gradient(ellipse 80% 80% at 50% 50%, rgba(0,212,255,0.06) 0%, transparent 70%),
+    linear-gradient(180deg, #08080F 0%, #050508 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.s3-chair-visual {
+  position: relative;
+  width: 80%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* CSS Chair Art — GX (mesh, light) */
+.chair-gx {
+  position: relative;
+  width: 160px;
+  height: 220px;
+}
+
+.chair-gx .back {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 145px;
+  border: 2px solid rgba(0,212,255,0.5);
+  border-radius: 8px 8px 0 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 8px,
+    rgba(0,212,255,0.08) 8px,
+    rgba(0,212,255,0.08) 9px
+  ),
+  repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 8px,
+    rgba(0,212,255,0.08) 8px,
+    rgba(0,212,255,0.08) 9px
+  );
+  box-shadow: 0 0 30px rgba(0,212,255,0.1);
+}
+
+.chair-gx .seat {
+  position: absolute;
+  top: 140px; left: 50%;
+  transform: translateX(-50%);
+  width: 130px;
+  height: 30px;
+  background: rgba(0,212,255,0.15);
+  border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 3px;
+}
+
+.chair-gx .leg-l,
+.chair-gx .leg-r {
+  position: absolute;
+  top: 165px;
+  width: 3px;
+  height: 50px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+}
+.chair-gx .leg-l { left: 30px; transform: rotate(-5deg); }
+.chair-gx .leg-r { right: 30px; transform: rotate(5deg); }
+
+.chair-gx .base {
+  position: absolute;
+  top: 207px; left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 6px;
+  background: rgba(0,212,255,0.2);
+  border-radius: 3px;
+}
+
+.chair-gx .headrest {
+  position: absolute;
+  top: -18px; left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 20px;
+  background: rgba(0,212,255,0.15);
+  border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 10px 10px 0 0;
+}
+
+.s3-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(0,212,255,0.06) 0%, transparent 70%);
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 4 — ICON FEATURE (GX 4대 특징)
+───────────────────────────────────────── */
+#slide-4 {
+  background:
+    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(0,212,255,0.05) 0%, transparent 60%),
+    linear-gradient(200deg, #0A0A16 0%, #08080F 100%);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 7vh 8vw 10vh;
+  gap: 5vh;
+}
+
+.s4-header {}
+
+.s4-headline {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  margin-top: 0.5rem;
+}
+
+.s4-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2vw;
+  align-items: start;
+}
+
+.s4-card {
+  padding: 2.5vh 2vw;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--secondary);
+  position: relative;
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.s4-card:hover {
+  border-color: rgba(0,212,255,0.4);
+  transform: translateY(-4px);
+}
+
+.s4-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 1.2rem;
+  color: var(--secondary);
+}
+
+.s4-feature-name {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.01em;
+}
+
+.s4-feature-desc {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.s4-feature-highlight {
+  display: block;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--secondary);
+  margin-top: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 5 — DIAGONAL SPLIT (GC PRO)
+───────────────────────────────────────── */
+#slide-5 {
+  display: grid;
+  grid-template-columns: 40fr 60fr;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.s5-left {
+  position: relative;
+  background:
+    radial-gradient(ellipse 80% 80% at 50% 50%, rgba(255,77,28,0.05) 0%, transparent 70%),
+    linear-gradient(180deg, #050508 0%, #080810 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.s5-left::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 40px,
+    rgba(255,77,28,0.02) 40px,
+    rgba(255,77,28,0.02) 41px
+  );
+}
+
+.chair-gcpro {
+  position: relative;
+  z-index: 2;
+  width: 150px;
+  height: 230px;
+}
+
+.chair-gcpro .back {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 150px;
+  border: 2px solid rgba(255,77,28,0.6);
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, rgba(255,77,28,0.05) 0%, rgba(255,77,28,0.02) 100%);
+  box-shadow:
+    0 0 20px rgba(255,77,28,0.15),
+    inset 0 0 20px rgba(255,77,28,0.05);
+}
+
+.chair-gcpro .led-strip {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), rgba(255,77,28,0.3), var(--primary));
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.chair-gcpro .seat {
+  position: absolute;
+  top: 143px; left: 50%;
+  transform: translateX(-50%);
+  width: 132px;
+  height: 32px;
+  background: rgba(255,77,28,0.12);
+  border: 1px solid rgba(255,77,28,0.3);
+  border-radius: 3px;
+}
+
+.chair-gcpro .wing-l,
+.chair-gcpro .wing-r {
+  position: absolute;
+  top: 10px;
+  width: 14px;
+  height: 50px;
+  background: rgba(255,77,28,0.2);
+  border: 1px solid rgba(255,77,28,0.3);
+}
+.chair-gcpro .wing-l { left: -10px; border-radius: 3px 0 0 3px; }
+.chair-gcpro .wing-r { right: -10px; border-radius: 0 3px 3px 0; }
+
+.chair-gcpro .arm-l,
+.chair-gcpro .arm-r {
+  position: absolute;
+  top: 155px;
+  width: 18px;
+  height: 35px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 3px;
+}
+.chair-gcpro .arm-l { left: 5px; }
+.chair-gcpro .arm-r { right: 5px; }
+
+.chair-gcpro .leg-l,
+.chair-gcpro .leg-r {
+  position: absolute;
+  top: 172px;
+  width: 3px;
+  height: 50px;
+  background: rgba(255,255,255,0.15);
+}
+.chair-gcpro .leg-l { left: 32px; transform: rotate(-4deg); }
+.chair-gcpro .leg-r { right: 32px; transform: rotate(4deg); }
+
+.chair-gcpro .base {
+  position: absolute;
+  top: 214px; left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 6px;
+  background: rgba(255,77,28,0.25);
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(255,77,28,0.2);
+}
+
+.chair-gcpro .headrest {
+  position: absolute;
+  top: -22px; left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 24px;
+  background: rgba(255,77,28,0.1);
+  border: 1px solid rgba(255,77,28,0.4);
+  border-radius: 12px 12px 0 0;
+}
+
+.s5-right {
+  position: relative;
+  padding: 8vh 8vw 10vh 6vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background:
+    radial-gradient(ellipse 80% 60% at 100% 0%, rgba(255,77,28,0.1) 0%, transparent 60%),
+    linear-gradient(135deg, #0A0A14 0%, #08080F 100%);
+  clip-path: polygon(5% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.s5-right::before {
+  content: 'PRO';
+  position: absolute;
+  top: 5vh;
+  left: 4vw;
+  font-size: clamp(5rem, 13vw, 11rem);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,77,28,0.1);
+  pointer-events: none;
+  z-index: 0;
+  line-height: 1;
+}
+
+.s5-content { position: relative; z-index: 1; }
+
+.s5-badge {
+  display: inline-block;
+  padding: 0.35em 1em;
+  background: rgba(255,77,28,0.1);
+  border: 1px solid rgba(255,77,28,0.3);
+  border-radius: 2px;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+}
+
+.s5-headline {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  color: var(--text);
+  margin-bottom: 1.2rem;
+}
+
+.s5-tagline {
+  font-size: var(--t-md);
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+.s5-body {
+  font-size: var(--t-sm);
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 42ch;
+  margin-bottom: 2rem;
+}
+
+.s5-meta {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.s5-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.s5-meta-val {
+  font-size: var(--t-md);
+  font-weight: 900;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+
+.s5-meta-key {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 6 — FEATURE SHOWCASE (GC PRO 3대 혁신)
+───────────────────────────────────────── */
+#slide-6 {
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 90%, rgba(255,77,28,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 90% 10%, rgba(255,77,28,0.05) 0%, transparent 60%),
+    linear-gradient(160deg, #08080F 0%, #0A0A16 100%);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 7vh 8vw 10vh;
+  gap: 5vh;
+}
+
+.s6-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.s6-headline {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  margin-top: 0.5rem;
+}
+
+.s6-award {
+  text-align: right;
+  border-right: 2px solid var(--primary);
+  padding-right: 1.2rem;
+}
+
+.s6-award-name {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--primary);
+  display: block;
+}
+
+.s6-award-year {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  display: block;
+}
+
+.s6-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2vw;
+}
+
+.s6-feature {
+  padding: 3vh 2.5vw;
+  border: 1px solid var(--line);
+  border-bottom: 2px solid var(--primary);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, border-color 0.3s;
+}
+
+.s6-feature:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary);
+}
+
+.s6-feature::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,77,28,0.04) 0%, transparent 100%);
+}
+
+.s6-num {
+  font-size: clamp(4rem, 8vw, 7rem);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,77,28,0.2);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.s6-feature-title {
+  font-size: var(--t-md);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.8rem;
+  position: relative;
+}
+
+.s6-feature-sub {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.6rem;
+  position: relative;
+  text-transform: uppercase;
+}
+
+.s6-feature-desc {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.8;
+  position: relative;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 7 — AWARD WALL
+───────────────────────────────────────── */
+#slide-7 {
+  background:
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 70%),
+    linear-gradient(180deg, #080810 0%, #08080F 100%);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 7vh 8vw 10vh;
+  gap: 4vh;
+  overflow: hidden;
+}
+
+.s7-header {}
+
+.s7-headline {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  margin-top: 0.5rem;
+}
+
+.s7-awards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr 1fr;
+  gap: 1.5vw;
+}
+
+.s7-award-card {
+  padding: 2.5vh 2vw;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s;
+}
+
+.s7-award-card:hover { transform: scale(1.02); }
+
+.s7-award-card.featured {
+  grid-column: 1 / 3;
+  border-color: rgba(201,168,76,0.3);
+  background: linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 100%);
+}
+
+.s7-award-icon {
+  font-size: 1.8rem;
+  margin-bottom: 0.8rem;
+  display: block;
+}
+
+.s7-award-title {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+  letter-spacing: -0.01em;
+}
+
+.s7-award-detail {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.s7-award-card.featured .s7-award-title {
+  font-size: var(--t-md);
+  color: var(--gold);
+}
+
+.s7-corner-badge {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 8 — VERSUS
+───────────────────────────────────────── */
+#slide-8 {
+  background:
+    radial-gradient(ellipse 40% 80% at 20% 50%, rgba(0,212,255,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 80% at 80% 50%, rgba(255,77,28,0.05) 0%, transparent 60%),
+    linear-gradient(180deg, #080810 0%, #08080F 100%);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 6vh 6vw 10vh;
+  gap: 3vh;
+}
+
+.s8-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.s8-vs {
+  font-size: var(--t-2xl);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.15);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.s8-sub {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  max-width: 30ch;
+  line-height: 1.7;
+}
+
+.s8-table {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0;
+  align-items: stretch;
+}
+
+.s8-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.s8-col-header {
+  padding: 1.2vh 2vw 1.5vh;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.s8-model-name {
+  font-size: var(--t-lg);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.s8-col-a .s8-model-name { color: var(--secondary); }
+.s8-col-b .s8-model-name { color: var(--primary); }
+
+.s8-row {
+  display: flex;
+  align-items: center;
+  padding: 1.2vh 2vw;
+  border-top: 1px solid var(--line);
+  gap: 0.8rem;
+  min-height: 4rem;
+}
+
+.s8-col-a .s8-row { justify-content: flex-end; text-align: right; }
+.s8-col-b .s8-row { justify-content: flex-start; text-align: left; }
+
+.s8-row-val {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.s8-row-val.highlight { color: var(--secondary); }
+.s8-col-b .s8-row-val.highlight { color: var(--primary); }
+
+.s8-row-note {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  display: block;
+}
+
+.s8-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding-top: 4.5rem;
+}
+
+.s8-divider-label {
+  padding: 1.2vh 0;
+  border-top: 1px solid var(--line);
+  width: 100%;
+  text-align: center;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 9 — PRICE RANGE
+───────────────────────────────────────── */
+#slide-9 {
+  background:
+    linear-gradient(135deg, #08080F 0%, #0C0C18 100%);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 7vh 8vw 10vh;
+  gap: 6vh;
+}
+
+.s9-header {}
+
+.s9-headline {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  margin-top: 0.5rem;
+}
+
+.s9-chart {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4vh;
+}
+
+.s9-product {
+  display: grid;
+  grid-template-columns: 12ch auto 1fr auto;
+  align-items: center;
+  gap: 2vw;
+}
+
+.s9-product-name {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.s9-track {
+  position: relative;
+  height: 2.5rem;
+  grid-column: 3;
+}
+
+.s9-bar-bg {
+  position: absolute;
+  inset: 50% 0 auto 0;
+  transform: translateY(-50%);
+  height: 4px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 2px;
+}
+
+.s9-bar {
+  position: absolute;
+  inset: 50% auto auto 0;
+  transform: translateY(-50%);
+  height: 4px;
+  border-radius: 2px;
+  transition: width 0.8s cubic-bezier(0.22,1,0.36,1);
+}
+
+.s9-bar-gx { background: linear-gradient(90deg, rgba(0,212,255,0.3), var(--secondary)); width: var(--w, 50%); }
+.s9-bar-gcpro { background: linear-gradient(90deg, rgba(255,77,28,0.3), var(--primary)); width: var(--w, 80%); }
+
+.s9-dot {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  right: 0;
+}
+.s9-bar-gx + .s9-dot { background: var(--secondary); box-shadow: 0 0 10px var(--secondary); right: auto; left: var(--w, 50%); margin-left: -5px; }
+
+.s9-price-val {
+  font-size: var(--t-lg);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+.s9-price-gx { color: var(--secondary); }
+.s9-price-gcpro { color: var(--primary); }
+
+.s9-price-range {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.s9-note {
+  font-size: var(--t-sm);
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.7;
+  border-top: 1px solid var(--line);
+  padding-top: 2vh;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 10 — PERSONA
+───────────────────────────────────────── */
+#slide-10 {
+  background:
+    radial-gradient(ellipse 60% 50% at 30% 50%, rgba(0,212,255,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 70% 50%, rgba(255,77,28,0.04) 0%, transparent 60%),
+    var(--bg);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 6vh 8vw 10vh;
+  gap: 4vh;
+}
+
+.s10-header {}
+
+.s10-headline {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  margin-top: 0.5rem;
+}
+
+.s10-personas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4vw;
+}
+
+.s10-persona {
+  padding: 3vh 2.5vw;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+
+.s10-persona::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.s10-persona.gx::before { background: var(--secondary); }
+.s10-persona.gcpro::before { background: var(--primary); }
+
+.s10-persona-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2vh;
+  padding-bottom: 2vh;
+  border-bottom: 1px solid var(--line);
+}
+
+.s10-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+.gx .s10-avatar { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3); }
+.gcpro .s10-avatar { background: rgba(255,77,28,0.1); border: 1px solid rgba(255,77,28,0.3); }
+
+.s10-persona-name {
+  font-size: var(--t-md);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.s10-persona-role {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+.s10-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5vh;
+}
+
+.s10-tag {
+  padding: 0.25em 0.7em;
+  border-radius: 2px;
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+.gx .s10-tag { background: rgba(0,212,255,0.1); color: var(--secondary); }
+.gcpro .s10-tag { background: rgba(255,77,28,0.1); color: var(--primary); }
+
+.s10-needs {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.s10-needs li {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.s10-needs li::before {
+  content: '→';
+  flex-shrink: 0;
+  font-weight: 400;
+}
+.gx .s10-needs li::before { color: var(--secondary); }
+.gcpro .s10-needs li::before { color: var(--primary); }
+
+/* ─────────────────────────────────────────
+   SLIDE 11 — QUOTE
+───────────────────────────────────────── */
+#slide-11 {
+  background:
+    radial-gradient(ellipse 60% 80% at 60% 40%, rgba(255,77,28,0.07) 0%, transparent 60%),
+    linear-gradient(200deg, #09090F 0%, #08080F 100%);
+  display: grid;
+  grid-template-columns: 55fr 45fr;
+  align-items: center;
+  padding: 0 8vw;
+  gap: 6vw;
+}
+
+.s11-left {}
+
+.s11-quote-mark {
+  font-size: clamp(4rem, 8vw, 7rem);
+  font-weight: 900;
+  color: var(--primary);
+  opacity: 0.4;
+  line-height: 0.8;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.s11-quote-text {
+  font-size: var(--t-md);
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.7;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.5rem;
+}
+
+.s11-cite {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.s11-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5vh;
+}
+
+.s11-rating-card {
+  padding: 1.8vh 2vw;
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: transform 0.3s;
+}
+
+.s11-rating-card:hover { transform: translateX(4px); }
+
+.s11-rating-val {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 4rem;
+  text-align: center;
+}
+
+.s11-rating-card.excellent .s11-rating-val { color: var(--primary); }
+.s11-rating-card.great .s11-rating-val { color: var(--secondary); }
+.s11-rating-card.good .s11-rating-val { color: var(--gold); }
+
+.s11-rating-info {}
+
+.s11-rating-cat {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--text);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.s11-rating-source {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 12 — BRAND STORY
+───────────────────────────────────────── */
+#slide-12 {
+  background:
+    radial-gradient(ellipse 70% 60% at 0% 50%, rgba(201,168,76,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 100% 80%, rgba(255,77,28,0.05) 0%, transparent 60%),
+    linear-gradient(160deg, #080810 0%, #08080F 100%);
+  display: grid;
+  grid-template-columns: 55fr 45fr;
+  align-items: center;
+  padding: 0 8vw;
+  gap: 6vw;
+}
+
+.s12-left {}
+
+.s12-headline {
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  margin-bottom: 0.5rem;
+}
+
+.s12-sub {
+  font-size: var(--t-md);
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: -0.01em;
+  margin-bottom: 2rem;
+  line-height: 1.4;
+}
+
+.s12-body {
+  font-size: var(--t-base);
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.9;
+  max-width: 48ch;
+}
+
+.s12-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.s12-right {
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+}
+
+.s12-pillar {
+  padding: 2vh 2vw;
+  border-left: 2px solid var(--line);
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.s12-pillar:hover {
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.s12-pillar:first-child { border-color: var(--gold); }
+.s12-pillar:nth-child(2) { border-color: rgba(255,77,28,0.4); }
+.s12-pillar:last-child { border-color: var(--secondary); }
+
+.s12-pillar-name {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+}
+
+.s12-pillar-desc {
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ─────────────────────────────────────────
+   SLIDE 13 — CTA CLOSING
+───────────────────────────────────────── */
+#slide-13 {
+  background:
+    radial-gradient(ellipse 80% 80% at 50% 50%, rgba(255,77,28,0.1) 0%, rgba(255,77,28,0.02) 50%, transparent 80%),
+    radial-gradient(ellipse 40% 40% at 20% 20%, rgba(201,168,76,0.05) 0%, transparent 60%),
+    linear-gradient(180deg, #08080F 0%, #050508 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8vw;
+  position: relative;
+}
+
+.s13-ring-outer {
+  position: absolute;
+  width: 70vmin;
+  height: 70vmin;
+  border-radius: 50%;
+  border: 1px solid rgba(255,77,28,0.08);
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+.s13-ring-mid {
+  position: absolute;
+  width: 50vmin;
+  height: 50vmin;
+  border-radius: 50%;
+  border: 1px solid rgba(255,77,28,0.12);
+}
+
+.s13-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.s13-label {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.s13-headline {
+  font-size: var(--t-2xl);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  color: var(--text);
+}
+
+.s13-headline em {
+  display: block;
+  color: var(--primary);
+  font-size: 0.85em;
+}
+
+.s13-sub {
+  font-size: var(--t-base);
+  font-weight: 300;
+  color: var(--muted);
+  max-width: 40ch;
+  line-height: 1.7;
+}
+
+.s13-cta-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.s13-btn-primary {
+  display: inline-block;
+  padding: 0.9em 2.4em;
+  background: var(--primary);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.s13-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255,77,28,0.3);
+}
+
+.s13-btn-secondary {
+  display: inline-block;
+  padding: 0.9em 2.4em;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--t-sm);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.s13-btn-secondary:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.s13-footer {
+  position: absolute;
+  bottom: 3vh;
+  font-size: var(--t-xs);
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+/* ─────────────────────────────────────────
+   PRINT
+───────────────────────────────────────── */
+@media print {
+  #ui-chrome { display: none !important; }
+  .slide {
+    position: relative !important;
+    display: block !important;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: all !important;
+    page-break-after: always;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="presentation">
+
+  <!-- SLIDE 1 — HERO -->
+  <section class="slide grain" id="slide-1">
+    <div class="s1-text">
+      <p class="s1-brand anim-eyebrow">Sidiz — Since 1994</p>
+      <h1 class="s1-headline anim-headline">
+        앉음의<br>새로운<br><em>기준</em>
+      </h1>
+      <p class="s1-sub anim-body">국내 의자 판매 1위 브랜드 시디즈,<br>두 의자가 재정의하는 퍼포먼스 착석.</p>
+      <div class="s1-model-tags anim-cta">
+        <span class="tag-teal tag">GX</span>
+        <span class="tag">GC PRO</span>
+      </div>
+    </div>
+    <div class="s1-visual anim-visual">
+      <div class="s1-circle-outer"></div>
+      <div class="s1-circle-inner"></div>
+      <div class="s1-logo-mark">
+        <span class="s1-logo-s">S</span>
+        <span class="s1-logo-name">IDIZ</span>
+      </div>
+    </div>
+    <span class="s1-year section-label">GX · GC PRO Presentation 2025</span>
+  </section>
+
+  <!-- SLIDE 2 — BRAND POWER -->
+  <section class="slide grain" id="slide-2">
+    <div class="s2-header">
+      <div class="s2-title-block">
+        <span class="eyebrow anim-eyebrow">브랜드 파워</span>
+        <h2 class="s2-headline anim-headline">숫자로 증명된<br><em>30년</em></h2>
+        <p class="s2-desc anim-body">1994년 창립 이후, 시디즈는 품질로 시장을 정의해 왔습니다. 세계가 인정한 대한민국 의자의 자존심.</p>
+      </div>
+      <div class="s2-badge anim-visual">
+        <span class="s2-badge-text">Kospi</span>
+        <span class="s2-badge-text">Listed</span>
+        <div class="divider-line" style="margin: 0.8rem auto; background: var(--gold);"></div>
+        <span class="s2-badge-text" style="color: var(--muted); font-weight: 300; font-size: var(--t-xs);">Fursys Group</span>
+      </div>
+    </div>
+    <div class="s2-grid">
+      <div class="s2-stat anim-stagger-1">
+        <span class="s2-num">30<em>yr</em></span>
+        <span class="s2-label">설립 이후<br>지속된 혁신</span>
+      </div>
+      <div class="s2-stat highlight anim-stagger-2">
+        <span class="s2-num">#1</span>
+        <span class="s2-label">국내 의자<br>판매 1위</span>
+      </div>
+      <div class="s2-stat anim-stagger-3">
+        <span class="s2-num">60<em>개국</em></span>
+        <span class="s2-label">글로벌<br>수출망</span>
+      </div>
+      <div class="s2-stat anim-stagger-4">
+        <span class="s2-num">150<em>만</em></span>
+        <span class="s2-label">연간 생산량<br>(개)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 — GX INTRO -->
+  <section class="slide grain" id="slide-3">
+    <div class="s3-left">
+      <div class="s3-content">
+        <span class="s3-badge anim-eyebrow">2024.09 출시</span>
+        <h2 class="s3-headline anim-headline">시디즈<br>GX</h2>
+        <p class="s3-tagline anim-sub">일상과 게임의 경계를<br>허물다</p>
+        <p class="s3-body anim-body">GC PRO의 게이밍 DNA를 계승하면서, 재택근무·캐주얼 게이밍·학습까지 모든 상황에 최적화된 퍼포먼스 체어. 넓은 좌판과 메쉬 등판으로 장시간 착석의 부담을 낮춥니다.</p>
+        <div class="s3-price anim-cta">
+          39만원 ~ 52만원 <span>/ 기본 구성 기준</span>
+        </div>
+      </div>
+    </div>
+    <div class="s3-right">
+      <div class="s3-glow"></div>
+      <div class="s3-chair-visual anim-visual">
+        <div class="chair-gx">
+          <div class="headrest"></div>
+          <div class="back"></div>
+          <div class="seat"></div>
+          <div class="leg-l"></div>
+          <div class="leg-r"></div>
+          <div class="base"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 — GX FEATURES -->
+  <section class="slide grain" id="slide-4">
+    <div class="s4-header">
+      <span class="eyebrow eyebrow-teal anim-eyebrow">GX — 4대 특징</span>
+      <h2 class="s4-headline anim-headline">더 넓게, 더 시원하게,<br><em>더 오래</em></h2>
+    </div>
+    <div class="s4-grid">
+      <div class="s4-card anim-stagger-1">
+        <svg class="s4-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M24 4 L44 14 L44 34 L24 44 L4 34 L4 14 Z"/>
+          <path d="M4 14 L24 24 L44 14"/>
+          <line x1="24" y1="24" x2="24" y2="44"/>
+        </svg>
+        <h3 class="s4-feature-name">메쉬 등판</h3>
+        <p class="s4-feature-desc">3D 입체 메쉬 소재로 체열 분산, 장시간 착석에도 쾌적한 통기성 확보.</p>
+        <span class="s4-feature-highlight">↑ 통풍 극대화</span>
+      </div>
+      <div class="s4-card anim-stagger-2">
+        <svg class="s4-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="4" y="20" width="40" height="12" rx="2"/>
+          <line x1="4" y1="26" x2="44" y2="26"/>
+          <path d="M12 20 L12 32"/>
+          <path d="M36 20 L36 32"/>
+        </svg>
+        <h3 class="s4-feature-name">넓은 좌판</h3>
+        <p class="s4-feature-desc">가로 52cm 초광폭 좌판. GC PRO 대비 4cm 더 넓어 체형 제한 없이 편안하게.</p>
+        <span class="s4-feature-highlight">W 52cm — 업계 최광폭</span>
+      </div>
+      <div class="s4-card anim-stagger-3">
+        <svg class="s4-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="24" cy="24" r="18"/>
+          <path d="M24 12 L24 24 L32 32"/>
+          <circle cx="24" cy="24" r="3" fill="currentColor"/>
+        </svg>
+        <h3 class="s4-feature-name">워크·게임 겸용</h3>
+        <p class="s4-feature-desc">재택근무, 학습, 캐주얼 게이밍 모두 커버. 공간을 가리지 않는 멀티 포지셔닝.</p>
+        <span class="s4-feature-highlight">All-Day Performance</span>
+      </div>
+      <div class="s4-card anim-stagger-4">
+        <svg class="s4-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M24 6 C14 6, 6 14, 6 24 C6 34, 14 42, 24 42"/>
+          <path d="M24 6 C34 6, 42 14, 42 24 C42 34, 34 42, 24 42"/>
+          <ellipse cx="24" cy="24" rx="10" ry="18"/>
+          <line x1="6" y1="24" x2="42" y2="24"/>
+        </svg>
+        <h3 class="s4-feature-name">카멜레온 컬러</h3>
+        <p class="s4-feature-desc">각도와 빛에 따라 색이 변하는 카멜레온 그레이·블랙. 배틀그라운드 모바일 컬래버레이션.</p>
+        <span class="s4-feature-highlight">BGMI Collab Edition</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5 — GC PRO INTRO -->
+  <section class="slide grain" id="slide-5">
+    <div class="s5-left">
+      <div class="chair-gcpro anim-visual">
+        <div class="headrest"></div>
+        <div class="back">
+          <div class="led-strip"></div>
+        </div>
+        <div class="wing-l"></div>
+        <div class="wing-r"></div>
+        <div class="seat"></div>
+        <div class="arm-l"></div>
+        <div class="arm-r"></div>
+        <div class="leg-l"></div>
+        <div class="leg-r"></div>
+        <div class="base"></div>
+      </div>
+    </div>
+    <div class="s5-right">
+      <div class="s5-content">
+        <span class="s5-badge anim-eyebrow">2023 출시 — 89만원</span>
+        <h2 class="s5-headline anim-headline">시디즈<br>GC PRO</h2>
+        <p class="s5-tagline anim-sub">프로 40인이<br>4년을 바친 의자</p>
+        <p class="s5-body anim-body">젠지(Gen.G) e스포츠 프로 40명과 4년간의 협업으로 탄생. 쿨링 시트, LED, 3방향 팔걸이 — 타협 없는 퍼포먼스. 2023 항저우 아시안게임 국가대표 공식 의자.</p>
+        <div class="s5-meta anim-cta">
+          <div class="s5-meta-item">
+            <span class="s5-meta-val">4년</span>
+            <span class="s5-meta-key">GenG 협업 기간</span>
+          </div>
+          <div class="s5-meta-item">
+            <span class="s5-meta-val">40명</span>
+            <span class="s5-meta-key">참여 프로 선수</span>
+          </div>
+          <div class="s5-meta-item">
+            <span class="s5-meta-val">IDEA</span>
+            <span class="s5-meta-key">2023 디자인 어워드</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6 — GC PRO FEATURES -->
+  <section class="slide grain" id="slide-6">
+    <div class="s6-header">
+      <div>
+        <span class="eyebrow anim-eyebrow">GC PRO — 3대 혁신</span>
+        <h2 class="s6-headline anim-headline">프로를 위한<br><em>기술</em></h2>
+      </div>
+      <div class="s6-award anim-visual">
+        <span class="s6-award-name">IDEA Award</span>
+        <span class="s6-award-year">2023 본상 수상</span>
+      </div>
+    </div>
+    <div class="s6-features">
+      <div class="s6-feature anim-stagger-1">
+        <div class="s6-num">01</div>
+        <h3 class="s6-feature-title">쿨링 시트</h3>
+        <span class="s6-feature-sub">3단계 터치 조절</span>
+        <p class="s6-feature-desc">자동차 카시트 기술에서 가져온 쿨링 시스템. 좌판 내장 팬이 체온을 조절해 장시간 게임에도 집중력을 유지합니다.</p>
+      </div>
+      <div class="s6-feature anim-stagger-2">
+        <div class="s6-num">02</div>
+        <h3 class="s6-feature-title">스타 라이트 LED</h3>
+        <span class="s6-feature-sub">4가지 색상 모드</span>
+        <p class="s6-feature-desc">등판 하단 LED 조명으로 분위기를 연출. 단색, 색 변환, 호흡, 오로라 4가지 모드로 세팅 자유도를 높였습니다.</p>
+      </div>
+      <div class="s6-feature anim-stagger-3">
+        <div class="s6-num">03</div>
+        <h3 class="s6-feature-title">3방향 팔걸이</h3>
+        <span class="s6-feature-sub">높낮이 · 좌우 · 앞뒤</span>
+        <p class="s6-feature-desc">높낮이·좌우 이동·전후 슬라이딩 3축 조절. 어떤 체형, 어떤 게임 자세에서도 완벽한 팔 지지를 실현합니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7 — AWARD WALL -->
+  <section class="slide grain" id="slide-7">
+    <div class="s7-header">
+      <span class="eyebrow anim-eyebrow">수상 · 공인</span>
+      <h2 class="s7-headline anim-headline">세계가 인정한<br><em>성과</em></h2>
+    </div>
+    <div class="s7-awards">
+      <div class="s7-award-card featured anim-stagger-1">
+        <span class="s7-corner-badge">Featured</span>
+        <span class="s7-award-icon">🏆</span>
+        <h3 class="s7-award-title">아시안게임 국가대표 공식 의자</h3>
+        <p class="s7-award-detail">2023 항저우 아시안게임 e스포츠 종목 한국 국가대표팀 공식 착석 의자로 채택. 최고의 압박 상황에서 검증된 퍼포먼스.</p>
+      </div>
+      <div class="s7-award-card anim-stagger-2">
+        <span class="s7-award-icon">🎯</span>
+        <h3 class="s7-award-title">IDEA 2023</h3>
+        <p class="s7-award-detail">GC PRO, 미국 산업디자인협회 IDEA 어워드 본상 수상</p>
+      </div>
+      <div class="s7-award-card anim-stagger-3">
+        <span class="s7-award-icon">🔴</span>
+        <h3 class="s7-award-title">Red Dot Design</h3>
+        <p class="s7-award-detail">세계 3대 디자인 어워드 레드닷 수상 다수</p>
+      </div>
+      <div class="s7-award-card anim-stagger-3">
+        <span class="s7-award-icon">✦</span>
+        <h3 class="s7-award-title">iF Design Award</h3>
+        <p class="s7-award-detail">독일 iF 디자인 어워드 — 인체공학·심미성 동시 인정</p>
+      </div>
+      <div class="s7-award-card anim-stagger-4">
+        <span class="s7-award-icon">⚡</span>
+        <h3 class="s7-award-title">Tottenham Hotspur 파트너</h3>
+        <p class="s7-award-detail">손흥민 소속팀 토트넘 홋스퍼 글로벌 공식 파트너 — 스포츠 성과의 파트너로 공인</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8 — VERSUS -->
+  <section class="slide grain" id="slide-8">
+    <div class="s8-header">
+      <h2 class="s8-vs anim-headline">VS</h2>
+      <div>
+        <span class="eyebrow anim-eyebrow">직접 비교</span>
+        <p class="s8-sub anim-body">같은 DNA, 다른 포지셔닝. GX와 GC PRO 중 당신의 의자를 찾아보세요.</p>
+      </div>
+    </div>
+    <div class="s8-table">
+      <div class="s8-col s8-col-a anim-stagger-1">
+        <div class="s8-col-header">
+          <span class="s8-model-name">GX</span>
+          <span class="tag-teal tag" style="font-size: var(--t-xs);">캐주얼</span>
+        </div>
+        <div class="s8-row"><span class="s8-row-val highlight">39 ~ 52만원</span></div>
+        <div class="s8-row"><span class="s8-row-val">2024년 9월</span></div>
+        <div class="s8-row"><span class="s8-row-val highlight">메쉬 등판<span class="s8-row-note">통기성 극대화</span></span></div>
+        <div class="s8-row"><span class="s8-row-val highlight">52cm (더 넓음)</span></div>
+        <div class="s8-row"><span class="s8-row-val">— (없음)</span></div>
+        <div class="s8-row"><span class="s8-row-val">— (없음)</span></div>
+        <div class="s8-row"><span class="s8-row-val">기본형 팔걸이</span></div>
+        <div class="s8-row"><span class="s8-row-val highlight">90도 가능</span></div>
+        <div class="s8-row"><span class="s8-row-val">카멜레온 컬러<span class="s8-row-note">BGMI 컬래버</span></span></div>
+      </div>
+      <div class="s8-divider">
+        <div style="height: 4.5rem;"></div>
+        <div class="s8-divider-label">가격</div>
+        <div class="s8-divider-label">출시</div>
+        <div class="s8-divider-label">등판</div>
+        <div class="s8-divider-label">좌판 폭</div>
+        <div class="s8-divider-label">쿨링 시트</div>
+        <div class="s8-divider-label">LED</div>
+        <div class="s8-divider-label">팔걸이</div>
+        <div class="s8-divider-label">틸팅 고정</div>
+        <div class="s8-divider-label">색상</div>
+      </div>
+      <div class="s8-col s8-col-b anim-stagger-2">
+        <div class="s8-col-header">
+          <span class="s8-model-name">GC PRO</span>
+          <span class="tag" style="font-size: var(--t-xs);">프로</span>
+        </div>
+        <div class="s8-row"><span class="s8-row-val highlight">89만원</span></div>
+        <div class="s8-row"><span class="s8-row-val">2023년</span></div>
+        <div class="s8-row"><span class="s8-row-val">폼 패딩 등판<span class="s8-row-note">지지력 중심</span></span></div>
+        <div class="s8-row"><span class="s8-row-val">48cm</span></div>
+        <div class="s8-row"><span class="s8-row-val highlight">3단계 조절<span class="s8-row-note">자동차 카시트 기술</span></span></div>
+        <div class="s8-row"><span class="s8-row-val highlight">스타 라이트 4모드</span></div>
+        <div class="s8-row"><span class="s8-row-val highlight">3방향 (높낮이·좌우·전후)</span></div>
+        <div class="s8-row"><span class="s8-row-val highlight">90도 가능</span></div>
+        <div class="s8-row"><span class="s8-row-val">블랙 / 화이트</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9 — PRICE RANGE -->
+  <section class="slide grain" id="slide-9">
+    <div class="s9-header">
+      <span class="eyebrow anim-eyebrow">가격 포지셔닝</span>
+      <h2 class="s9-headline anim-headline">합리적 선택의<br><em>스펙트럼</em></h2>
+    </div>
+    <div class="s9-chart">
+      <div class="s9-product anim-stagger-1">
+        <span class="s9-product-name" style="color: var(--secondary); font-weight: 700;">GX</span>
+        <span style="width: 1px; height: 2rem; background: var(--line); display: block;"></span>
+        <div class="s9-track">
+          <div class="s9-bar-bg"></div>
+          <div class="s9-bar s9-bar-gx" style="--w: 52%;">
+            <div class="s9-dot" style="background: var(--secondary); box-shadow: 0 0 10px var(--secondary); right: auto; left: 100%; margin-left: -5px; top: 50%; transform: translateY(-50%); width: 10px; height: 10px; border-radius: 50%; position: absolute;"></div>
+          </div>
+        </div>
+        <div>
+          <span class="s9-price-val s9-price-gx">39~52만원</span>
+          <span class="s9-price-range">GX 기본 / 풀옵션</span>
+        </div>
+      </div>
+      <div class="s9-product anim-stagger-2">
+        <span class="s9-product-name" style="color: var(--primary); font-weight: 700;">GC PRO</span>
+        <span style="width: 1px; height: 2rem; background: var(--line); display: block;"></span>
+        <div class="s9-track">
+          <div class="s9-bar-bg"></div>
+          <div class="s9-bar s9-bar-gcpro" style="--w: 80%;"></div>
+        </div>
+        <div>
+          <span class="s9-price-val s9-price-gcpro">89만원</span>
+          <span class="s9-price-range">GC PRO 단일 구성</span>
+        </div>
+      </div>
+      <div class="s9-product anim-stagger-3">
+        <span class="s9-product-name" style="color: var(--muted); font-weight: 300;">타 프리미엄</span>
+        <span style="width: 1px; height: 2rem; background: var(--line); display: block;"></span>
+        <div class="s9-track">
+          <div class="s9-bar-bg"></div>
+          <div class="s9-bar" style="--w: 100%; background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1)); width: 100%;"></div>
+        </div>
+        <div>
+          <span class="s9-price-val" style="color: var(--muted);">100만원+</span>
+          <span class="s9-price-range">수입 게이밍체어 기준</span>
+        </div>
+      </div>
+      <p class="s9-note anim-cta">
+        <strong style="color: var(--text);">GX</strong>는 같은 시디즈 퀄리티를 더 넓은 예산 스펙트럼으로,
+        <strong style="color: var(--text);">GC PRO</strong>는 프로 게이머와 동일한 환경을 89만원에 제공합니다.
+        수입 프리미엄 대비 가격 경쟁력과 국산 AS 인프라라는 이중 우위.
+      </p>
+    </div>
+  </section>
+
+  <!-- SLIDE 10 — PERSONA -->
+  <section class="slide grain" id="slide-10">
+    <div class="s10-header">
+      <span class="eyebrow anim-eyebrow">타겟 페르소나</span>
+      <h2 class="s10-headline anim-headline">나의 의자는<br><em>어느 쪽인가</em></h2>
+    </div>
+    <div class="s10-personas">
+      <div class="s10-persona gx anim-stagger-1">
+        <div class="s10-persona-header">
+          <div class="s10-avatar">🎮</div>
+          <div>
+            <p class="s10-persona-name">GX 사용자</p>
+            <p class="s10-persona-role">캐주얼 게이머 / 재택근무자 / 대학생</p>
+          </div>
+        </div>
+        <div class="s10-tags">
+          <span class="s10-tag">장시간 착석</span>
+          <span class="s10-tag">통풍 중요</span>
+          <span class="s10-tag">가성비</span>
+          <span class="s10-tag">워크·게임 겸용</span>
+        </div>
+        <ul class="s10-needs">
+          <li>하루 6시간 이상 책상 앞에서 보내지만 최고 사양보다 합리적 선택을 원한다</li>
+          <li>여름철 등에 땀이 차는 불쾌함을 없애고 싶다</li>
+          <li>체형이 평균보다 크거나 넓은 좌판이 필요하다</li>
+          <li>게임도 하고 업무도 하는 멀티 유저 공간에 두고 싶다</li>
+        </ul>
+      </div>
+      <div class="s10-persona gcpro anim-stagger-2">
+        <div class="s10-persona-header">
+          <div class="s10-avatar">🏆</div>
+          <div>
+            <p class="s10-persona-name">GC PRO 사용자</p>
+            <p class="s10-persona-role">프로/하드코어 게이머 / 스트리머 / e스포츠 팀</p>
+          </div>
+        </div>
+        <div class="s10-tags">
+          <span class="s10-tag">퍼포먼스 극대화</span>
+          <span class="s10-tag">프로 경험</span>
+          <span class="s10-tag">쿨링 필수</span>
+          <span class="s10-tag">공식 인증</span>
+        </div>
+        <ul class="s10-needs">
+          <li>국가대표와 동일한 장비로 게임하고 싶다는 열망이 있다</li>
+          <li>집중이 필요한 긴 게임 세션에서 체온 상승이 실수로 이어지는 것을 막고 싶다</li>
+          <li>LED와 3방향 팔걸이 등 디테일 조절로 최적의 세팅을 구현하고 싶다</li>
+          <li>방송·유튜브 배경으로도 게이밍 감성을 보여주고 싶다</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11 — QUOTE -->
+  <section class="slide grain" id="slide-11">
+    <div class="s11-left">
+      <span class="s11-quote-mark anim-visual">"</span>
+      <blockquote>
+        <p class="s11-quote-text anim-headline">쿨링 시트가 진짜입니다.<br>여름에 에어컨 없이 6시간 게임해도<br>등이 축축하지 않았어요. 이 가격에<br>이 퀄리티가 한국 브랜드라는 게<br>믿기지 않을 정도.</p>
+        <cite class="s11-cite anim-body">— 퀘이사존 GC PRO 장기 사용 리뷰</cite>
+      </blockquote>
+    </div>
+    <div class="s11-right">
+      <div class="s11-rating-card excellent anim-stagger-1">
+        <span class="s11-rating-val">9.4</span>
+        <div class="s11-rating-info">
+          <span class="s11-rating-cat">종합 만족도</span>
+          <span class="s11-rating-source">퀘이사존 / 100점 기준</span>
+        </div>
+      </div>
+      <div class="s11-rating-card great anim-stagger-2">
+        <span class="s11-rating-val">4.8</span>
+        <div class="s11-rating-info">
+          <span class="s11-rating-cat">쿨링 성능</span>
+          <span class="s11-rating-source">실사용자 평균 / 5.0 만점</span>
+        </div>
+      </div>
+      <div class="s11-rating-card good anim-stagger-3">
+        <span class="s11-rating-val">4.6</span>
+        <div class="s11-rating-info">
+          <span class="s11-rating-cat">조절 편의성</span>
+          <span class="s11-rating-source">3방향 팔걸이 + 틸팅</span>
+        </div>
+      </div>
+      <div class="s11-rating-card great anim-stagger-4">
+        <span class="s11-rating-val">4.7</span>
+        <div class="s11-rating-info">
+          <span class="s11-rating-cat">가격 대비 만족도</span>
+          <span class="s11-rating-source">GX / 동가격대 비교</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12 — BRAND STORY -->
+  <section class="slide grain" id="slide-12">
+    <div class="s12-left">
+      <span class="eyebrow anim-eyebrow">왜 시디즈인가</span>
+      <h2 class="s12-headline anim-headline">국산 의자의<br><em>자존심</em></h2>
+      <p class="s12-sub anim-sub">Fursys Group · 코스피 상장 · 60개국 수출</p>
+      <p class="s12-body anim-body">
+        수입 의자가 프리미엄 브랜드로 군림하던 시장에서, 시디즈는 <strong>30년 동안 품질로만 승부했습니다.</strong> 세계 3대 디자인상 석권, 국가대표 공식 의자 채택, 토트넘 홋스퍼 글로벌 파트너십 — 이 모든 것이 마케팅이 아닌 <strong>제품으로 얻은 신뢰</strong>입니다.
+        <br><br>
+        그리고 GX와 GC PRO는 그 신뢰를 39만원부터 경험할 수 있게 합니다.
+      </p>
+    </div>
+    <div class="s12-right">
+      <div class="s12-pillar anim-stagger-1">
+        <h3 class="s12-pillar-name">30년의 인체공학 연구</h3>
+        <p class="s12-pillar-desc">단순 의자가 아닌, 인간의 착석 패턴과 체형 데이터를 30년간 축적한 결과물. 각 모델은 수천 시간의 사용자 테스트를 거칩니다.</p>
+      </div>
+      <div class="s12-pillar anim-stagger-2">
+        <h3 class="s12-pillar-name">프로의 검증</h3>
+        <p class="s12-pillar-desc">GC PRO는 실제 프로 선수 40명과 4년을 협업해 설계했습니다. 가장 극단적인 환경에서 검증된 스펙이 일반 사용자에게 내려옵니다.</p>
+      </div>
+      <div class="s12-pillar anim-stagger-3">
+        <h3 class="s12-pillar-name">국내 AS 인프라</h3>
+        <p class="s12-pillar-desc">전국 서비스 네트워크와 부품 수급 안정성. 수입 의자의 AS 사각지대 문제 없이, 구매 후 수년간 안심하고 사용할 수 있습니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 13 — CTA -->
+  <section class="slide grain" id="slide-13">
+    <div class="s13-ring-outer"></div>
+    <div class="s13-ring-mid"></div>
+    <div class="s13-content">
+      <span class="s13-label anim-eyebrow">당신의 선택</span>
+      <h2 class="s13-headline anim-headline">
+        지금 직접<br><em>경험하세요</em>
+      </h2>
+      <p class="s13-sub anim-body">GX와 GC PRO는 백 마디 말보다 한 번의 착석이 말해줍니다. 가까운 시디즈 전시장에서 두 의자의 차이를 직접 느껴보세요.</p>
+      <div class="s13-cta-group anim-cta">
+        <button class="s13-btn-primary" onclick="alert('sidiz.com에서 확인하세요')">GC PRO 알아보기</button>
+        <button class="s13-btn-secondary" onclick="alert('sidiz.com에서 확인하세요')">GX 살펴보기</button>
+      </div>
+      <div class="anim-cta" style="margin-top: 1rem; display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;">
+        <div style="text-align: center;">
+          <div style="font-size: var(--t-xl); font-weight: 900; color: var(--secondary); letter-spacing: -0.04em;">GX</div>
+          <div style="font-size: var(--t-xs); color: var(--muted);">39 ~ 52만원</div>
+        </div>
+        <div style="width: 1px; background: var(--line);"></div>
+        <div style="text-align: center;">
+          <div style="font-size: var(--t-xl); font-weight: 900; color: var(--primary); letter-spacing: -0.04em;">GC PRO</div>
+          <div style="font-size: var(--t-xs); color: var(--muted);">89만원</div>
+        </div>
+      </div>
+    </div>
+    <p class="s13-footer">SIDIZ — Redefining the Standard of Sitting · sidiz.com</p>
+  </section>
+
+</div>
+
+<!-- UI CHROME -->
+<div id="ui-chrome">
+  <div class="progress-track">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+  <span class="slide-counter" id="slide-counter">1 / 13</span>
+</div>
+
+<script>
+(function() {
+  const TOTAL = 13;
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const progressBar = document.getElementById('progress-bar');
+  const counter = document.getElementById('slide-counter');
+
+  function updateUI() {
+    const pct = ((current + 1) / TOTAL) * 100;
+    progressBar.style.width = pct + '%';
+    counter.textContent = (current + 1) + ' / ' + TOTAL;
+  }
+
+  function goTo(n) {
+    if (n < 0 || n >= TOTAL || n === current) return;
+    const dir = n > current ? 1 : -1;
+
+    const prev = slides[current];
+    prev.style.setProperty('--exit-x', (-dir * 70) + 'px');
+    prev.classList.remove('active');
+    prev.classList.add('exiting');
+    const prevCopy = prev;
+    setTimeout(() => prevCopy.classList.remove('exiting'), 600);
+
+    current = n;
+    const next = slides[current];
+    next.style.setProperty('--enter-x', (dir * 70) + 'px');
+    next.classList.add('active');
+
+    updateUI();
+  }
+
+  // Init
+  slides[0].style.setProperty('--enter-x', '0px');
+  slides[0].classList.add('active');
+  updateUI();
+
+  // Keyboard
+  document.addEventListener('keydown', function(e) {
+    switch(e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+      case ' ':
+        e.preventDefault();
+        goTo(current + 1);
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        e.preventDefault();
+        goTo(current - 1);
+        break;
+      case 'Home':
+        goTo(0);
+        break;
+      case 'End':
+        goTo(TOTAL - 1);
+        break;
+      case 'f':
+      case 'F':
+        if (document.fullscreenElement) {
+          document.exitFullscreen && document.exitFullscreen();
+        } else {
+          document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+        }
+        break;
+    }
+  });
+
+  // Touch / swipe
+  let touchStartX = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      goTo(diff > 0 ? current + 1 : current - 1);
+    }
+  }, { passive: true });
+
+  // Click navigation
+  document.addEventListener('click', function(e) {
+    const w = window.innerWidth;
+    if (e.target.closest('button') || e.target.closest('a')) return;
+    if (e.clientX > w * 0.6) {
+      goTo(current + 1);
+    } else if (e.clientX < w * 0.4) {
+      goTo(current - 1);
+    }
+  });
+})();
+</script>
+</body>
+</html>
