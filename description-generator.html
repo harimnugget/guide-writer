@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS 디스크립션 생성기</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-input: #1e2a45;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8b8ba3;
+            --text-muted: #5a5a7a;
+            --accent-instagram: #E1306C;
+            --accent-youtube: #FF0000;
+            --accent-blue: #4a6cf7;
+            --accent-green: #2ecc71;
+            --accent-purple: #9b59b6;
+            --border: #2a2a4a;
+            --danger: #e74c3c;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .app {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 24px 16px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .header h1 { font-size: 20px; font-weight: 700; }
+
+        .header-actions { display: flex; gap: 8px; }
+
+        .btn-icon {
+            width: 36px; height: 36px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* === Platform Select === */
+        .platform-select {
+            display: flex; flex-direction: column; gap: 16px; margin-top: 60px;
+        }
+
+        .platform-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex; align-items: center; gap: 20px;
+        }
+
+        .platform-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .platform-card.instagram:hover { border-color: var(--accent-instagram); }
+        .platform-card.youtube:hover { border-color: var(--accent-youtube); }
+
+        .platform-icon {
+            width: 56px; height: 56px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; flex-shrink: 0;
+        }
+
+        .platform-card.instagram .platform-icon {
+            background: linear-gradient(135deg, #833AB4, #E1306C, #F77737);
+        }
+
+        .platform-card.youtube .platform-icon { background: var(--accent-youtube); }
+
+        .platform-info h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+        .platform-info p { font-size: 13px; color: var(--text-secondary); }
+
+        /* === Profile List === */
+        .profile-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .profile-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; transition: all 0.2s;
+        }
+
+        .profile-item:hover { border-color: var(--accent-blue); background: var(--bg-input); }
+
+        .profile-item-info { flex: 1; }
+        .profile-item-name { font-weight: 600; font-size: 15px; }
+        .profile-item-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .profile-item-actions { display: flex; gap: 4px; }
+
+        .btn-sm {
+            padding: 6px 10px; border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent; color: var(--text-secondary);
+            font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: inherit;
+        }
+
+        .btn-sm:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+        .btn-sm.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+        .new-profile-btn {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px; text-align: center;
+            cursor: pointer; color: var(--text-muted);
+            font-size: 14px; transition: all 0.2s;
+            background: transparent; width: 100%; font-family: inherit;
+        }
+
+        .new-profile-btn:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+
+        /* === Forms === */
+        .form-group { margin-bottom: 20px; }
+
+        .form-group label {
+            display: block; font-size: 13px; font-weight: 600;
+            color: var(--text-secondary); margin-bottom: 8px;
+        }
+
+        .form-group label .hint { font-weight: 400; color: var(--text-muted); font-size: 12px; }
+
+        input[type="text"], textarea {
+            width: 100%; padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: inherit; font-size: 14px; line-height: 1.5;
+            outline: none; transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, textarea:focus { border-color: var(--accent-blue); }
+
+        textarea { min-height: 120px; resize: vertical; }
+        textarea.large { min-height: 200px; }
+
+        /* === Buttons === */
+        .btn {
+            padding: 12px 24px; border-radius: var(--radius-sm);
+            border: none; font-family: inherit; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+
+        .btn-primary { background: var(--accent-blue); color: white; }
+        .btn-primary:hover { background: #3a5ce6; }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); }
+        .btn-secondary:hover { border-color: var(--accent-blue); }
+        .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        .btn-green { background: var(--accent-green); color: white; }
+        .btn-green:hover { background: #27ae60; }
+
+        .btn-row { display: flex; gap: 8px; margin-top: 16px; }
+        .btn-row.right { justify-content: flex-end; }
+
+        /* === Tags === */
+        .tag-input-wrapper {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            padding: 8px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            min-height: 44px; align-items: center;
+            cursor: text; transition: border-color 0.2s;
+        }
+
+        .tag-input-wrapper:focus-within { border-color: var(--accent-blue); }
+
+        .tag {
+            background: var(--accent-blue); color: white;
+            padding: 4px 10px; border-radius: 20px;
+            font-size: 12px; font-weight: 500;
+            display: flex; align-items: center; gap: 4px;
+        }
+
+        .tag .remove { cursor: pointer; opacity: 0.7; font-size: 14px; line-height: 1; }
+        .tag .remove:hover { opacity: 1; }
+
+        .tag-input {
+            border: none; background: transparent; color: var(--text-primary);
+            font-family: inherit; font-size: 14px; outline: none;
+            flex: 1; min-width: 80px; padding: 4px 0;
+        }
+
+        /* === Sample List === */
+        .sample-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+
+        .sample-item {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px; font-size: 13px; color: var(--text-secondary);
+            display: flex; align-items: flex-start; gap: 12px; line-height: 1.5;
+        }
+
+        .sample-item .sample-text {
+            flex: 1; white-space: pre-wrap; word-break: break-word;
+            max-height: 80px; overflow: hidden;
+        }
+
+        .sample-item .sample-remove {
+            color: var(--text-muted); cursor: pointer;
+            font-size: 16px; flex-shrink: 0; padding: 0 4px;
+        }
+
+        .sample-item .sample-remove:hover { color: var(--danger); }
+
+        .sample-count { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+
+        /* === Analysis Card === */
+        .analysis-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px; margin-top: 20px;
+        }
+
+        .analysis-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--accent-blue); }
+
+        .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .analysis-item { font-size: 13px; }
+        .analysis-label { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .analysis-value { font-weight: 500; }
+
+        /* === Result === */
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px; margin-bottom: 12px;
+        }
+
+        .result-card h4 { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+        .result-text { font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+
+        .result-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+        .btn-copy {
+            padding: 6px 14px; border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent; color: var(--text-secondary);
+            font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.2s;
+        }
+
+        .btn-copy:hover { border-color: var(--accent-green); color: var(--accent-green); }
+        .btn-copy.copied { border-color: var(--accent-green); color: var(--accent-green); }
+
+        .title-option {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px; margin-bottom: 8px;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        }
+
+        .title-option .title-text { flex: 1; font-size: 14px; font-weight: 500; }
+        .title-option .title-num { color: var(--accent-blue); font-weight: 700; font-size: 13px; flex-shrink: 0; }
+
+        /* === Step Guide === */
+        .step-guide {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px; margin-bottom: 20px;
+        }
+
+        .step-guide h4 {
+            font-size: 14px; font-weight: 700; margin-bottom: 12px;
+            color: var(--accent-green);
+        }
+
+        .step-list {
+            list-style: none; counter-reset: step;
+        }
+
+        .step-list li {
+            counter-increment: step;
+            padding: 8px 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+
+        .step-list li::before {
+            content: counter(step);
+            background: var(--accent-blue);
+            color: white;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-list li.active { color: var(--text-primary); font-weight: 500; }
+        .step-list li.done { color: var(--accent-green); }
+        .step-list li.done::before { background: var(--accent-green); }
+
+        /* === Prompt Box === */
+        .prompt-box {
+            background: var(--bg-input);
+            border: 1px solid var(--accent-blue);
+            border-radius: var(--radius);
+            padding: 16px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 12px;
+        }
+
+        /* === Loading === */
+        .loading-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15,15,26,0.8); z-index: 100;
+            align-items: center; justify-content: center;
+            flex-direction: column; gap: 16px;
+        }
+
+        .loading-overlay.active { display: flex; }
+
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: var(--text-secondary); font-size: 14px; }
+
+        /* === Toast === */
+        .toast {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 24px; font-size: 14px;
+            z-index: 200; transition: transform 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* === Modal === */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15,15,26,0.85); z-index: 150;
+            align-items: center; justify-content: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px; width: 90%; max-width: 480px;
+            box-shadow: var(--shadow);
+        }
+
+        .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+        .section-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; margin-top: 28px; }
+        .section-title:first-child { margin-top: 0; }
+        .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+        /* === Tabs === */
+        .tabs {
+            display: flex; gap: 4px;
+            background: var(--bg-card); padding: 4px;
+            border-radius: var(--radius-sm); margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1; padding: 10px 16px; border-radius: 6px;
+            border: none; background: transparent; color: var(--text-muted);
+            font-family: inherit; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; text-align: center;
+        }
+
+        .tab.active { background: var(--accent-blue); color: white; }
+        .tab:hover:not(.active) { color: var(--text-primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        .btn-back {
+            background: none; border: none; color: var(--text-muted);
+            font-family: inherit; font-size: 14px; cursor: pointer;
+            padding: 4px 0; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 4px; transition: color 0.2s;
+        }
+
+        .btn-back:hover { color: var(--text-primary); }
+
+        /* === Info Box === */
+        .info-box {
+            background: rgba(74,108,247,0.1);
+            border: 1px solid rgba(74,108,247,0.3);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 480px) {
+            .app { padding: 16px 12px; }
+            .analysis-grid { grid-template-columns: 1fr; }
+            .platform-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <h1>SNS 디스크립션 생성기</h1>
+            <div class="header-actions">
+                <button class="btn-icon" onclick="openSettings()" title="설정">&#9881;</button>
+            </div>
+        </div>
+
+        <!-- Screen 1: Platform Select -->
+        <div id="screen-platform" class="screen active">
+            <div class="platform-select">
+                <div class="platform-card instagram" onclick="selectPlatform('instagram')">
+                    <div class="platform-icon">&#9830;</div>
+                    <div class="platform-info">
+                        <h3>Instagram</h3>
+                        <p>릴스 업로드 캡션 생성</p>
+                    </div>
+                </div>
+                <div class="platform-card youtube" onclick="selectPlatform('youtube')">
+                    <div class="platform-icon">&#9654;</div>
+                    <div class="platform-info">
+                        <h3>YouTube</h3>
+                        <p>영상 제목 3안 + 디스크립션 생성</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Profile Select -->
+        <div id="screen-profiles" class="screen">
+            <button class="btn-back" onclick="goTo('screen-platform')">&larr; 플랫폼 선택</button>
+            <div class="section-title" id="profiles-title">프로필 선택</div>
+            <div id="profile-list" class="profile-list"></div>
+            <button class="new-profile-btn" onclick="createNewProfile()" style="margin-top:12px">+ 새 프로필 만들기</button>
+        </div>
+
+        <!-- Screen 3: Learning / Edit Profile -->
+        <div id="screen-learn" class="screen">
+            <button class="btn-back" onclick="goTo('screen-profiles')">&larr; 프로필 목록</button>
+            <div id="learn-profile-name" class="section-title"></div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab(this, 'tab-channel')">채널 디스크립션</button>
+                <button class="tab" onclick="switchTab(this, 'tab-reference')">레퍼런스</button>
+                <button class="tab" onclick="switchTab(this, 'tab-analysis')">분석 결과</button>
+            </div>
+
+            <div id="tab-channel" class="tab-content active">
+                <div class="form-group">
+                    <label>기존 채널 디스크립션 입력 <span class="hint">하나씩 붙여넣고 추가</span></label>
+                    <textarea id="input-channel-sample" placeholder="기존에 올렸던 디스크립션을 복사해서 붙여넣으세요..."></textarea>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="addChannelSample()">추가</button>
+                    </div>
+                </div>
+                <div id="channel-samples-list" class="sample-list"></div>
+                <div id="channel-samples-count" class="sample-count"></div>
+            </div>
+
+            <div id="tab-reference" class="tab-content">
+                <div class="form-group">
+                    <label>레퍼런스 디스크립션 입력 <span class="hint">참고하고 싶은 디스크립션</span></label>
+                    <textarea id="input-ref-sample" placeholder="참고하고 싶은 다른 채널의 디스크립션을 복사해서 붙여넣으세요..."></textarea>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="addReferenceSample()">추가</button>
+                    </div>
+                </div>
+                <div id="ref-samples-list" class="sample-list"></div>
+                <div id="ref-samples-count" class="sample-count"></div>
+            </div>
+
+            <div id="tab-analysis" class="tab-content">
+                <div id="analysis-content">
+                    <div class="empty-state">
+                        <div class="icon">&#128202;</div>
+                        <p>채널 디스크립션을 추가한 뒤<br>'분석 프롬프트 복사'를 눌러주세요.</p>
+                    </div>
+                </div>
+                <div class="btn-row" id="analyze-btn-row" style="display:none">
+                    <button class="btn btn-primary" onclick="copyAnalyzePrompt()">분석 프롬프트 복사</button>
+                    <button class="btn btn-secondary" onclick="openPasteAnalysis()">Claude 응답 붙여넣기</button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="btn-row right">
+                <button class="btn btn-primary" onclick="goToGenerate()">디스크립션 생성하기 &rarr;</button>
+            </div>
+        </div>
+
+        <!-- Screen 4: Generate -->
+        <div id="screen-generate" class="screen">
+            <button class="btn-back" onclick="goTo('screen-learn')">&larr; 프로필 수정</button>
+            <div id="generate-profile-name" class="section-title"></div>
+
+            <div class="form-group">
+                <label>필수 키워드 <span class="hint">Enter로 추가</span></label>
+                <div class="tag-input-wrapper" onclick="this.querySelector('.tag-input').focus()">
+                    <div id="keywords-tags"></div>
+                    <input type="text" class="tag-input" id="input-keyword" placeholder="키워드 입력 후 Enter" onkeydown="handleKeywordInput(event)">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>러프 멘션 <span class="hint">대략적으로 작성한 1차 초안</span></label>
+                <textarea id="input-rough" class="large" placeholder="대략적인 멘트를 적어주세요. 학습된 스타일로 다듬어 드립니다..."></textarea>
+            </div>
+
+            <div class="step-guide">
+                <h4>사용 방법</h4>
+                <ol class="step-list">
+                    <li>'프롬프트 복사' 클릭 후 클립보드에 복사됨</li>
+                    <li>claude.ai에서 붙여넣기 후 응답 받기</li>
+                    <li>'Claude 응답 붙여넣기'로 돌아와서 결과 입력</li>
+                </ol>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-green" onclick="copyGeneratePrompt()">프롬프트 복사</button>
+                <button class="btn btn-primary" onclick="openPasteResult()">Claude 응답 붙여넣기</button>
+            </div>
+        </div>
+
+        <!-- Screen 5: Result -->
+        <div id="screen-result" class="screen">
+            <button class="btn-back" onclick="goTo('screen-generate')">&larr; 다시 입력</button>
+            <div class="section-title">생성 결과</div>
+
+            <div id="result-titles" style="display:none">
+                <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">제목 제안 (3안)</div>
+                <div id="title-options"></div>
+            </div>
+
+            <div id="result-description" class="result-card">
+                <h4 id="result-desc-label">디스크립션</h4>
+                <div id="result-desc-text" class="result-text"></div>
+                <div class="result-actions">
+                    <button class="btn-copy" onclick="copyResult('result-desc-text', this)">복사</button>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="goTo('screen-generate')">다시 생성</button>
+                <button class="btn btn-primary" onclick="goTo('screen-platform')">처음으로</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay" onclick="if(event.target===this)closeSettings()">
+        <div class="modal">
+            <h3>설정</h3>
+            <div class="form-group">
+                <label>Google Apps Script URL</label>
+                <input type="text" id="setting-script-url" placeholder="https://script.google.com/macros/s/...">
+            </div>
+            <div class="btn-row right">
+                <button class="btn btn-secondary" onclick="closeSettings()">취소</button>
+                <button class="btn btn-primary" onclick="saveSettings()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">처리 중...</div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- New Profile Modal -->
+    <div id="new-profile-modal" class="modal-overlay" onclick="if(event.target===this)closeNewProfileModal()">
+        <div class="modal">
+            <h3>새 프로필 만들기</h3>
+            <div class="form-group">
+                <label>프로필 이름 <span class="hint">예: 공차 인스타그램, 브랜드X 유튜브</span></label>
+                <input type="text" id="new-profile-name" placeholder="프로필 이름 입력">
+            </div>
+            <div class="btn-row right">
+                <button class="btn btn-secondary" onclick="closeNewProfileModal()">취소</button>
+                <button class="btn btn-primary" onclick="confirmNewProfile()">만들기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paste Analysis Modal -->
+    <div id="paste-analysis-modal" class="modal-overlay" onclick="if(event.target===this)closePasteAnalysis()">
+        <div class="modal">
+            <h3>Claude 분석 결과 붙여넣기</h3>
+            <div class="info-box">
+                claude.ai에서 받은 JSON 응답을 그대로 붙여넣어 주세요.
+            </div>
+            <div class="form-group">
+                <textarea id="paste-analysis-text" class="large" placeholder='{"avgLength": 150, "emojiUsage": "...", ...}'></textarea>
+            </div>
+            <div class="btn-row right">
+                <button class="btn btn-secondary" onclick="closePasteAnalysis()">취소</button>
+                <button class="btn btn-primary" onclick="applyAnalysis()">적용</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paste Result Modal -->
+    <div id="paste-result-modal" class="modal-overlay" onclick="if(event.target===this)closePasteResult()">
+        <div class="modal">
+            <h3>Claude 응답 붙여넣기</h3>
+            <div class="info-box">
+                claude.ai에서 받은 응답을 그대로 붙여넣어 주세요. JSON 형식이 아니어도 괜찮습니다.
+            </div>
+            <div class="form-group">
+                <textarea id="paste-result-text" class="large" placeholder="Claude의 응답을 여기에 붙여넣으세요..."></textarea>
+            </div>
+            <div class="btn-row right">
+                <button class="btn btn-secondary" onclick="closePasteResult()">취소</button>
+                <button class="btn btn-primary" onclick="applyResult()">적용</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ===== State =====
+    let currentPlatform = null;
+    let currentProfile = null;
+    let profiles = [];
+    let keywords = [];
+    let settings = { scriptUrl: '' };
+
+    // ===== Init =====
+    function init() {
+        const saved = localStorage.getItem('descgen_settings');
+        if (saved) {
+            try { settings = JSON.parse(saved); } catch(e) {}
+        }
+    }
+    init();
+
+    // ===== Navigation =====
+    function goTo(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function selectPlatform(platform) {
+        currentPlatform = platform;
+        document.getElementById('profiles-title').textContent =
+            (platform === 'instagram' ? 'Instagram' : 'YouTube') + ' 프로필 선택';
+        loadProfiles();
+        goTo('screen-profiles');
+    }
+
+    // ===== Settings =====
+    function openSettings() {
+        document.getElementById('setting-script-url').value = settings.scriptUrl || '';
+        document.getElementById('settings-modal').classList.add('active');
+    }
+
+    function closeSettings() {
+        document.getElementById('settings-modal').classList.remove('active');
+    }
+
+    function saveSettings() {
+        settings.scriptUrl = document.getElementById('setting-script-url').value.trim();
+        localStorage.setItem('descgen_settings', JSON.stringify(settings));
+        closeSettings();
+        showToast('설정이 저장되었습니다');
+    }
+
+    // ===== Google Sheets API =====
+    async function callApi(action, data = {}) {
+        if (!settings.scriptUrl) {
+            showToast('설정에서 Apps Script URL을 먼저 입력하세요');
+            openSettings();
+            throw new Error('No script URL');
+        }
+
+        const response = await fetch(settings.scriptUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action, ...data })
+        });
+
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+        return result;
+    }
+
+    // ===== Profiles =====
+    async function loadProfiles() {
+        try {
+            showLoading('프로필 불러오는 중...');
+            const result = await callApi('listProfiles', { platform: currentPlatform });
+            profiles = result.profiles || [];
+            hideLoading();
+        } catch(e) {
+            hideLoading();
+            profiles = [];
+        }
+        renderProfileList();
+    }
+
+    function renderProfileList() {
+        const list = document.getElementById('profile-list');
+
+        if (profiles.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">${currentPlatform === 'instagram' ? '&#9830;' : '&#9654;'}</div>
+                    <p>아직 프로필이 없습니다.<br>새 프로필을 만들어 시작하세요.</p>
+                </div>`;
+            return;
+        }
+
+        list.innerHTML = profiles.map(p => `
+            <div class="profile-item" onclick="selectProfile('${p.profileId}')">
+                <div class="profile-item-info">
+                    <div class="profile-item-name">${escapeHtml(p.name)}</div>
+                    <div class="profile-item-meta">
+                        학습 ${p.sampleCount || 0}개 / 레퍼런스 ${p.refCount || 0}개
+                        ${p.updatedAt ? ' / ' + formatDate(p.updatedAt) : ''}
+                    </div>
+                </div>
+                <div class="profile-item-actions">
+                    <button class="btn-sm danger" onclick="event.stopPropagation();deleteProfile('${p.profileId}','${escapeHtml(p.name)}')">삭제</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function createNewProfile() {
+        document.getElementById('new-profile-name').value = '';
+        document.getElementById('new-profile-modal').classList.add('active');
+        setTimeout(() => document.getElementById('new-profile-name').focus(), 100);
+    }
+
+    function closeNewProfileModal() {
+        document.getElementById('new-profile-modal').classList.remove('active');
+    }
+
+    async function confirmNewProfile() {
+        const name = document.getElementById('new-profile-name').value.trim();
+        if (!name) { showToast('프로필 이름을 입력하세요'); return; }
+
+        closeNewProfileModal();
+
+        try {
+            showLoading('프로필 생성 중...');
+            const result = await callApi('saveProfile', {
+                name, platform: currentPlatform,
+                channelSamples: [], referenceSamples: [], analysis: null
+            });
+            hideLoading();
+            showToast('프로필이 생성되었습니다');
+
+            currentProfile = {
+                profileId: result.profileId, name,
+                platform: currentPlatform,
+                channelSamples: [], referenceSamples: [], analysis: null
+            };
+            openLearnScreen();
+        } catch(e) {
+            hideLoading();
+            showToast('프로필 생성 실패: ' + e.message);
+        }
+    }
+
+    async function selectProfile(profileId) {
+        try {
+            showLoading('프로필 불러오는 중...');
+            const result = await callApi('getProfile', { profileId });
+            currentProfile = result.profile;
+            hideLoading();
+            openLearnScreen();
+        } catch(e) {
+            hideLoading();
+            showToast('프로필 불러오기 실패: ' + e.message);
+        }
+    }
+
+    async function deleteProfile(profileId, name) {
+        if (!confirm(`"${name}" 프로필을 삭제하시겠습니까?`)) return;
+
+        try {
+            showLoading('삭제 중...');
+            await callApi('deleteProfile', { profileId });
+            hideLoading();
+            showToast('삭제되었습니다');
+            loadProfiles();
+        } catch(e) {
+            hideLoading();
+            showToast('삭제 실패: ' + e.message);
+        }
+    }
+
+    // ===== Learn Screen =====
+    function openLearnScreen() {
+        document.getElementById('learn-profile-name').textContent = currentProfile.name;
+        renderChannelSamples();
+        renderReferenceSamples();
+        renderAnalysis();
+        document.querySelectorAll('#screen-learn .tab')[0].click();
+        goTo('screen-learn');
+    }
+
+    function switchTab(tabBtn, contentId) {
+        tabBtn.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tabBtn.classList.add('active');
+        tabBtn.closest('.screen').querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(contentId).classList.add('active');
+    }
+
+    function renderChannelSamples() {
+        const samples = currentProfile.channelSamples || [];
+        const list = document.getElementById('channel-samples-list');
+        const count = document.getElementById('channel-samples-count');
+
+        if (samples.length === 0) { list.innerHTML = ''; count.textContent = ''; return; }
+
+        list.innerHTML = samples.map((s, i) => `
+            <div class="sample-item">
+                <div class="sample-text">${escapeHtml(s)}</div>
+                <span class="sample-remove" onclick="removeChannelSample(${i})">&times;</span>
+            </div>
+        `).join('');
+
+        count.textContent = `${samples.length}개의 디스크립션이 학습되었습니다`;
+    }
+
+    async function addChannelSample() {
+        const textarea = document.getElementById('input-channel-sample');
+        const text = textarea.value.trim();
+        if (!text) return;
+
+        if (!currentProfile.channelSamples) currentProfile.channelSamples = [];
+        currentProfile.channelSamples.push(text);
+        textarea.value = '';
+
+        renderChannelSamples();
+        await saveCurrentProfile();
+        updateAnalyzeButton();
+    }
+
+    async function removeChannelSample(index) {
+        currentProfile.channelSamples.splice(index, 1);
+        renderChannelSamples();
+        await saveCurrentProfile();
+        updateAnalyzeButton();
+    }
+
+    function renderReferenceSamples() {
+        const samples = currentProfile.referenceSamples || [];
+        const list = document.getElementById('ref-samples-list');
+        const count = document.getElementById('ref-samples-count');
+
+        if (samples.length === 0) { list.innerHTML = ''; count.textContent = ''; return; }
+
+        list.innerHTML = samples.map((s, i) => `
+            <div class="sample-item">
+                <div class="sample-text">${escapeHtml(s)}</div>
+                <span class="sample-remove" onclick="removeReferenceSample(${i})">&times;</span>
+            </div>
+        `).join('');
+
+        count.textContent = `${samples.length}개의 레퍼런스`;
+    }
+
+    async function addReferenceSample() {
+        const textarea = document.getElementById('input-ref-sample');
+        const text = textarea.value.trim();
+        if (!text) return;
+
+        if (!currentProfile.referenceSamples) currentProfile.referenceSamples = [];
+        currentProfile.referenceSamples.push(text);
+        textarea.value = '';
+
+        renderReferenceSamples();
+        await saveCurrentProfile();
+    }
+
+    async function removeReferenceSample(index) {
+        currentProfile.referenceSamples.splice(index, 1);
+        renderReferenceSamples();
+        await saveCurrentProfile();
+    }
+
+    function updateAnalyzeButton() {
+        const samples = currentProfile.channelSamples || [];
+        document.getElementById('analyze-btn-row').style.display = samples.length >= 1 ? 'flex' : 'none';
+    }
+
+    function renderAnalysis() {
+        const content = document.getElementById('analysis-content');
+        const analysis = currentProfile.analysis;
+        updateAnalyzeButton();
+
+        if (!analysis) {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">&#128202;</div>
+                    <p>채널 디스크립션을 추가한 뒤<br>'분석 프롬프트 복사'를 눌러주세요.</p>
+                </div>`;
+            return;
+        }
+
+        content.innerHTML = `
+            <div class="analysis-card">
+                <h4>스타일 분석 결과</h4>
+                <div class="analysis-grid">
+                    <div class="analysis-item">
+                        <div class="analysis-label">평균 길이</div>
+                        <div class="analysis-value">${analysis.avgLength || '-'}자</div>
+                    </div>
+                    <div class="analysis-item">
+                        <div class="analysis-label">이모지 사용</div>
+                        <div class="analysis-value">${analysis.emojiUsage || '-'}</div>
+                    </div>
+                    <div class="analysis-item">
+                        <div class="analysis-label">해시태그 패턴</div>
+                        <div class="analysis-value">${analysis.hashtagPattern || '-'}</div>
+                    </div>
+                    <div class="analysis-item">
+                        <div class="analysis-label">CTA 스타일</div>
+                        <div class="analysis-value">${analysis.ctaStyle || '-'}</div>
+                    </div>
+                </div>
+            </div>
+            ${analysis.toneDescription ? `
+            <div class="analysis-card" style="margin-top:12px">
+                <h4>말투 및 어조</h4>
+                <div style="font-size:13px;line-height:1.7;color:var(--text-secondary)">${escapeHtml(analysis.toneDescription)}</div>
+            </div>` : ''}
+            ${analysis.structurePattern ? `
+            <div class="analysis-card" style="margin-top:12px">
+                <h4>구조 패턴</h4>
+                <div style="font-size:13px;line-height:1.7;color:var(--text-secondary)">${escapeHtml(analysis.structurePattern)}</div>
+            </div>` : ''}
+        `;
+    }
+
+    // ===== 분석 프롬프트 (복사 방식) =====
+    function copyAnalyzePrompt() {
+        const samples = currentProfile.channelSamples || [];
+        const refs = currentProfile.referenceSamples || [];
+
+        const prompt = `당신은 SNS 콘텐츠 분석 전문가입니다. 아래 디스크립션 샘플들을 분석하여 스타일 특성을 JSON으로 반환해주세요.
+
+[채널 디스크립션 샘플]
+${samples.map((s, i) => `--- 샘플 ${i+1} ---\n${s}`).join('\n\n')}
+
+${refs.length > 0 ? `[레퍼런스 디스크립션]
+${refs.map((s, i) => `--- 레퍼런스 ${i+1} ---\n${s}`).join('\n\n')}` : ''}
+
+다음 JSON 형식으로만 응답해주세요 (코드블록 없이 순수 JSON만):
+{
+  "avgLength": 평균글자수(숫자),
+  "emojiUsage": "이모지 사용 빈도 및 종류 설명 (한 줄)",
+  "hashtagPattern": "해시태그 사용 패턴 설명 (한 줄)",
+  "ctaStyle": "CTA(행동유도) 스타일 설명 (한 줄)",
+  "toneDescription": "전체적인 말투와 어조를 2-3문장으로 설명",
+  "structurePattern": "디스크립션의 구조 패턴을 2-3문장으로 설명 (줄바꿈, 섹션 구분, 순서 등)"
+}`;
+
+        copyToClipboard(prompt);
+        showToast('프롬프트가 복사되었습니다. claude.ai에 붙여넣으세요!');
+    }
+
+    function openPasteAnalysis() {
+        document.getElementById('paste-analysis-text').value = '';
+        document.getElementById('paste-analysis-modal').classList.add('active');
+    }
+
+    function closePasteAnalysis() {
+        document.getElementById('paste-analysis-modal').classList.remove('active');
+    }
+
+    async function applyAnalysis() {
+        const text = document.getElementById('paste-analysis-text').value.trim();
+        if (!text) { showToast('응답을 붙여넣어 주세요'); return; }
+
+        try {
+            const analysis = parseJsonFromText(text);
+            currentProfile.analysis = analysis;
+            await saveCurrentProfile();
+            closePasteAnalysis();
+            renderAnalysis();
+            showToast('분석 결과가 적용되었습니다');
+        } catch(e) {
+            showToast('JSON 파싱 실패. Claude 응답을 그대로 붙여넣어 주세요.');
+        }
+    }
+
+    // ===== 생성 프롬프트 (복사 방식) =====
+    function buildGeneratePrompt() {
+        const rough = document.getElementById('input-rough').value.trim();
+        const analysis = currentProfile.analysis;
+        const samples = currentProfile.channelSamples || [];
+        const refs = currentProfile.referenceSamples || [];
+        const isYoutube = currentProfile.platform === 'youtube';
+
+        let styleContext = '';
+        if (analysis) {
+            styleContext = `[학습된 스타일]
+- 말투: ${analysis.toneDescription || '정보 없음'}
+- 이모지: ${analysis.emojiUsage || '정보 없음'}
+- 해시태그: ${analysis.hashtagPattern || '정보 없음'}
+- CTA: ${analysis.ctaStyle || '정보 없음'}
+- 구조: ${analysis.structurePattern || '정보 없음'}
+- 평균 길이: ${analysis.avgLength || '정보 없음'}자`;
+        }
+
+        let sampleContext = '';
+        if (samples.length > 0) {
+            const recentSamples = samples.slice(-3);
+            sampleContext = `\n\n[실제 디스크립션 예시 (최근 ${recentSamples.length}개)]
+${recentSamples.map((s, i) => `--- 예시 ${i+1} ---\n${s}`).join('\n\n')}`;
+        }
+
+        let refContext = '';
+        if (refs.length > 0) {
+            const recentRefs = refs.slice(-2);
+            refContext = `\n\n[레퍼런스 스타일 참고]
+${recentRefs.map((s, i) => `--- 레퍼런스 ${i+1} ---\n${s}`).join('\n\n')}`;
+        }
+
+        let outputInstruction = '';
+        if (isYoutube) {
+            outputInstruction = `[출력 형식]
+제목 3안과 디스크립션을 아래 형식으로 작성해주세요:
+
+[제목 1안] (제목 텍스트)
+[제목 2안] (제목 텍스트)
+[제목 3안] (제목 텍스트)
+
+[디스크립션]
+(디스크립션 전체 텍스트)
+
+제목은 유튜브에 적합한 길이(30~50자)로 작성하세요.`;
+        } else {
+            outputInstruction = `[출력 형식]
+인스타그램 릴스 캡션을 바로 복사해서 쓸 수 있도록 작성해주세요. 별도의 설명 없이 캡션 텍스트만 출력하세요.`;
+        }
+
+        return `당신은 SNS 콘텐츠 카피라이터입니다. 학습된 스타일을 바탕으로 ${isYoutube ? '유튜브 제목과 디스크립션' : '인스타그램 릴스 캡션'}을 작성해주세요.
+
+${styleContext}${sampleContext}${refContext}
+
+[입력 정보]
+- 플랫폼: ${isYoutube ? '유튜브' : '인스타그램'}
+- 필수 키워드: ${keywords.length > 0 ? keywords.join(', ') : '없음'}
+- 러프 멘션: ${rough || '없음'}
+
+[지시사항]
+- 학습된 말투와 스타일을 최대한 반영하세요
+- 필수 키워드는 반드시 자연스럽게 포함하세요
+- 러프 멘션의 핵심 내용은 유지하되, 학습된 톤으로 다듬어주세요
+
+${outputInstruction}`;
+    }
+
+    function copyGeneratePrompt() {
+        const rough = document.getElementById('input-rough').value.trim();
+        if (!rough && keywords.length === 0) {
+            showToast('키워드 또는 러프 멘션을 입력해주세요');
+            return;
+        }
+
+        const prompt = buildGeneratePrompt();
+        copyToClipboard(prompt);
+        showToast('프롬프트가 복사되었습니다. claude.ai에 붙여넣으세요!');
+    }
+
+    function openPasteResult() {
+        document.getElementById('paste-result-text').value = '';
+        document.getElementById('paste-result-modal').classList.add('active');
+    }
+
+    function closePasteResult() {
+        document.getElementById('paste-result-modal').classList.remove('active');
+    }
+
+    function applyResult() {
+        const text = document.getElementById('paste-result-text').value.trim();
+        if (!text) { showToast('응답을 붙여넣어 주세요'); return; }
+
+        const isYoutube = currentProfile.platform === 'youtube';
+
+        closePasteResult();
+
+        if (isYoutube) {
+            // 유튜브: 제목 3안 + 디스크립션 파싱
+            const parsed = parseYoutubeResponse(text);
+            document.getElementById('result-titles').style.display = 'block';
+            document.getElementById('title-options').innerHTML = parsed.titles.map((t, i) => `
+                <div class="title-option">
+                    <span class="title-num">${i+1}안</span>
+                    <span class="title-text">${escapeHtml(t)}</span>
+                    <button class="btn-copy" onclick="copyText(this.previousElementSibling.textContent, this)">복사</button>
+                </div>
+            `).join('');
+            document.getElementById('result-desc-label').textContent = '디스크립션';
+            document.getElementById('result-desc-text').textContent = parsed.description;
+        } else {
+            // 인스타그램: 캡션 전체
+            document.getElementById('result-titles').style.display = 'none';
+            document.getElementById('result-desc-label').textContent = '릴스 캡션';
+            document.getElementById('result-desc-text').textContent = text;
+        }
+
+        goTo('screen-result');
+    }
+
+    function parseYoutubeResponse(text) {
+        const titles = [];
+        let description = text;
+
+        // [제목 1안], [제목 2안], [제목 3안] 패턴 매칭
+        const titlePattern = /\[제목\s*\d+안\]\s*(.+)/g;
+        let match;
+        while ((match = titlePattern.exec(text)) !== null) {
+            titles.push(match[1].trim());
+        }
+
+        // [디스크립션] 이후 텍스트 추출
+        const descMatch = text.match(/\[디스크립션\]\s*([\s\S]*)/);
+        if (descMatch) {
+            description = descMatch[1].trim();
+        } else if (titles.length > 0) {
+            // 제목들 이후 나머지 텍스트를 디스크립션으로
+            const lastTitleIdx = text.lastIndexOf(titles[titles.length - 1]);
+            if (lastTitleIdx !== -1) {
+                description = text.substring(lastTitleIdx + titles[titles.length - 1].length).trim();
+                // 앞쪽의 줄바꿈 제거
+                description = description.replace(/^\n+/, '');
+            }
+        }
+
+        // JSON 형식으로 온 경우 대비
+        if (titles.length === 0) {
+            try {
+                const json = parseJsonFromText(text);
+                if (json.titles) return { titles: json.titles, description: json.description || '' };
+            } catch(e) {}
+        }
+
+        // 제목을 못 찾았으면 전체를 디스크립션으로
+        if (titles.length === 0) {
+            return { titles: ['(제목을 파싱하지 못했습니다)'], description: text };
+        }
+
+        return { titles, description };
+    }
+
+    async function saveCurrentProfile() {
+        try {
+            await callApi('saveProfile', {
+                profileId: currentProfile.profileId,
+                name: currentProfile.name,
+                platform: currentProfile.platform,
+                channelSamples: currentProfile.channelSamples,
+                referenceSamples: currentProfile.referenceSamples,
+                analysis: currentProfile.analysis
+            });
+        } catch(e) {
+            console.error('프로필 저장 실패:', e);
+        }
+    }
+
+    // ===== Generate Screen =====
+    function goToGenerate() {
+        document.getElementById('generate-profile-name').textContent = currentProfile.name;
+        keywords = [];
+        renderKeywords();
+        document.getElementById('input-rough').value = '';
+        goTo('screen-generate');
+    }
+
+    function handleKeywordInput(event) {
+        if (event.isComposing || event.keyCode === 229) return;
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const input = event.target;
+            const value = input.value.trim();
+            if (value && !keywords.includes(value)) {
+                keywords.push(value);
+                renderKeywords();
+            }
+            input.value = '';
+        }
+    }
+
+    function renderKeywords() {
+        document.getElementById('keywords-tags').innerHTML = keywords.map((k, i) => `
+            <span class="tag">${escapeHtml(k)}<span class="remove" onclick="removeKeyword(${i})">&times;</span></span>
+        `).join('');
+    }
+
+    function removeKeyword(index) {
+        keywords.splice(index, 1);
+        renderKeywords();
+    }
+
+    // ===== Clipboard =====
+    function copyResult(elementId, btn) {
+        copyToClipboard(document.getElementById(elementId).textContent, btn);
+    }
+
+    function copyText(text, btn) {
+        copyToClipboard(text, btn);
+    }
+
+    function copyToClipboard(text, btn) {
+        navigator.clipboard.writeText(text).then(() => {
+            if (btn) {
+                btn.textContent = '복사됨!';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('copied'); }, 2000);
+            }
+            showToast('클립보드에 복사되었습니다');
+        }).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast('클립보드에 복사되었습니다');
+        });
+    }
+
+    // ===== Utilities =====
+    function showLoading(text) {
+        document.getElementById('loading-text').textContent = text || '처리 중...';
+        document.getElementById('loading').classList.add('active');
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').classList.remove('active');
+    }
+
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+        try {
+            const d = new Date(dateStr);
+            return `${d.getMonth()+1}/${d.getDate()}`;
+        } catch(e) { return ''; }
+    }
+
+    function parseJsonFromText(text) {
+        // 코드블록 안의 JSON
+        const codeMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeMatch) return JSON.parse(codeMatch[1].trim());
+
+        // 직접 파싱
+        try { return JSON.parse(text.trim()); } catch(e) {}
+
+        // 중괄호 추출
+        const braceStart = text.indexOf('{');
+        const braceEnd = text.lastIndexOf('}');
+        if (braceStart !== -1 && braceEnd !== -1) {
+            return JSON.parse(text.substring(braceStart, braceEnd + 1));
+        }
+
+        throw new Error('JSON 파싱 실패');
+    }
+    </script>
+</body>
+</html>
