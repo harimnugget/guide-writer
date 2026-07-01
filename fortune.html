@@ -4,197 +4,191 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>오늘의 운세 · 공차</title>
+<meta name="theme-color" content="#bfe0f4">
+<title>공차 행운빨대</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
-  html,body { height:100%; background:#e8f1f7; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; overflow:hidden; }
-  #wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-    background:radial-gradient(120% 100% at 50% 18%, #cfe6f5 0%, #9cc6e6 60%, #7fb4dd 100%); }
-  #c { width:100%; height:100%; display:block; touch-action:none; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; }
+  html,body{ height:100%; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; }
+  body{ background:#bfe0f4; }
 
-  #sensor { position:absolute; top:max(16px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
-    font-size:12px; font-weight:600; color:#5a7184; padding:5px 12px; border-radius:99px;
-    background:rgba(255,255,255,.45); border:1px solid rgba(255,255,255,.6); letter-spacing:.3px; }
-  #sensor.on { color:#1f9d57; border-color:rgba(31,157,87,.4); background:rgba(255,255,255,.7); }
+  /* ===== 무대 ===== */
+  #stage{ position:fixed; inset:0; overflow:hidden;
+    background:url('assets/gongcha/bg.jpg') center/cover no-repeat, linear-gradient(180deg,#e4f2fb 0%,#bfe0f4 60%,#a8d3ef 100%); }
 
-  #meterWrap { position:absolute; bottom:88px; left:50%; transform:translateX(-50%);
-    width:min(70%,360px); height:10px; background:rgba(255,255,255,.45); border-radius:99px; overflow:hidden;
-    border:1px solid rgba(255,255,255,.6); }
-  #meter { height:100%; width:0%; border-radius:99px;
-    background:linear-gradient(90deg,#ffb27a,#f0593f,#d62f28); transition:width .08s linear; }
+  /* 반짝이(코드 추가분) */
+  .spark{ position:absolute; color:#fff; opacity:.9; pointer-events:none;
+    text-shadow:0 0 8px rgba(255,255,255,.8); animation:tw 2.6s ease-in-out infinite; }
+  @keyframes tw{ 0%,100%{ transform:scale(1); opacity:.55 } 50%{ transform:scale(1.25); opacity:1 } }
 
-  #hint { position:absolute; bottom:118px; left:50%; transform:translateX(-50%);
-    color:#34495e; font-size:15px; font-weight:700; letter-spacing:.3px; opacity:.92; text-align:center;
-    text-shadow:0 1px 2px rgba(255,255,255,.5); }
+  /* ===== 타이틀 ===== */
+  #title{ position:absolute; top:max(20px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+    width:min(84%,420px); z-index:20; pointer-events:none;
+    filter:drop-shadow(0 8px 16px rgba(214,40,120,.25)); transition:opacity .4s, transform .5s; }
+  #stage.result #title{ opacity:0; transform:translateX(-50%) translateY(-20px); }
 
-  #shakeBtn { position:absolute; bottom:max(30px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
-    padding:14px 40px; font-size:17px; font-weight:700; color:#fff;
-    background:linear-gradient(180deg,#ef5a48,#d62f28); border:none; border-radius:99px;
-    box-shadow:0 6px 18px rgba(214,47,40,.4); cursor:pointer; }
-  #shakeBtn:active { transform:translateX(-50%) scale(.95); }
+  /* ===== 컵 ===== */
+  #cupWrap{ position:absolute; left:50%; bottom:-1vh; transform:translateX(-50%); z-index:14;
+    width:min(60vw,240px); transform-origin:50% 92%; }
+  #cup{ width:100%; display:block; filter:drop-shadow(0 14px 22px rgba(60,80,120,.28)); }
+  #cupWrap.shaking{ animation:wobble .18s linear infinite; }
+  @keyframes wobble{
+    0%{ transform:translateX(-50%) rotate(-2.2deg) }
+    25%{ transform:translateX(-50%) rotate(1.8deg) translateY(-2px) }
+    50%{ transform:translateX(-50%) rotate(-1.4deg) }
+    75%{ transform:translateX(-50%) rotate(2.2deg) translateY(-2px) }
+    100%{ transform:translateX(-50%) rotate(-2.2deg) }
+  }
 
-  #start, #result { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    background:rgba(30,50,70,.55); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); z-index:5; }
-  #result { display:none; }
-  .card, .rcard { text-align:center; padding:34px 30px; background:rgba(255,255,255,.96);
-    border-radius:26px; box-shadow:0 20px 50px rgba(0,0,0,.3); max-width:340px; margin:0 18px; }
-  .title { color:#d62f28; font-size:32px; font-weight:800; letter-spacing:1px; }
-  .sub { color:#6b7785; font-size:15px; margin-top:10px; }
-  #startBtn, #againBtn { margin-top:24px; padding:14px 46px; font-size:18px; font-weight:700;
-    color:#fff; background:linear-gradient(180deg,#ef5a48,#d62f28); border:none; border-radius:99px;
-    box-shadow:0 6px 20px rgba(214,47,40,.35); cursor:pointer; }
-  #startBtn:active,#againBtn:active { transform:scale(.95); }
-  .note { color:#9aa4ad; font-size:12px; margin-top:18px; line-height:1.7; }
-  .note b { color:#6b7785; }
+  /* ===== 빨대 ===== */
+  #strawPos{ position:absolute; left:50%; bottom:15vh; z-index:12;
+    transform:translateX(-50%) translateY(var(--raise,150px));
+    transition:transform 1s cubic-bezier(.16,1.02,.3,1); }
+  #strawJit{ position:relative; }
+  #stage.shaking #strawJit{ animation:sjit .16s linear infinite; }
+  @keyframes sjit{ 0%{transform:translateX(-1px) rotate(-1.2deg)} 50%{transform:translateX(1px) rotate(1.2deg)} 100%{transform:translateX(-1px) rotate(-1.2deg)} }
 
-  .rcard { animation:pop .45s cubic-bezier(.18,.9,.3,1.3); }
-  @keyframes pop { 0%{transform:scale(.6);opacity:0} 100%{transform:scale(1);opacity:1} }
-  .rlabel { color:#d62f28; font-size:14px; font-weight:700; letter-spacing:1px; }
-  .rtitle { font-size:27px; font-weight:900; margin:10px 0 12px; line-height:1.3; word-break:keep-all; color:#2c3e50; }
-  .rmsg { color:#56616b; font-size:16px; line-height:1.65; word-break:keep-all; }
+  #straw{ position:relative; width:26px; height:38vh; max-height:320px; margin:0 auto;
+    border-radius:13px 13px 5px 5px; overflow:hidden;
+    box-shadow:0 6px 14px rgba(150,10,20,.28); }
+  #strawTex{ position:absolute; left:50%; top:50%; height:26px; width:340px;
+    transform:translate(-50%,-50%) rotate(90deg); object-fit:cover; }
+  #strawText{ position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center;
+    padding-top:14px; writing-mode:vertical-rl; text-orientation:upright;
+    color:#fff; font-weight:800; font-size:15px; letter-spacing:2px; line-height:1.05;
+    text-shadow:0 1px 3px rgba(120,0,10,.5); opacity:0; transition:opacity .4s .3s; word-break:keep-all; }
+  #stage.result #strawText{ opacity:1; }
+
+  /* ===== 카드 공통 ===== */
+  .card{ position:absolute; left:50%; transform:translateX(-50%);
+    width:min(78%,340px); background:rgba(255,255,255,.94); border-radius:28px;
+    box-shadow:0 18px 40px rgba(70,100,140,.28); padding:30px 26px; text-align:center; z-index:18;
+    backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); }
+
+  /* 시작 카드 */
+  #startCard{ top:34%; }
+  #startCard .lead{ color:#37506a; font-size:21px; font-weight:800; line-height:1.5; word-break:keep-all; }
+  .note{ color:#9aa7b5; font-size:11.5px; margin-top:14px; line-height:1.6; }
+  .note b{ color:#6b7b8c; }
+
+  /* 결과 카드 */
+  #resultCard{ top:7%; display:none; }
+  #resultCard .rlabel{ color:#37506a; font-size:22px; font-weight:900; letter-spacing:1px; }
+  #resultCard .divider{ height:2px; width:44px; margin:12px auto 16px; border-radius:2px;
+    background:linear-gradient(90deg,#ff8fc0,#e5397f); }
+  #resultCard .rmsg{ color:#3a4b5c; font-size:18px; font-weight:700; line-height:1.55; word-break:keep-all; min-height:56px; }
+
+  /* 버튼 */
+  .btn{ margin-top:20px; padding:15px 0; width:70%; font-size:20px; font-weight:800; color:#fff;
+    background:linear-gradient(180deg,#f65aa6,#e5297e); border:none; border-radius:99px; cursor:pointer;
+    box-shadow:0 8px 20px rgba(229,41,126,.4); letter-spacing:.5px; }
+  .btn:active{ transform:scale(.95); }
+
+  /* 흔들기 안내 + 게이지 */
+  #hint{ position:absolute; top:46%; left:50%; transform:translateX(-50%); z-index:16;
+    color:#2f4a63; font-size:18px; font-weight:800; text-align:center; word-break:keep-all; width:80%;
+    text-shadow:0 1px 4px rgba(255,255,255,.85); opacity:0; transition:opacity .3s; pointer-events:none; }
+  #stage.shaking #hint{ opacity:1; }
+  #meterWrap{ position:absolute; bottom:8vh; left:50%; transform:translateX(-50%); z-index:16;
+    width:min(64%,320px); height:12px; border-radius:99px; overflow:hidden;
+    background:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.7);
+    opacity:0; transition:opacity .3s; }
+  #stage.shaking #meterWrap{ opacity:1; }
+  #meter{ height:100%; width:0%; border-radius:99px;
+    background:linear-gradient(90deg,#ffb0d4,#f65aa6,#e5297e); transition:width .1s linear; }
+
+  #sensor{ position:absolute; top:max(14px,env(safe-area-inset-top)); right:14px; z-index:22;
+    font-size:10.5px; font-weight:600; color:#5a7184; padding:4px 9px; border-radius:99px;
+    background:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.6); opacity:0; transition:.3s; }
+  #sensor.show{ opacity:1; }
+  #sensor.on{ color:#1f9d57; }
 </style>
 </head>
 <body>
-<div id="wrap">
-  <canvas id="c"></canvas>
-  <div id="sensor">센서 대기 중</div>
-  <div id="meterWrap"><div id="meter"></div></div>
-  <div id="hint">📱 컵을 흔드세요!</div>
-  <button id="shakeBtn">흔들기</button>
+<div id="stage">
+  <img id="title" src="assets/gongcha/title.png" alt="공차 행운빨대">
+  <div id="sensor">센서 대기</div>
+  <div id="hint">📱 휴대폰을 흔드세요!</div>
 
-  <div id="start">
-    <div class="card">
-      <div class="title">오늘의 운세</div>
-      <div class="sub">공차 컵을 흔들어 빨대를 뽑아보세요</div>
-      <button id="startBtn">시작하기</button>
-      <div class="note">아이폰은 누르면 <b>동작·방향 접근</b> 허용 팝업이 떠요. 허용을 눌러주세요.</div>
+  <div id="strawPos">
+    <div id="strawJit">
+      <div id="straw">
+        <img id="strawTex" src="assets/gongcha/straw.png" alt="">
+        <div id="strawText"></div>
+      </div>
     </div>
   </div>
 
-  <div id="result">
-    <div class="rcard">
-      <div class="rlabel">🥤 오늘의 운세</div>
-      <div class="rtitle" id="rtitle"></div>
-      <div class="rmsg" id="rmsg"></div>
-      <button id="againBtn">다시 뽑기</button>
-    </div>
+  <div id="cupWrap"><img id="cup" src="assets/gongcha/cup.png" alt="공차 컵"></div>
+
+  <div id="meterWrap"><div id="meter"></div></div>
+
+  <div class="card" id="startCard">
+    <div class="lead">휴대폰을 흔들어<br>오늘의 행운빨대를<br>뽑아보세요!</div>
+    <button class="btn" id="startBtn">Start</button>
+    <div class="note">아이폰은 시작 시 <b>동작·방향 접근</b> 허용 팝업이 떠요. 허용을 눌러주세요.</div>
+  </div>
+
+  <div class="card" id="resultCard">
+    <div class="rlabel">오늘의 행운</div>
+    <div class="divider"></div>
+    <div class="rmsg" id="rmsg"></div>
+    <button class="btn" id="replayBtn">Replay</button>
   </div>
 </div>
 
 <script>
-const cv = document.getElementById('c');
-const ctx = cv.getContext('2d');
-let W=0,H=0,DPR=1;
-function resize(){
-  DPR = Math.min(window.devicePixelRatio||1, 2);
-  W = cv.clientWidth; H = cv.clientHeight;
-  cv.width = W*DPR; cv.height = H*DPR;
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-}
-window.addEventListener('resize', resize);
+/* ===== 반짝이 배치 ===== */
+(function(){
+  const st=document.getElementById('stage');
+  const pts=[[12,16,16],[80,12,12],[68,30,20],[20,40,12],[88,46,16],[8,62,14],[74,66,22],[30,74,12],[90,80,18],[16,86,16]];
+  for(const [x,y,s] of pts){
+    const el=document.createElement('div'); el.className='spark'; el.textContent='✦';
+    el.style.left=x+'%'; el.style.top=y+'%'; el.style.fontSize=s+'px';
+    el.style.animationDelay=(x%10)*0.18+'s';
+    st.appendChild(el);
+  }
+})();
 
-const FORTUNES = [
-  {t:'좋은 소식이 들려와요', m:'기다리던 연락이나 결과가 오늘 도착할 수 있어요.', c:'#f2a93b'},
-  {t:'작은 행운이 따르는 날', m:'평소 안 풀리던 일이 오늘은 술술 풀려요.', c:'#7fd1a8'},
-  {t:'지갑이 두둑해질 신호', m:'생각지 못한 곳에서 이득이 생길 수 있어요.', c:'#f2c14e'},
-  {t:'사람 복이 좋은 하루', m:'좋은 인연이나 도움 주는 사람을 만나요.', c:'#6db3f2'},
-  {t:'쉬어가도 괜찮아요', m:'무리하지 말고 오늘은 컨디션을 챙기세요.', c:'#b7a6d9'},
-  {t:'노력이 빛을 보는 날', m:'준비한 만큼 결과가 따라오는 하루예요.', c:'#ef7a6a'},
-  {t:'시작하기 좋은 날', m:'미뤄둔 일, 오늘 첫발을 떼보세요.', c:'#5fc0c8'},
-  {t:'뜻밖의 즐거움이 와요', m:'소소한 일에서 행복을 느끼는 하루.', c:'#f59abf'},
-  {t:'오해가 풀리는 날', m:'짧은 대화 한마디면 충분해요.', c:'#8ec96b'},
-  {t:'결정의 타이밍이 좋아요', m:'망설이던 선택, 지금이 적기예요.', c:'#f0883e'},
-  {t:'칭찬받을 일이 생겨요', m:'당신의 노력을 누군가 알아봐 줘요.', c:'#f2c14e'},
-  {t:'마음이 가벼워지는 날', m:'걱정하던 일이 생각보다 별일 아니에요.', c:'#7fd1a8'},
+/* ===== 운세 데이터 ===== */
+const FORTUNES=[
+  {straw:'대박\n예감', msg:'기다리던 좋은 소식이\n오늘 도착할 거예요!'},
+  {straw:'행운\n가득', msg:'평소 안 풀리던 일이\n오늘은 술술 풀려요.'},
+  {straw:'돈복\n터짐', msg:'생각지 못한 곳에서\n이득이 생길 수 있어요.'},
+  {straw:'귀인\n등장', msg:'좋은 인연이나 도움 주는\n사람을 만나는 하루.'},
+  {straw:'힐링\n타임', msg:'무리하지 말고 오늘은\n컨디션을 챙기세요.'},
+  {straw:'노력\n결실', msg:'준비한 만큼 결과가\n따라오는 하루예요.'},
+  {straw:'도전\n행운', msg:'새로운 아이디어가 솟아나!\n주저 말고 도전해봐 🍀'},
+  {straw:'설렘\n주의', msg:'소소한 일에서 행복을\n느끼는 즐거운 하루.'},
+  {straw:'오해\n해소', msg:'짧은 대화 한마디면\n관계가 부드러워져요.'},
+  {straw:'선택\n적기', msg:'망설이던 그 선택,\n지금이 딱 좋은 타이밍!'},
+  {straw:'칭찬\n받음', msg:'당신의 노력을 누군가\n알아봐 주는 날이에요.'},
+  {straw:'꽃길\n예약', msg:'걱정하던 일이 생각보다\n별일 아니었어요.'},
 ];
 
-const N = 7;
-let straws = [];
-let energy = 0;
-let tubeTilt = 0, targetTilt = 0;
-let phase = 'idle';
-let popT = 0, luckyIdx = -1, luckyFortune = null;
-let motionWorking = false;
-const POP = 100;
+/* ===== 상태 ===== */
+const stage=document.getElementById('stage');
+const strawPos=document.getElementById('strawPos');
+const strawTextEl=document.getElementById('strawText');
+const cupWrap=document.getElementById('cupWrap');
+const meter=document.getElementById('meter');
+const hint=document.getElementById('hint');
+const sensorEl=document.getElementById('sensor');
+const startCard=document.getElementById('startCard');
+const resultCard=document.getElementById('resultCard');
+const rmsg=document.getElementById('rmsg');
 
-let boba = [];
-for(let i=0;i<26;i++){
-  boba.push({ nx:(Math.random()-0.5)*1.5, ny:Math.pow(Math.random(),0.7), r:0.032+Math.random()*0.018 });
-}
+const RAISE_IDLE=150, RAISE_UP=-70, POP=100;
+let phase='start';         // start | shaking | popping | result
+let energy=0, motionWorking=false, lastA=null, lastBuzz=0;
 
-function initStraws(){
-  straws = [];
-  for(let i=0;i<N;i++){
-    straws.push({
-      slot:(i/(N-1)-0.5), jx:0, jt:0,
-      poke: 34 + Math.random()*46, basePoke: 34 + Math.random()*46,
-      ph: Math.random()*Math.PI*2,
-      ejX:0, ejY:0, ejR:0, alpha:1
-    });
-  }
-}
-initStraws();
+function setRaise(px){ strawPos.style.setProperty('--raise', px+'px'); }
+setRaise(RAISE_IDLE);
 
 function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
 
-let lastBuzz=0;
-function addEnergy(v){
-  if(phase!=='idle') return;
-  energy = Math.min(energy + v, POP);
-  const now=performance.now();
-  if(v>8 && now-lastBuzz>70){ buzz(Math.min(35, 8+v)); lastBuzz=now; }
-  if(energy >= POP) startPop();
-}
-
-let lastA = null;
-const sensorEl = document.getElementById('sensor');
-function onMotion(e){
-  const a = e.accelerationIncludingGravity;
-  if(!a || (a.x==null && a.y==null)) return;
-  if(!motionWorking){ motionWorking=true; sensorEl.classList.add('on'); }
-  if(lastA){
-    const dx=a.x-lastA.x, dy=a.y-lastA.y, dz=(a.z||0)-(lastA.z||0);
-    const d = Math.sqrt(dx*dx+dy*dy+dz*dz);
-    sensorEl.textContent = '센서 작동 중 · '+d.toFixed(1);
-    if(d>2){ addEnergy(d*0.9); }
-    targetTilt = Math.max(-0.32, Math.min(0.32, -(a.x||0)*0.05));
-  }
-  lastA = {x:a.x,y:a.y,z:a.z};
-}
-
-let lastP=null, lastPT=0;
-cv.addEventListener('pointermove', ev=>{
-  const t=performance.now();
-  if(lastP){
-    const dt=Math.max(t-lastPT,8);
-    const sp=Math.hypot(ev.clientX-lastP.x, ev.clientY-lastP.y)/dt;
-    if(sp>0.4){ addEnergy(sp*4); targetTilt=Math.max(-0.3,Math.min(0.3,(ev.clientX-W/2)/W*-0.6)); }
-  }
-  lastP={x:ev.clientX,y:ev.clientY}; lastPT=t;
-});
-
-const shakeBtn=document.getElementById('shakeBtn');
-shakeBtn.addEventListener('pointerdown',()=>{ addEnergy(26); targetTilt=(Math.random()-0.5)*0.5; });
-
-function startPop(){
-  phase='popping'; popT=0;
-  luckyIdx = Math.floor(Math.random()*N);
-  luckyFortune = FORTUNES[Math.floor(Math.random()*FORTUNES.length)];
-  hint.style.opacity=0; shakeBtn.style.opacity=0;
-  buzz([0,60,40,140]); beep(660,0.12,'sine');
-}
-
+/* ===== 사운드 ===== */
 let AC=null;
 function initAudio(){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
-function clack(){
-  if(!AC) return;
-  const o=AC.createOscillator(), g=AC.createGain();
-  o.type='triangle'; o.frequency.value=180+Math.random()*160;
-  g.gain.setValueAtTime(0.0001,AC.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.14,AC.currentTime+0.005);
-  g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+0.07);
-  o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime+0.08);
-}
 function beep(f,d,type){
   if(!AC) return;
   const o=AC.createOscillator(), g=AC.createGain();
@@ -205,231 +199,93 @@ function beep(f,d,type){
   o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime+d+0.02);
 }
 
-let frame=0;
-function draw(){
-  frame++;
-  ctx.clearRect(0,0,W,H);
-  tubeTilt += (targetTilt - tubeTilt)*0.12;
-  targetTilt *= 0.92;
-  if(phase==='idle'){ energy *= 0.94; }
-  meter.style.width = Math.min(100, energy/POP*100)+'%';
+/* ===== 에너지 축적 ===== */
+function addEnergy(v){
+  if(phase!=='shaking') return;
+  energy=Math.min(energy+v, POP);
+  meter.style.width=(energy/POP*100)+'%';
+  const now=performance.now();
+  if(v>7 && now-lastBuzz>80){ buzz(Math.min(30,8+v)); lastBuzz=now; }
+  if(energy>=POP) pop();
+}
+/* 흔들기 상태에서 에너지 서서히 감소(계속 흔들어야 참) */
+setInterval(()=>{ if(phase==='shaking' && energy>0){ energy=Math.max(0,energy-2.2); meter.style.width=(energy/POP*100)+'%'; } },100);
 
-  const cx=W/2, cy=H/2+30;
-  const cupW=Math.min(W*0.52,250), cupH=Math.min(H*0.46,350);
-  const rimY=-cupH*0.16, botY=cupH*0.5;
-  const topR=cupW*0.5, botR=cupW*0.31;
-  const domeH=cupW*0.30, domeTopY=rimY-domeH;
-  const holeR=topR*0.30;
-  const shake = phase==='idle' ? energy/POP : 0;
-
-  ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(tubeTilt);
-  if(shake>0.05){ ctx.translate((Math.random()-0.5)*shake*8,(Math.random()-0.5)*shake*5); }
-
-  ctx.save();
-  cupBodyPath(rimY, botY, topR, botR);
-  ctx.clip();
-  const liqTop=rimY+cupH*0.10;
-  const lg=ctx.createLinearGradient(0,liqTop,0,botY);
-  lg.addColorStop(0,'#e3d2b8'); lg.addColorStop(.5,'#d8c3a0'); lg.addColorStop(1,'#cdb78f');
-  ctx.fillStyle=lg;
-  ctx.fillRect(-topR,liqTop,topR*2,botY-liqTop);
-  const bobaTop=botY-cupH*0.18;
-  for(const b of boba){
-    const yy=bobaTop+(botY-bobaTop-cupH*0.02)*b.ny;
-    const rad=radAt(yy,rimY,botY,topR,botR);
-    const xx=b.nx*rad*0.78;
-    const br=b.r*cupW;
-    ctx.beginPath(); ctx.arc(xx,yy,br,0,Math.PI*2);
-    ctx.fillStyle='#221a12'; ctx.fill();
-    ctx.beginPath(); ctx.arc(xx-br*0.3,yy-br*0.3,br*0.3,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,.25)'; ctx.fill();
+/* ===== 모션 센서 ===== */
+function onMotion(e){
+  const a=e.accelerationIncludingGravity;
+  if(!a || (a.x==null && a.y==null)) return;
+  if(!motionWorking){ motionWorking=true; sensorEl.classList.add('on'); sensorEl.textContent='센서 작동'; }
+  if(lastA){
+    const dx=a.x-lastA.x, dy=a.y-lastA.y, dz=(a.z||0)-(lastA.z||0);
+    const d=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    if(d>2) addEnergy(d*0.9);
   }
-  ctx.restore();
+  lastA={x:a.x,y:a.y,z:a.z};
+}
 
-  cupBodyPath(rimY, botY, topR, botR);
-  ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.lineWidth=2.5; ctx.stroke();
-  ctx.save(); cupBodyPath(rimY, botY, topR, botR); ctx.clip();
-  const hg=ctx.createLinearGradient(-topR,0,topR,0);
-  hg.addColorStop(0,'rgba(255,255,255,.28)'); hg.addColorStop(.18,'rgba(255,255,255,.05)');
-  hg.addColorStop(.85,'rgba(255,255,255,.0)'); hg.addColorStop(1,'rgba(255,255,255,.22)');
-  ctx.fillStyle=hg; ctx.fillRect(-topR,rimY,topR*2,botY-rimY);
-  ctx.restore();
-
-  const logoY=rimY+cupH*0.28, ls=cupW*0.20;
-  ctx.fillStyle='#c0241a';
-  roundRect(-ls/2, logoY-ls/2, ls, ls, ls*0.18); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.font='bold '+(ls*0.42)+'px serif';
-  ctx.fillText('貢', 0, logoY-ls*0.20);
-  ctx.fillText('茶', 0, logoY+ls*0.22);
-  ctx.fillStyle='#6b4a35'; ctx.font='600 '+(cupW*0.085)+'px serif';
-  ctx.fillText('Gong cha', 0, logoY+ls*0.78);
-
-  ctx.fillStyle='rgba(235,245,250,.55)';
-  roundRect(-topR-2, rimY-6, topR*2+4, 14, 6); ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.lineWidth=2;
-  roundRect(-topR-2, rimY-6, topR*2+4, 14, 6); ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(-topR, rimY);
-  ctx.bezierCurveTo(-topR, domeTopY, topR, domeTopY, topR, rimY);
-  ctx.closePath();
-  const dg=ctx.createLinearGradient(-topR,domeTopY,topR,rimY);
-  dg.addColorStop(0,'rgba(255,255,255,.42)'); dg.addColorStop(.5,'rgba(220,238,248,.22)');
-  dg.addColorStop(1,'rgba(255,255,255,.4)');
-  ctx.fillStyle=dg; ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.lineWidth=2; ctx.stroke();
-  ctx.beginPath();
-  ctx.ellipse(-topR*0.35, rimY-domeH*0.5, topR*0.12, domeH*0.45, -0.3, 0, Math.PI*2);
-  ctx.fillStyle='rgba(255,255,255,.45)'; ctx.fill();
-
-  ctx.beginPath();
-  ctx.ellipse(0, domeTopY+2, holeR, holeR*0.4, 0, 0, Math.PI*2);
-  ctx.fillStyle='rgba(40,55,65,.45)'; ctx.fill();
-
-  const baseY=domeTopY+2;
-  for(let i=0;i<N;i++){
-    const s=straws[i];
-    if(phase==='idle'){
-      const w = shake*14;
-      s.jx = Math.sin(frame*0.4 + s.ph)*w + (Math.random()-0.5)*w*0.6;
-      s.jt = Math.sin(frame*0.35 + s.ph)*shake*0.22;
-      s.poke = s.basePoke + Math.abs(Math.sin(frame*0.3+s.ph))*shake*34;
-      if(shake>0.4 && Math.random()<shake*0.22) clack();
-    }
-    if(i===luckyIdx && phase!=='idle') continue;
-    drawStraw(s.slot*holeR*1.5 + s.jx, baseY, s.poke, s.jt, false);
+/* ===== 데스크탑 폴백: 문지르기 ===== */
+let lastP=null, lastPT=0;
+stage.addEventListener('pointermove', ev=>{
+  const t=performance.now();
+  if(lastP){
+    const dt=Math.max(t-lastPT,8);
+    const sp=Math.hypot(ev.clientX-lastP.x, ev.clientY-lastP.y)/dt;
+    if(sp>0.4) addEnergy(sp*4);
   }
-
-  if(phase==='popping'){
-    popT += 1/60;
-    const s=straws[luckyIdx];
-    const rise=Math.min(popT/0.55,1);
-    const ease=1-Math.pow(1-rise,3);
-    const poke=s.basePoke+ease*(cupH*1.0);
-    if(popT<0.55){
-      drawStraw(s.slot*holeR*0.8, baseY, poke, Math.sin(frame*0.5)*0.07, true);
-    }else{
-      const et=(popT-0.55)/0.6;
-      s.ejX=s.slot*holeR*0.8+Math.sin(et*6)*22;
-      s.ejY=-cupH*1.0-et*260;
-      s.ejR=et*2.2;
-      s.alpha=Math.max(0,1-et*1.1);
-      ctx.globalAlpha=s.alpha;
-      drawFlyStraw(s.ejX, baseY+s.ejY, s.ejR);
-      ctx.globalAlpha=1;
-      if(et>=1 && phase==='popping'){ phase='done'; showResult(); }
-    }
-  }
-
-  ctx.restore();
-  requestAnimationFrame(draw);
-}
-
-function radAt(y,rimY,botY,topR,botR){
-  const t=(y-rimY)/(botY-rimY);
-  return topR+(botR-topR)*Math.max(0,Math.min(1,t));
-}
-function cupBodyPath(rimY,botY,topR,botR){
-  const r=12;
-  ctx.beginPath();
-  ctx.moveTo(-topR,rimY);
-  ctx.lineTo(topR,rimY);
-  ctx.lineTo(botR,botY-r);
-  ctx.quadraticCurveTo(botR,botY,botR-r,botY);
-  ctx.lineTo(-botR+r,botY);
-  ctx.quadraticCurveTo(-botR,botY,-botR,botY-r);
-  ctx.closePath();
-}
-
-function drawStraw(x, baseY, poke, tilt, lucky){
-  ctx.save();
-  ctx.translate(x, baseY); ctx.rotate(tilt);
-  const sw=14, top=-poke, slant=sw*1.0;
-  ctx.beginPath();
-  ctx.moveTo(-sw/2, 12);
-  ctx.lineTo(-sw/2, top+slant);
-  ctx.lineTo(sw/2, top);
-  ctx.lineTo(sw/2, 12);
-  ctx.closePath();
-  const g=ctx.createLinearGradient(-sw/2,0,sw/2,0);
-  if(lucky){ g.addColorStop(0,'#ff7d6a'); g.addColorStop(.45,'#f23b2c'); g.addColorStop(1,'#c41d12'); }
-  else { g.addColorStop(0,'#f0604e'); g.addColorStop(.45,'#dd2f24'); g.addColorStop(1,'#a81b12'); }
-  if(lucky){ ctx.shadowColor='#ff6a55'; ctx.shadowBlur=18; }
-  ctx.fillStyle=g; ctx.fill();
-  ctx.shadowBlur=0;
-  ctx.beginPath();
-  ctx.moveTo(-sw*0.22, 10); ctx.lineTo(-sw*0.22, top+slant*0.9);
-  ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.stroke();
-  ctx.beginPath();
-  ctx.ellipse(0, top+slant*0.5, sw*0.5, sw*0.22, -0.5, 0, Math.PI*2);
-  ctx.fillStyle = lucky ? '#8a1208' : '#6e0f08'; ctx.fill();
-  ctx.restore();
-}
-function drawFlyStraw(x,y,rot){
-  ctx.save();
-  ctx.translate(x,y); ctx.rotate(rot);
-  ctx.shadowColor='#ff6a55'; ctx.shadowBlur=22;
-  const sw=15,h=160;
-  ctx.beginPath();
-  ctx.moveTo(-sw/2, h/2);
-  ctx.lineTo(-sw/2, -h/2+sw);
-  ctx.lineTo(sw/2, -h/2);
-  ctx.lineTo(sw/2, h/2);
-  ctx.closePath();
-  const g=ctx.createLinearGradient(-sw/2,0,sw/2,0);
-  g.addColorStop(0,'#ff7d6a'); g.addColorStop(.45,'#f23b2c'); g.addColorStop(1,'#c41d12');
-  ctx.fillStyle=g; ctx.fill();
-  ctx.beginPath(); ctx.ellipse(0,-h/2+sw*0.5,sw*0.5,sw*0.22,-0.5,0,Math.PI*2);
-  ctx.fillStyle='#8a1208'; ctx.fill();
-  ctx.restore();
-}
-function roundRect(x,y,w,h,r){
-  ctx.beginPath(); ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
-}
-
-const resultEl=document.getElementById('result');
-function showResult(){
-  buzz([0,40,30,90]); beep(880,0.18,'sine'); setTimeout(()=>beep(1175,0.25,'sine'),120);
-  const f=luckyFortune;
-  const rt=document.getElementById('rtitle');
-  rt.textContent=f.t; rt.style.color=f.c;
-  document.getElementById('rmsg').textContent=f.m;
-  resultEl.style.display='flex';
-}
-document.getElementById('againBtn').addEventListener('click',()=>{
-  resultEl.style.display='none';
-  phase='idle'; energy=0; luckyIdx=-1;
-  initStraws();
-  hint.style.opacity=.92; shakeBtn.style.opacity=1;
+  lastP={x:ev.clientX,y:ev.clientY}; lastPT=t;
 });
 
-const hint=document.getElementById('hint');
-const startEl=document.getElementById('start');
+/* ===== 팝(빨대 뽑힘) ===== */
+function pop(){
+  if(phase!=='shaking') return;
+  phase='popping';
+  stage.classList.remove('shaking');
+  const f=FORTUNES[Math.floor(Math.random()*FORTUNES.length)];
+  strawTextEl.textContent=f.straw;
+  buzz([0,60,40,140]); beep(660,0.12,'sine'); setTimeout(()=>beep(990,0.16,'sine'),140);
+  setRaise(RAISE_UP);               // 빨대 쑥 상승
+  setTimeout(()=>{
+    phase='result';
+    stage.classList.add('result');
+    rmsg.textContent=f.msg;
+    resultCard.style.display='block';
+    resultCard.animate([{transform:'translateX(-50%) scale(.6)',opacity:0},{transform:'translateX(-50%) scale(1)',opacity:1}],{duration:420,easing:'cubic-bezier(.18,.9,.3,1.3)'});
+    buzz([0,40,30,90]); beep(1175,0.22,'sine');
+  },1000);
+}
+
+/* ===== 흔들기 상태 진입 ===== */
+function enterShaking(){
+  phase='shaking'; energy=0; meter.style.width='0%';
+  stage.classList.remove('result');
+  stage.classList.add('shaking');
+  cupWrap.classList.add('shaking');
+  resultCard.style.display='none';
+  strawTextEl.textContent='';
+  setRaise(RAISE_IDLE);
+}
+
+/* ===== 시작 ===== */
 document.getElementById('startBtn').addEventListener('click', async ()=>{
-  let permTried=false;
   if(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function'){
-    permTried=true;
+    sensorEl.classList.add('show');
     try{
-      const p = await DeviceMotionEvent.requestPermission();
+      const p=await DeviceMotionEvent.requestPermission();
       if(p==='granted'){ window.addEventListener('devicemotion',onMotion); }
-      else { sensorEl.textContent='센서 권한 거부됨 — 버튼/문지르기 사용'; }
-    }catch(err){ sensorEl.textContent='센서 차단됨 — 권한을 다시 시도하세요'; }
+      else { sensorEl.textContent='버튼/문지르기'; }
+    }catch(err){ sensorEl.textContent='센서 차단됨'; }
   }else if(typeof DeviceMotionEvent!=='undefined'){
     window.addEventListener('devicemotion',onMotion);
-  }else{ sensorEl.textContent='이 기기는 모션 미지원 — 버튼/문지르기'; }
+  }
   initAudio(); buzz(20);
-  startEl.style.display='none'; resize();
-  setTimeout(()=>{
-    if(!motionWorking){ hint.textContent='화면을 빠르게 문지르거나 버튼을 누르세요'; }
-  },1800);
+  startCard.style.display='none';
+  enterShaking();
+  setTimeout(()=>{ if(!motionWorking){ hint.textContent='화면을 빠르게 문질러 보세요!'; } },2000);
 });
 
-resize();
-draw();
+/* ===== 다시하기 ===== */
+document.getElementById('replayBtn').addEventListener('click', ()=>{ enterShaking(); });
 </script>
 </body>
 </html>
