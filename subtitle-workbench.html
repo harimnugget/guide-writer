@@ -169,6 +169,9 @@ pre.fmt{margin:8px 0 0;background:var(--field);border-radius:var(--r-xs);padding
 .gent .gtc:focus,.gent .gtx:focus{border-color:var(--accent);background:var(--card);outline:0}
 .gent .x{border:0;background:none;color:var(--mute);font-size:15px;line-height:1;padding:5px 0}
 .gent .x:hover{color:var(--danger)}
+.gent.memo .gtx{display:flex;flex-wrap:wrap;align-items:center;gap:6px;color:var(--sub)}
+.gent.memo .lab{font-size:11px;font-weight:700;padding:1px 6px;border-radius:99px;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
+.gent.memo .gtc{cursor:pointer;text-align:left}
 .gfoot{border-top:1px solid var(--border);padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px}
 
 /* 대화상자, 토스트 */
@@ -237,8 +240,16 @@ body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 영상)';p
 다시 한 번 후회 없이 농구해보자!
 
 (서브자막) ㅋㅋ
-(메모) 여기부터 BGM 다른 걸로
 또 이제 살도 찌고</pre>
+        <p class="hint" style="margin-top:8px">메모는 SRT에 넣지 않고 화면 가이드로 내보내요.</p>
+      </details>
+      <details class="set">
+        <summary>단축키</summary>
+        <pre class="fmt">Enter        커서 위치에서 나누기
+Shift+Enter  한 자막 안에서 줄바꿈
+⌘/Ctrl+E     아랫줄과 합치기
+⌘/Ctrl+B     강조 켜고 끄기
+⌘/Ctrl+D     삭제 표시 (Shift+클릭은 범위)</pre>
       </details>
     </div>
   </section>
@@ -323,7 +334,7 @@ function restore(){
   try{const raw=localStorage.getItem(LS); if(!raw) return false; const d=JSON.parse(raw);
     if(!d||!Array.isArray(d.cues)||!d.cues.length) return false;
     S=Object.assign(S,d); S.guide=Array.isArray(d.guide)?d.guide:[]; S.chips=Array.isArray(d.chips)?d.chips:[];
-    let mx=0; for(const x of [...S.cues,...S.guide]){const n=parseInt(String(x.id).slice(1),10); if(n>mx) mx=n; if(x.open) x.open=false}
+    let mx=0; for(const x of [...S.cues,...S.guide]){const n=parseInt(String(x.id).slice(1),10); if(n>mx) mx=n; if(x.open) x.open=false; if(x.subOn) x.subOn=false}
     uid=mx+1; return true;
   }catch(e){return false}
 }
@@ -495,18 +506,19 @@ function renderBar(){
     +(n.ai?`<button class="lnk" data-f="clearai" type="button" style="margin-left:auto">AI 수정 표시 모두 지우기</button>`:'');
 }
 function rowHTML(c){
-  const st=lenState(c), n=maxLenText(c.text), open=c.open||c.sub||c.memo;
+  const st=lenState(c), n=maxLenText(c.text), open=c.open||c.subOn||c.sub||c.memo;
   let h=`<div class="row${c.del?' is-del':''}${c.emph?' is-emph':''}${c.id===curId?' cur':''}" data-id="${c.id}">`;
   if(c.sec!=null) h+=`<div class="secmark"><input class="secname" value="${esc(c.sec)}" aria-label="구간 이름"><button class="lnk" data-act="unsec" type="button">구간 해제</button></div>`;
   h+=`<div class="rm"><button class="tc" data-act="seek" type="button" title="이 지점으로 이동">${fmtTC(c.s)}</button>`
     +`<textarea class="txt" rows="1" spellcheck="false" aria-label="자막">${esc(c.text)}</textarea>`
     +`<span class="cnt ${st}" title="가장 긴 줄의 글자 수">${c.del?'':n}</span>`
-    +`<span class="acts"><button class="pill${c.emph?' on':''}" data-act="emph" aria-pressed="${c.emph}" type="button">강조</button>`
+    +`<span class="acts"><button class="pill${c.emph?' on':''}" data-act="emph" aria-pressed="${c.emph}" type="button" title="⌘/Ctrl+B">강조</button>`
+    +`<button class="pill${c.sub.trim()?' on':''}" data-act="sub" aria-pressed="${!!c.sub.trim()}" type="button" title="서브자막 칸 열기">서브</button>`
     +`<button class="pill del${c.del?' on':''}" data-act="del" aria-pressed="${c.del}" type="button" title="Shift를 누른 채 누르면 사이 줄까지 한 번에">삭제</button>`
-    +`<button class="pill" data-act="more" aria-label="서브자막, 메모, 나누기" aria-expanded="${!!c.open}" type="button">⋯</button></span></div>`;
+    +`<button class="pill" data-act="more" aria-label="메모, 나누기, 합치기" aria-expanded="${!!c.open}" type="button">⋯</button></span></div>`;
   if(open) h+=`<div class="extra"><label><span>서브자막</span><input class="inp sub" value="${esc(c.sub)}" placeholder="ㅋㅋ, 찐 애장품"></label>`
-    +`<label><span>메모</span><input class="inp memo" value="${esc(c.memo)}" placeholder="BGM, 효과음"></label>`
-    +(c.open?`<button class="lnk" data-act="split" type="button">커서에서 나누기</button><button class="lnk" data-act="merge" type="button">윗줄과 합치기</button>`
+    +`<label><span>메모</span><input class="inp memo" value="${esc(c.memo)}" placeholder="BGM, 효과음 (화면 가이드로 나가요)"></label>`
+    +(c.open?`<button class="lnk" data-act="split" type="button">커서에서 나누기 (Enter)</button><button class="lnk" data-act="merge" type="button">윗줄과 합치기</button><button class="lnk" data-act="mergenext" type="button">아랫줄과 합치기 (⌘E)</button>`
     +(c.sec==null?`<button class="lnk" data-act="sec" type="button">여기서 구간 시작</button>`:'')
     +`<button class="lnk" data-act="toguide" type="button">화면 가이드 쓰기</button>`:'')+`</div>`;
   if(c.g0) h+=`<div class="note ai"><span class="lab">AI</span><span>${c.g0.n}줄로 나눔${c.g0.fixed?' · 수정 전: '+diffOldGroup(c):''}</span><button class="lnk" data-act="revert" type="button">되돌리기</button><button class="lnk" data-act="okai" type="button">확인</button></div>`;
@@ -553,13 +565,20 @@ function act(id,a,ev){
       c.del=v; lastDelIdx=i; break}
     case 'more': c.open=!c.open; break;
     case 'split':{
-      const ta=rowEl.querySelector('.txt'); const pos=ta.selectionStart; const a1=c.text.slice(0,pos).trim(), b1=c.text.slice(pos).trim();
-      if(!a1||!b1){toast('나눌 위치에 커서를 두고 눌러 주세요 (Ctrl+Enter도 돼요)');return}
+      const ta=rowEl.querySelector('.txt'); c.text=ta.value; const pos=ta.selectionStart; const a1=c.text.slice(0,pos).trim(), b1=c.text.slice(pos).trim();
+      if(!a1||!b1){toast('나눌 위치에 커서를 두고 Enter를 눌러 주세요');return}
       c.g0=null;c.grp=null; const news=replaceWithParts(c,[a1,b1],null); renderBar(); renderList(); save();
       const nx=$('list').querySelector(`.row[data-id="${news[1].id}"] .txt`); if(nx){nx.focus();nx.setSelectionRange(0,0)} return}
     case 'merge':{
-      if(i===0) return; const p=S.cues[i-1]; p.text=(p.text+' '+c.text).trim(); p.e=c.e; if(!p.sub) p.sub=c.sub; if(!p.memo) p.memo=c.memo;
+      if(i===0) return; const p=S.cues[i-1]; p.text=(p.text+' '+c.text).trim(); p.e=c.e; const join=(a,b)=>[a,b].map(x=>(x||'').trim()).filter(Boolean).join(' / '); p.sub=join(p.sub,c.sub); p.memo=join(p.memo,c.memo);
       S.cues.splice(i,1); curId=p.id; renderBar(); renderList(); save(); return}
+    case 'mergenext':{
+      const nx=S.cues[i+1]; if(!nx) return; const ta=rowEl&&rowEl.querySelector('.txt'); if(ta) c.text=ta.value;
+      const pos=c.text.trim().length+(c.text.trim()&&nx.text.trim()?1:0);
+      act(nx.id,'merge'); const t=$('list').querySelector(`.row[data-id="${id}"] .txt`); if(t){t.focus();t.setSelectionRange(pos,pos)} return}
+    case 'sub':{
+      if(!c.sub.trim()) c.subOn=!c.subOn; else c.subOn=true;
+      refreshRow(id); save(); if(c.subOn){const inp=$('list').querySelector(`.row[data-id="${id}"] .sub`); if(inp) inp.focus()} return}
     case 'sec': c.sec='#구간'; renderList(); renderChips(); save(); {const inp=$('list').querySelector(`.row[data-id="${id}"] .secname`); if(inp){inp.focus();inp.select()}} return;
     case 'unsec': c.sec=null; renderList(); renderChips(); save(); return;
     case 'toguide': selectRow(id); tcManual=false; setCurTime(c.s/1000); $('gText').focus(); return;
@@ -575,17 +594,26 @@ $('list').addEventListener('focusin',e=>{const r=e.target.closest('.row'); if(r)
 $('list').addEventListener('input',e=>{
   const r=e.target.closest('.row'); if(!r) return; const c=byId(r.dataset.id); if(!c) return; const t=e.target;
   if(t.classList.contains('txt')){c.text=t.value; autosize(t); const cn=r.querySelector('.cnt'); cn.className='cnt '+lenState(c); cn.textContent=c.del?'':maxLenText(c.text); renderBar(); showCap()}
-  else if(t.classList.contains('sub')){c.sub=t.value; showCap()}
-  else if(t.classList.contains('memo')) c.memo=t.value;
+  else if(t.classList.contains('sub')){c.sub=t.value; const b=r.querySelector('[data-act="sub"]'); b.classList.toggle('on',!!c.sub.trim()); b.setAttribute('aria-pressed',!!c.sub.trim()); showCap()}
+  else if(t.classList.contains('memo')){c.memo=t.value; renderGuide()}
   else if(t.classList.contains('secname')){c.sec=t.value; renderChips()}
   save();
 });
 $('list').addEventListener('keydown',e=>{
   if(!e.target.classList.contains('txt')) return; const r=e.target.closest('.row'); const mod=e.ctrlKey||e.metaKey;
-  if(mod&&e.key==='Enter'){e.preventDefault();act(r.dataset.id,'split')}
-  else if(mod&&(e.key==='d'||e.key==='D')){e.preventDefault();act(r.dataset.id,'del',e); focusTxt(r.dataset.id)}
-  else if(mod&&(e.key==='e'||e.key==='E')){e.preventDefault();act(r.dataset.id,'emph'); focusTxt(r.dataset.id)}
-  else if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault(); const nx=r.nextElementSibling; if(nx){const t=nx.querySelector('.txt'); if(t) t.focus()}}
+  // 한글 입력 상태에서도 단축키가 먹도록 e.key 대신 e.code로 판단
+  if(e.isComposing||e.keyCode===229) return;
+  const ta=e.target, id=r.dataset.id;
+  if(mod&&e.key==='Enter'){e.preventDefault();act(id,'split')}
+  else if(mod&&e.code==='KeyD'){e.preventDefault();act(id,'del',e); focusTxt(id)}
+  else if(mod&&e.code==='KeyB'){e.preventDefault();act(id,'emph'); focusTxt(id)}
+  else if(mod&&e.code==='KeyE'){e.preventDefault();act(id,'mergenext')}
+  else if(e.key==='Enter'&&!e.shiftKey&&!mod&&!e.altKey){
+    e.preventDefault();
+    const pos=ta.selectionStart, v=ta.value;
+    if(v.slice(0,pos).trim()&&v.slice(pos).trim()) act(id,'split');
+    else{const nx=r.nextElementSibling; if(nx){const t=nx.querySelector('.txt'); if(t) t.focus()}}
+  }
 });
 function focusTxt(id){const t=$('list').querySelector(`.row[data-id="${id}"] .txt`); if(t) t.focus()}
 $('bar').addEventListener('click',e=>{const b=e.target.closest('[data-f]'); if(!b) return;
@@ -638,15 +666,19 @@ function renderChips(){
 $('chips').addEventListener('click',e=>{const b=e.target.closest('[data-sec]'); if(!b) return; curSec=b.dataset.sec; secPinned=true; renderChips(); $('gText').focus()});
 $('chips').addEventListener('keydown',e=>{if(e.target.id!=='newSec'||e.key!=='Enter'||e.isComposing) return; e.preventDefault(); let v=e.target.value.trim(); if(!v) return; if(!v.startsWith('#')) v='#'+v;
   if(!S.chips.includes(v)) S.chips.push(v); curSec=v; secPinned=true; e.target.value=''; e.target.blur(); renderChips(); save(); $('gText').focus()});
+// 자막 줄의 메모는 SRT에 넣지 않고 화면 가이드 항목으로 내보냄 (그 줄의 구간·시작 시각)
+function memoItems(){return S.cues.filter(c=>c.memo&&c.memo.trim()).map(c=>({id:'m'+c.id,cue:c.id,memo:true,sec:secAt(c.s)||'#전체',tc:Math.floor(c.s/1000),text:c.memo.trim()}))}
+const guideAll=()=>[...S.guide,...memoItems()];
 function guideGroups(){
-  const g={}; for(const it of S.guide){(g[it.sec]=g[it.sec]||[]).push(it)}
+  const g={}; for(const it of guideAll()){(g[it.sec]=g[it.sec]||[]).push(it)}
   const arr=Object.entries(g).map(([sec,items])=>{items=[...items].sort((a,b)=>(a.tc??-1)-(b.tc??-1)); const tcs=items.filter(x=>x.tc!=null).map(x=>x.tc); return {sec,items,min:sec==='#전체'?-1:(tcs.length?Math.min(...tcs):1e9)}});
   return arr.sort((a,b)=>a.min-b.min);
 }
 function renderGuide(){
   const gs=guideGroups();
-  $('gList').innerHTML=gs.length?gs.map(g=>`<div class="gsec"><h3>${esc(g.sec)}</h3>`+g.items.map(it=>
-    `<div class="gent" data-g="${it.id}"><input class="gtc" value="${it.tc==null?'':fmtTC(it.tc*1000)}" placeholder="--:--" aria-label="타임코드"><textarea class="gtx" rows="1" aria-label="가이드 내용">${esc(it.text)}</textarea><button class="x" type="button" aria-label="지우기" data-gx>×</button></div>`).join('')+'</div>').join('')
+  $('gList').innerHTML=gs.length?gs.map(g=>`<div class="gsec"><h3>${esc(g.sec)}</h3>`+g.items.map(it=>it.memo
+    ?`<div class="gent memo" data-cue="${it.cue}"><button class="gtc" type="button" data-mseek title="이 자막 줄로 이동">${fmtTC(it.tc*1000)}</button><div class="gtx"><span class="lab">메모</span>${esc(it.text)}</div><span></span></div>`
+    :`<div class="gent" data-g="${it.id}"><input class="gtc" value="${it.tc==null?'':fmtTC(it.tc*1000)}" placeholder="--:--" aria-label="타임코드"><textarea class="gtx" rows="1" aria-label="가이드 내용">${esc(it.text)}</textarea><button class="x" type="button" aria-label="지우기" data-gx>×</button></div>`).join('')+'</div>').join('')
     :`<p class="hint">자막에 넣기 어려운 인서트, 누끼, 화면 효과, 순서 변경은 여기에 적어요. 타임코드는 보고 있는 지점으로 자동 입력됩니다.</p>`;
   if(NO_FS) $('gList').querySelectorAll('textarea').forEach(autosize);
 }
@@ -659,7 +691,11 @@ $('gAdd').addEventListener('click',addGuide);
 $('gText').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();addGuide()}});
 $('gTc').addEventListener('input',()=>{tcManual=true});
 $('gTc').addEventListener('blur',()=>{const t=parseTC($('gTc').value); if(t!=null) $('gTc').value=fmtTC(t*1000)});
-$('gList').addEventListener('click',e=>{if(!e.target.closest('[data-gx]')) return; const id=e.target.closest('.gent').dataset.g; S.guide=S.guide.filter(x=>x.id!==id); renderGuide(); renderChips(); save()});
+$('gList').addEventListener('click',e=>{
+  const ms=e.target.closest('[data-mseek]');
+  if(ms){const id=ms.closest('.gent').dataset.cue; if(!$('list').querySelector(`.row[data-id="${id}"]`)){S.filter='all';renderBar();renderList()}
+    act(id,'seek'); const el=$('list').querySelector(`.row[data-id="${id}"]`); if(el){el.scrollIntoView({block:'center'}); const m=el.querySelector('.memo'); if(m){m.focus(); m.setSelectionRange(m.value.length,m.value.length)}} return}
+  if(!e.target.closest('[data-gx]')) return; const id=e.target.closest('.gent').dataset.g; S.guide=S.guide.filter(x=>x.id!==id); renderGuide(); renderChips(); save()});
 $('gList').addEventListener('input',e=>{const el=e.target.closest('.gent'); if(!el) return; const it=S.guide.find(x=>x.id===el.dataset.g); if(!it) return;
   if(e.target.classList.contains('gtx')){it.text=e.target.value;autosize(e.target)} save()});
 $('gList').addEventListener('change',e=>{if(!e.target.classList.contains('gtc')) return; const it=S.guide.find(x=>x.id===e.target.closest('.gent').dataset.g); if(!it) return; it.tc=parseTC(e.target.value); renderGuide(); save()});
@@ -678,7 +714,7 @@ function buildSrt(){
   while(i<C.length){
     const c=C[i];
     if(c.del){let j=i; while(j+1<C.length&&C[j+1].del) j++; blk(c.s,C[j].e,['삭제']); i=j+1; continue}
-    const L=[]; if(c.emph) L.push('(강조자막)'); if(c.sub.trim()) L.push('(서브자막) '+c.sub.trim()); if(c.memo.trim()) L.push('(메모) '+c.memo.trim());
+    const L=[]; if(c.emph) L.push('(강조자막)'); if(c.sub.trim()) L.push('(서브자막) '+c.sub.trim());
     if(c.text.trim()) L.push(...c.text.trim().split('\n').map(x=>x.trim()).filter(Boolean));
     if(L.length) blk(c.s,c.e,L); i++;
   }
@@ -693,7 +729,7 @@ async function copyText(text,html){
 }
 function openExport(){
   const n=counts(); const over=n.over;
-  $('exportSum').innerHTML=`<li>자막 ${n.all-n.del}줄 (강조자막 ${n.emph}줄 포함)</li><li>삭제 ${n.delSeg}구간</li><li>화면 가이드 ${S.guide.length}개</li>`
+  $('exportSum').innerHTML=`<li>자막 ${n.all-n.del}줄 (강조자막 ${n.emph}줄 포함)</li><li>삭제 ${n.delSeg}구간</li><li>화면 가이드 ${guideAll().length}개${memoItems().length?` (메모 ${memoItems().length}개 포함)`:''}</li>`
     +(over?`<li>글자 수 기준을 넘는 줄이 ${over}줄 남아 있어요</li>`:'')+(n.cand?`<li>아직 보지 않은 강조 후보 ${n.cand}개 (SRT에는 들어가지 않아요)</li>`:'');
   $('exportNote').textContent='SRT와 화면 가이드(csv)를 내려받아요. SRT는 프리미어 캡션으로 바로 불러올 수 있습니다.';
   $('exportDlg').showModal();
@@ -701,15 +737,15 @@ function openExport(){
 function anchorSave(name,blob){const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
 function doSave(){
   const base=(S.name||'자막').replace(/[\\/:*?"<>|]/g,'_');
-  const files=[[base+'_가이드.srt',buildSrt()]]; if(S.guide.length) files.push([base+'_화면가이드.csv',guideCsv()]);
+  const files=[[base+'_가이드.srt',buildSrt()]]; if(guideAll().length) files.push([base+'_화면가이드.csv',guideCsv()]);
   files.forEach(([n,d],k)=>setTimeout(()=>anchorSave(n,new Blob([d],{type:'text/plain;charset=utf-8'})),k*300));
   toast('파일을 내려받았어요'); $('exportDlg').close();
 }
 $('btnExport').addEventListener('click',openExport);
 $('exSave').addEventListener('click',doSave);
 $('exCopySrt').addEventListener('click',async()=>{if(await copyText(buildSrt())) toast('SRT 내용을 복사했어요')});
-$('gCopy').addEventListener('click',async()=>{if(!S.guide.length){toast('복사할 가이드가 없어요');return} if(await copyText(guideTsv(),guideHtml())) toast('복사했어요. 시트의 #S 칸에 붙여넣으면 됩니다')});
-$('gCopyTxt').addEventListener('click',async()=>{if(!S.guide.length){toast('복사할 가이드가 없어요');return} if(await copyText(guideTxt())) toast('텍스트로 복사했어요')});
+$('gCopy').addEventListener('click',async()=>{if(!guideAll().length){toast('복사할 가이드가 없어요');return} if(await copyText(guideTsv(),guideHtml())) toast('복사했어요. 시트의 #S 칸에 붙여넣으면 됩니다')});
+$('gCopyTxt').addEventListener('click',async()=>{if(!guideAll().length){toast('복사할 가이드가 없어요');return} if(await copyText(guideTxt())) toast('텍스트로 복사했어요')});
 
 /* ───────── 공통 ───────── */
 let toastT=null;
