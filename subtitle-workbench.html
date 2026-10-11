@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자막 가이드 작업대</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+/* 레이아웃: 한 화면 작업대. 왼쪽 미리보기 · 가운데 자막 목록 · 오른쪽 화면 가이드. 좁은 화면에서는 세로로 쌓임. */
+:root{
+  --bg:#f5f7fa; --card:#ffffff; --field:#f0f2f5; --field-strong:#e4e8ef;
+  --text:#1a1d23; --sub:#555c68; --mute:#8b93a1;
+  --accent:#4a7cff; --accent-hover:#3a6aee; --accent-soft:#eaf0ff; --on-accent:#ffffff;
+  --ok:#17935a; --ok-soft:#e5f6ed;
+  --warn:#b26a00; --warn-soft:#fdf1dc;
+  --danger:#d93636; --danger-soft:#fdeaea;
+  --border:#dfe3ea; --border-strong:#c9cfd9;
+  --screen:#12151a; --screen-text:#ffffff; --screen-mute:#9aa3b2; --screen-emph:#ffd84a;
+  --shadow:0 1px 2px rgba(20,30,50,.06),0 4px 14px rgba(20,30,50,.05);
+  --r-lg:12px; --r-sm:8px; --r-xs:6px;
+  --font:'Pretendard',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#13161b; --card:#1b1f26; --field:#252a33; --field-strong:#303643;
+    --text:#eceff4; --sub:#b3bac6; --mute:#7f8896;
+    --accent:#6f97ff; --accent-hover:#86a8ff; --accent-soft:#232f4d; --on-accent:#0d1220;
+    --ok:#4fca8d; --ok-soft:#173326;
+    --warn:#f0b354; --warn-soft:#3a2d14;
+    --danger:#ff7b7b; --danger-soft:#3d1e1e;
+    --border:#2c323c; --border-strong:#3b424e;
+    --screen:#07090c; --screen-text:#ffffff; --screen-mute:#8f98a7; --screen-emph:#ffd84a;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#13161b; --card:#1b1f26; --field:#252a33; --field-strong:#303643;
+  --text:#eceff4; --sub:#b3bac6; --mute:#7f8896;
+  --accent:#6f97ff; --accent-hover:#86a8ff; --accent-soft:#232f4d; --on-accent:#0d1220;
+  --ok:#4fca8d; --ok-soft:#173326;
+  --warn:#f0b354; --warn-soft:#3a2d14;
+  --danger:#ff7b7b; --danger-soft:#3d1e1e;
+  --border:#2c323c; --border-strong:#3b424e;
+  --screen:#07090c; --screen-text:#ffffff; --screen-mute:#8f98a7; --screen-emph:#ffd84a;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;padding-inline:16px;padding-block:12px;display:flex;flex-direction:column;gap:12px}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* 상단 */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.top h1{font-size:17px;font-weight:700;margin:0;letter-spacing:-.01em}
+.file{display:flex;align-items:center;gap:8px;min-width:0;color:var(--sub);font-size:13px}
+.file b{font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:38ch}
+.tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
+.top .sp{flex:1}
+.btn{border:1px solid var(--border-strong);background:var(--card);border-radius:var(--r-sm);padding:7px 13px;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--field)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.btn.pri:hover{background:var(--accent-hover)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--sub)}
+.btn.ghost:hover{background:var(--field)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.status{display:flex;align-items:center;gap:10px;background:var(--accent-soft);border-radius:var(--r-sm);padding:8px 12px;font-size:13px}
+.status .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.status .dot{animation:none}}
+
+/* 본문 그리드 */
+.main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(260px,29%) minmax(0,1fr) minmax(280px,27%);gap:12px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.panel>h2{font-size:13px;font-weight:700;margin:0;padding:11px 14px 9px;color:var(--sub);letter-spacing:.02em}
+.scroll{overflow:auto;min-height:0;flex:1}
+.left{gap:0}
+.left .scroll{padding:0 14px 14px;display:flex;flex-direction:column;gap:14px}
+
+/* 미리보기 화면 */
+.screen{position:relative;background:var(--screen);border-radius:var(--r-sm);aspect-ratio:16/9;max-width:100%;overflow:hidden;container-type:inline-size}
+.screen video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--screen)}
+.screen .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--screen-mute);font-size:12.5px;text-align:center;padding:12px}
+.cap{position:absolute;left:0;right:0;bottom:7%;display:flex;flex-direction:column;align-items:center;gap:1cqw;pointer-events:none}
+.cap .c-sub{font-size:3cqw;color:var(--screen-emph);font-weight:700;text-shadow:0 0 .6cqw #000,0 0 .6cqw #000}
+.cap .c-txt{font-size:3.7cqw;font-weight:700;color:var(--screen-text);white-space:pre;text-align:center;line-height:1.3;text-shadow:0 0 .7cqw #000,0 0 .7cqw #000,0 0 .7cqw #000}
+.cap.emph .c-txt{font-size:5cqw;color:var(--screen-emph)}
+.cap .c-del{font-size:3cqw;font-weight:700;color:var(--screen-text);background:var(--danger);padding:.4cqw 1.6cqw;border-radius:99px}
+.safe{position:absolute;inset:0 6% 0 6%;border-inline:1px dashed color-mix(in srgb,var(--screen-mute) 45%,transparent);pointer-events:none}
+.vrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:12.5px;color:var(--sub)}
+.vrow label{display:flex;align-items:center;gap:5px}
+.hint{font-size:12.5px;color:var(--sub);margin:0}
+details.set{border-top:1px solid var(--border);padding-top:10px}
+details.set summary{font-weight:700;font-size:13px;cursor:pointer;color:var(--sub)}
+.set .f{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-size:12.5px;color:var(--sub)}
+.set .f .inl{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.set input[type=number]{width:62px}
+.inp{border:1px solid var(--border);background:var(--field);border-radius:var(--r-xs);padding:6px 8px;min-width:0}
+textarea.inp{resize:vertical;width:100%}
+pre.fmt{margin:8px 0 0;background:var(--field);border-radius:var(--r-xs);padding:9px 10px;font-family:var(--mono);font-size:12px;line-height:1.55;overflow-x:auto;color:var(--text)}
+
+/* 자막 목록 */
+.bar{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;border-bottom:1px solid var(--border)}
+.chip{border:1px solid var(--border);background:var(--card);border-radius:99px;padding:3px 10px;font-size:12.5px;color:var(--sub);white-space:nowrap}
+.chip b{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.chip:hover{background:var(--field)}
+.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.chip.on b{color:var(--accent)}
+.list{padding:4px 0 40px}
+.row{padding:5px 14px;border-bottom:1px solid var(--border)}
+.row.cur{background:var(--accent-soft)}
+.row.play{box-shadow:inset 3px 0 0 var(--accent)}
+.rm{display:grid;grid-template-columns:50px minmax(0,1fr) 30px auto;align-items:start;gap:8px}
+.tc{border:0;background:none;padding:5px 0;font-family:var(--mono);font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums;text-align:left}
+.tc:hover{color:var(--accent)}
+.txt{border:1px solid transparent;background:transparent;border-radius:var(--r-xs);padding:4px 7px;width:100%;resize:none;line-height:1.5;field-sizing:content;min-height:31px;overflow:hidden}
+.txt:hover{border-color:var(--border)}
+.txt:focus{background:var(--card);border-color:var(--accent);outline:0}
+.cnt{font-size:12px;font-variant-numeric:tabular-nums;text-align:center;padding:5px 0;color:var(--mute);border-radius:var(--r-xs)}
+.cnt.near{color:var(--warn);font-weight:700}
+.cnt.over{background:var(--danger-soft);color:var(--danger);font-weight:700}
+.acts{display:flex;gap:4px;padding-top:2px}
+.pill{border:1px solid var(--border);background:var(--card);border-radius:var(--r-xs);padding:3px 8px;font-size:12px;color:var(--sub)}
+.pill:hover{background:var(--field)}
+.pill.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.pill.del.on{background:var(--danger);border-color:var(--danger)}
+.row.is-emph .txt{font-weight:700}
+.row.is-del{background:var(--danger-soft)}
+.row.is-del .txt{text-decoration:line-through;color:var(--mute)}
+.extra{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:4px 0 2px 58px;font-size:12.5px;color:var(--sub)}
+.extra label{display:flex;align-items:center;gap:5px;flex:1 1 180px;min-width:0}
+.extra label span{white-space:nowrap}
+.extra .inp{flex:1;padding:3px 7px}
+.note{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:3px 0 2px 58px;font-size:12.5px;color:var(--sub)}
+.note .lab{font-size:11px;font-weight:700;padding:1px 6px;border-radius:99px;white-space:nowrap}
+.note.ai .lab{background:var(--ok-soft);color:var(--ok)}
+.note.cand .lab{background:var(--warn-soft);color:var(--warn)}
+.note del{text-decoration:none;background:var(--danger-soft);color:var(--danger);border-radius:2px}
+.note q{quotes:'“' '”';color:var(--text);font-weight:500}
+.lnk{border:0;background:none;padding:0;color:var(--accent);font-size:12.5px;text-decoration:underline;text-underline-offset:2px}
+.secmark{display:flex;align-items:center;gap:10px;margin:6px 0 4px}
+.secmark::after{content:'';flex:1;height:1px;background:var(--border-strong)}
+.secname{border:1px solid transparent;background:var(--field);border-radius:99px;padding:2px 10px;font-weight:700;font-size:12.5px;width:17ch;min-width:0}
+.secname:focus{border-color:var(--accent);outline:0}
+.empty{padding:28px 16px;text-align:center;color:var(--sub)}
+
+/* 화면 가이드 */
+.gtop{padding:0 14px 12px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.chips .newsec{width:11ch;border-radius:99px;padding:3px 10px;font-size:12.5px}
+.gform{display:grid;grid-template-columns:64px minmax(0,1fr);gap:6px}
+.gform .inp{font-size:13.5px}
+#gTc{font-family:var(--mono);font-size:12.5px;text-align:center;height:34px}
+#gText{field-sizing:content;min-height:34px;max-height:160px;resize:none}
+.gform .btn{grid-column:1/-1}
+.glist{padding:10px 14px 14px;display:flex;flex-direction:column;gap:14px}
+.gsec h3{margin:0 0 4px;font-size:13px;font-weight:700}
+.gent{display:grid;grid-template-columns:52px minmax(0,1fr) 22px;gap:4px;align-items:start;padding:2px 0}
+.gent .gtc{border:1px solid transparent;background:transparent;font-family:var(--mono);font-size:12px;color:var(--accent);padding:4px 2px;border-radius:var(--r-xs);width:100%;font-variant-numeric:tabular-nums}
+.gent .gtx{border:1px solid transparent;background:transparent;border-radius:var(--r-xs);padding:3px 6px;resize:none;field-sizing:content;min-height:28px;width:100%;overflow:hidden}
+.gent .gtc:hover,.gent .gtx:hover{border-color:var(--border)}
+.gent .gtc:focus,.gent .gtx:focus{border-color:var(--accent);background:var(--card);outline:0}
+.gent .x{border:0;background:none;color:var(--mute);font-size:15px;line-height:1;padding:5px 0}
+.gent .x:hover{color:var(--danger)}
+.gfoot{border-top:1px solid var(--border);padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px}
+
+/* 대화상자, 토스트 */
+dialog{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--card);color:var(--text);padding:20px;width:min(440px,calc(100vw - 32px));box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(10,14,20,.45)}
+dialog h2{margin:0 0 6px;font-size:16px}
+dialog p{margin:0 0 12px;color:var(--sub)}
+dialog ul{margin:0 0 14px;padding-left:18px;color:var(--sub)}
+.drow{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+#copyBox{width:100%;height:140px;margin-bottom:12px;font-family:var(--mono);font-size:12px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 16px;border-radius:99px;font-size:13px;font-weight:500;max-width:calc(100vw - 32px);box-shadow:var(--shadow);z-index:20}
+body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 영상)';position:fixed;inset:10px;border:2px dashed var(--accent);border-radius:var(--r-lg);background:color-mix(in srgb,var(--accent-soft) 88%,transparent);display:grid;place-items:center;font-size:16px;font-weight:700;color:var(--accent);z-index:30;pointer-events:none}
+
+@media (max-width:980px){
+  html,body{height:auto}
+  .main{grid-template-columns:minmax(0,1fr);flex:none}
+  .panel{overflow:visible}
+  .scroll{overflow:visible}
+  .center .scroll{max-height:70vh;overflow:auto}
+  .rm{grid-template-columns:44px minmax(0,1fr) 26px}
+  .acts{grid-column:2/-1;padding:0 0 2px}
+  .extra,.note{margin-left:52px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>자막 가이드 작업대</h1>
+  <div class="file"><b id="fileName">예시 인터뷰</b><span class="tag" id="demoTag">예시 데이터</span></div>
+  <span class="sp"></span>
+  <button class="btn" id="btnSrt" type="button">SRT 불러오기</button>
+  <button class="btn" id="btnAi" type="button" title="글자 수 기준을 넘는 줄을 규칙으로 나눕니다">긴 줄 나누기</button>
+  <button class="btn pri" id="btnExport" type="button">내보내기</button>
+  <input type="file" id="fileSrt" accept=".srt,.txt" hidden>
+  <input type="file" id="fileVid" accept="video/*,audio/*" hidden>
+</header>
+
+<div class="main">
+  <section class="panel left">
+    <h2>미리보기</h2>
+    <div class="scroll">
+      <div class="screen" id="screen">
+        <video id="video" controls playsinline hidden></video>
+        <div class="ph" id="ph">영상 없이도 작업할 수 있어요.<br>선택한 줄의 자막이 아래에 보여요.</div>
+        <div class="safe"></div>
+        <div class="cap" id="cap"></div>
+      </div>
+      <div class="vrow">
+        <button class="btn sm" id="btnVid" type="button">가편 영상 불러오기</button>
+        <label><input type="checkbox" id="follow" checked> 재생 위치 따라가기</label>
+      </div>
+      <p class="hint">영상은 이 컴퓨터에서만 재생되고 어디에도 올라가지 않아요.</p>
+      <details class="set" id="setBox">
+        <summary>검수 기준</summary>
+        <div class="f"><span>말자막 한 줄 글자 수</span>
+          <div class="inl"><input class="inp" type="number" id="limit" min="8" max="40" value="20">자 기준, <input class="inp" type="number" id="tol" min="0" max="8" value="2">자까지는 그대로 둠</div></div>
+        <div class="f"><label for="dict">고유명사 사전 (쉼표로 구분)</label>
+          <textarea class="inp" id="dict" rows="3" placeholder="예: 천녹, 제로투히어로, 이대헌, 레드부스터스"></textarea></div>
+      </details>
+      <details class="set">
+        <summary>SRT에 들어가는 표기</summary>
+        <pre class="fmt">삭제                   ← 지울 구간 (연속이면 하나로)
+
+(강조자막)
+다시 한 번 후회 없이 농구해보자!
+
+(서브자막) ㅋㅋ
+(메모) 여기부터 BGM 다른 걸로
+또 이제 살도 찌고</pre>
+      </details>
+    </div>
+  </section>
+
+  <section class="panel center">
+    <h2>자막</h2>
+    <div class="bar" id="bar"></div>
+    <div class="scroll" id="listScroll"><div class="list" id="list"></div></div>
+  </section>
+
+  <section class="panel right">
+    <h2>화면 가이드</h2>
+    <div class="gtop">
+      <div class="chips" id="chips"></div>
+      <div class="gform">
+        <input class="inp" id="gTc" placeholder="00:00" aria-label="타임코드" inputmode="numeric">
+        <textarea class="inp" id="gText" rows="1" placeholder="인서트, 누끼, 화면 효과, 순서 변경 등" aria-label="가이드 내용"></textarea>
+        <button class="btn" id="gAdd" type="button">가이드 추가 (Enter)</button>
+      </div>
+    </div>
+    <div class="scroll"><div class="glist" id="gList"></div></div>
+    <div class="gfoot">
+      <button class="btn sm" id="gCopy" type="button">시트용 복사</button>
+      <button class="btn sm" id="gCopyTxt" type="button">텍스트로 복사</button>
+    </div>
+  </section>
+</div>
+
+<dialog id="exportDlg">
+  <h2>내보내기</h2>
+  <ul id="exportSum"></ul>
+  <p id="exportNote"></p>
+  <div class="drow">
+    <button class="btn ghost" type="button" data-close>닫기</button>
+    <button class="btn" id="exCopySrt" type="button">SRT 내용 복사</button>
+    <button class="btn pri" id="exSave" type="button">파일 받기</button>
+  </div>
+</dialog>
+<dialog id="confirmDlg">
+  <h2 id="cfTitle"></h2><p id="cfMsg"></p>
+  <div class="drow"><button class="btn ghost" type="button" data-close>취소</button><button class="btn pri" id="cfYes" type="button">계속</button></div>
+</dialog>
+<dialog id="copyDlg">
+  <h2>직접 복사해 주세요</h2><p>이 화면에서는 자동 복사가 막혀 있어요. 아래 내용을 전체 선택해 복사하면 됩니다.</p>
+  <textarea class="inp" id="copyBox" readonly></textarea>
+  <div class="drow"><button class="btn pri" type="button" data-close>닫기</button></div>
+</dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const LS='subtitle-workbench-v1';
+const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+let uid=1; const nid=()=>'c'+(uid++);
+
+/* ───────── 상태 ───────── */
+let S={name:'예시 인터뷰',demo:true,limit:20,tol:2,dict:'',cues:[],guide:[],chips:[],filter:'all'};
+let curId=null, playId=null, curSec='#전체', secPinned=false, tcManual=false, lastDelIdx=null;
+const mk=(s,e,text,o={})=>Object.assign({id:nid(),s,e,text,emph:false,del:false,sub:'',memo:'',sec:null,orig:null,cand:null,grp:null,g0:null,open:false},o);
+
+function demo(){
+  uid=1;
+  const c=[
+    mk(0,2600,'안녕하세요 오늘 인터뷰를 맡은 김하늘입니다',{sec:'#인트로'}),
+    mk(2600,7200,'PD) 요즘 가장 자주 쓰는 물건을 하나만 소개해 주신다면 어떤 게 있을까요?'),
+    mk(7200,10100,'제가 요즘 매일 들고 다니는 텀블러가 있는데요',{sec:'#첫 번째 물건'}),
+    mk(10100,12000,'이게 보냉이 진짜 오래가요',{emph:true}),
+    mk(12000,14300,'음 그러니까 그게 어 뭐였더라',{del:true}),
+    mk(14300,16000,'아 잠깐만요 다시 할게요',{del:true}),
+    mk(16000,19800,'아침에 얼음을 넣으면 저녁까지 그대로 있더라고요',{sub:'얼음 그대로',memo:'여기부터 BGM 밝게'}),
+    mk(19800,22400,'그래서 주변에 선물도 몇 계 했어요'),
+  ];
+  return {name:'예시 인터뷰',demo:true,limit:20,tol:2,dict:'',cues:c,filter:'all',chips:[],
+    guide:[{id:nid(),sec:'#전체',tc:null,text:'지난 편과 같은 느낌으로 BGM, 효과음 부탁드려요'},
+           {id:nid(),sec:'#인트로',tc:2,text:'이름 자막 넣어주세요'},
+           {id:nid(),sec:'#첫 번째 물건',tc:9,text:'텀블러 누끼컷 띄워주시고 주변에 반짝이 효과'}]};
+}
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}},400)}
+function restore(){
+  try{const raw=localStorage.getItem(LS); if(!raw) return false; const d=JSON.parse(raw);
+    if(!d||!Array.isArray(d.cues)||!d.cues.length) return false;
+    S=Object.assign(S,d); S.guide=Array.isArray(d.guide)?d.guide:[]; S.chips=Array.isArray(d.chips)?d.chips:[];
+    let mx=0; for(const x of [...S.cues,...S.guide]){const n=parseInt(String(x.id).slice(1),10); if(n>mx) mx=n; if(x.open) x.open=false}
+    uid=mx+1; return true;
+  }catch(e){return false}
+}
+
+/* ───────── 시간·글자 수 ───────── */
+const p2=n=>String(n).padStart(2,'0');
+function fmtTC(ms){const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60;return (h?h+':':'')+p2(m)+':'+p2(s)}
+function srtTime(ms){ms=Math.max(0,Math.round(ms));const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),x=ms%1000;return p2(h)+':'+p2(m)+':'+p2(s)+','+String(x).padStart(3,'0')}
+function parseTC(v){v=String(v||'').trim(); if(!v) return null;
+  if(v.includes(':')){const p=v.split(':').map(x=>parseInt(x,10)||0); return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+(p[1]||0)}
+  const d=v.replace(/\D/g,''); if(!d) return null;
+  if(d.length<=2) return +d; if(d.length<=4) return (+d.slice(0,-2))*60+(+d.slice(-2));
+  return (+d.slice(0,-4))*3600+(+d.slice(-4,-2))*60+(+d.slice(-2))}
+const lineLen=s=>[...s.replace(/^PD\)\s*/,'').trim()].length;
+const maxLenText=t=>Math.max(0,...String(t).split('\n').map(lineLen));
+function lenState(c){if(c.del||c.emph) return 'ok'; const n=maxLenText(c.text); return n>S.limit+S.tol?'over':n>S.limit?'near':'ok'}
+
+/* ───────── SRT 읽기 ───────── */
+const MEMO_RE=/BGM|브금|효과음|효과|음악|사운드|배경음/i;
+function parseSrt(txt){
+  if(txt.charCodeAt(0)===0xFEFF) txt=txt.slice(1); txt=txt.replace(/\r\n?/g,'\n');
+  const out=[];
+  for(const b of txt.split(/\n\s*\n/)){
+    const L=b.split('\n'); const ti=L.findIndex(x=>x.includes('-->')); if(ti<0) continue;
+    const m=L[ti].match(/(\d+):(\d+):(\d+)[,.](\d+)\s*-->\s*(\d+):(\d+):(\d+)[,.](\d+)/); if(!m) continue;
+    const t=i=>(+m[i])*3600000+(+m[i+1])*60000+(+m[i+2])*1000+(+String(m[i+3]).padEnd(3,'0').slice(0,3));
+    const c=mk(t(1),t(5),''); const sub=[],memo=[],text=[];
+    const body=L.slice(ti+1).map(x=>x.trim()).filter(Boolean);
+    body.forEach((ln,i)=>{
+      let g;
+      if(ln==='삭제'){c.del=true;return}
+      if(text.length){text.push(ln);return}
+      if(/^\(강조\s*자막\)$/.test(ln)){c.emph=true;return}
+      if((g=ln.match(/^\(서브\s*자막\)\s*(.+)$/))){sub.push(g[1]);return}
+      if((g=ln.match(/^\(메모\)\s*(.+)$/))){memo.push(g[1]);return}
+      if((g=ln.match(/^\(수정전\)\s*(.+)$/))){c.orig=g[1].trim();return}
+      if((g=ln.match(/^\(강조후보\)\s*(.+)$/))){c.cand={phrase:g[1].trim()};return}
+      if((g=ln.match(/^\(구간\)\s*(.+)$/))){c.sec=(g[1].trim().startsWith('#')?'':'#')+g[1].trim();return}
+      if((g=ln.match(/^[(\[]([^()\[\]]+)[)\]](?:\s*\/\s*(.+))?$/))){
+        for(const part of g[1].split('/').map(x=>x.trim()).filter(Boolean)){
+          if(/^(강조\s*)?자막$/.test(part)) c.emph=true; else if(MEMO_RE.test(part)) memo.push(part); else sub.push(part);
+        }
+        if(g[2]) memo.push(g[2].trim()); return;
+      }
+      if(i<body.length-1 && /브금|BGM|효과음/i.test(ln) && !/^PD\)/.test(ln)){memo.push(ln);return}
+      text.push(ln);
+    });
+    c.text=text.join('\n'); c.sub=sub.join(' / '); c.memo=memo.join(' / ');
+    if(c.del){c.text=c.text||''; }
+    out.push(c);
+  }
+  return out.sort((a,b)=>a.s-b.s);
+}
+async function readSrtFile(f){
+  let t=await f.text();
+  if(t.split(String.fromCharCode(0xFFFD)).length>6){try{t=new TextDecoder('euc-kr').decode(await f.arrayBuffer())}catch(e){}}
+  return t;
+}
+function loadSrtText(txt,name){
+  const cues=parseSrt(txt);
+  if(!cues.length){toast('자막을 찾지 못했어요. SRT 파일이 맞는지 확인해 주세요.');return}
+  const go=()=>{
+    S.cues=cues;S.guide=[];S.chips=[];S.name=name.replace(/\.(srt|txt)$/i,'').replace(/_검수본$/,'');S.demo=false;S.filter='all';curId=cues[0].id;curSec='#전체';secPinned=false;
+    // 검수본의 분할 표시(||)를 실제 줄로 나눔. 시간은 글자 수 비율.
+    for(const c of [...S.cues]){
+      if(c.del||!c.text.includes('||')) continue;
+      const parts=c.text.split('||').map(x=>x.trim()).filter(Boolean);
+      if(parts.length<2||c.text.includes('\n')){c.text=c.text.replace(/\s*\|\|\s*/g,' ').trim();continue}
+      replaceWithParts(c,parts,{orig:c.orig??parts.join(' '),n:parts.length,fixed:c.orig!=null});
+    }
+    const n=counts(); renderAll(); save();
+    toast(`자막 ${cues.length}줄을 불러왔어요`+(n.ai||n.cand?` · AI 수정 ${n.ai}줄 · 강조 후보 ${n.cand}개`:''),4000)};
+  if(S.demo) go(); else ask('새 SRT를 불러올까요?','지금 작업 중인 자막과 화면 가이드가 지워져요.',go);
+}
+
+/* ───────── 분할 ───────── */
+const BAD_NEXT=/^(수|것|거|게|걸|때|중|등|전|후|뒤|줄|적|번|데|뿐|만큼|있|없|같|않|못|싶|모르|하[고는면지]|되)/;
+const BAD_END=/^(못|안|잘|더|꼭|좀|막|한|이|그|저|제|또|다|큰|몇|되게|너무|정말|진짜|아직|항상)$/;
+const GOOD_END=/([,.?!…]|고|서|면|는데|은데|니까|지만|다가|으며|면서|가지고|해서|어서|아서|요|죠|다)$/;
+function splitLocal(text,limit){
+  limit=limit||S.limit;
+  const pre=/^PD\)\s*/.test(text)?'PD) ':''; const body=text.replace(/^PD\)\s*/,'').trim();
+  const w=body.split(/\s+/).filter(Boolean); const total=[...body].length;
+  if(total<=limit+S.tol||w.length<2) return [text];
+  const wl=w.map(x=>[...x].length);
+  const seg=(i,j)=>{let n=j-i-1; for(let k=i;k<j;k++) n+=wl[k]; return n};
+  let best=null;
+  const n0=Math.ceil(total/limit);
+  for(let n=n0;n<=Math.min(w.length,n0+1);n++){
+    const target=total/n, INF=1e12;
+    const f=Array.from({length:n+1},()=>Array(w.length+1).fill(INF)), bk=Array.from({length:n+1},()=>Array(w.length+1).fill(-1));
+    f[0][0]=0;
+    for(let k=1;k<=n;k++) for(let j=k;j<=w.length;j++) for(let i=k-1;i<j;i++){
+      if(f[k-1][i]>=INF) continue;
+      const len=seg(i,j), over=Math.max(0,len-limit);
+      let cost=(len-target)**2+over*over*25+(len<5?80:0);
+      if(j<w.length){ if(BAD_NEXT.test(w[j])) cost+=45; if(BAD_END.test(w[j-1])) cost+=45; if(GOOD_END.test(w[j-1])) cost-=22; }
+      if(f[k-1][i]+cost<f[k][j]){f[k][j]=f[k-1][i]+cost;bk[k][j]=i}
+    }
+    const parts=[]; let j=w.length;
+    for(let k=n;k>=1;k--){const i=bk[k][j]; parts.unshift(w.slice(i,j).join(' ')); j=i}
+    const mx=Math.max(...parts.map(p=>[...p].length));
+    const cand={parts,cost:f[n][w.length]+n*6,mx};
+    if(!best||cand.cost<best.cost) best=cand;
+    if(cand.mx<=limit+S.tol) break;
+  }
+  best.parts[0]=pre+best.parts[0];
+  return best.parts;
+}
+function spreadTimes(s,e,parts){
+  const wt=parts.map(p=>Math.max(1,[...p.replace(/\s/g,'')].length)); const tot=wt.reduce((a,b)=>a+b,0);
+  const out=[]; let acc=0;
+  parts.forEach((p,i)=>{const a=s+Math.round((e-s)*acc/tot/10)*10; acc+=wt[i]; const b=i===parts.length-1?e:s+Math.round((e-s)*acc/tot/10)*10; out.push([a,b])});
+  return out;
+}
+const byId=id=>S.cues.find(c=>c.id===id);
+const idxOf=id=>S.cues.findIndex(c=>c.id===id);
+function replaceWithParts(c,parts,meta){
+  const i=idxOf(c.id); const tm=spreadTimes(c.s,c.e,parts); const grp=meta?nid():null;
+  const news=parts.map((p,k)=>k===0
+    ? Object.assign(c,{text:p,s:tm[0][0],e:tm[0][1],grp,g0:meta||null,orig:meta?null:c.orig})
+    : mk(tm[k][0],tm[k][1],p,{grp}));
+  S.cues.splice(i,1,...news);
+  return news;
+}
+function revert(c){
+  if(c.g0){
+    const i=idxOf(c.id); let j=i; while(j+1<S.cues.length&&S.cues[j+1].grp===c.grp) j++;
+    c.e=S.cues[j].e; c.text=c.g0.orig; c.g0=null; c.grp=null; c.orig=null;
+    S.cues.splice(i+1,j-i);
+  }else if(c.orig!=null){c.text=c.orig;c.orig=null}
+}
+function splitRemaining(){
+  let n=0;
+  for(const c of [...S.cues]){
+    if(c.del||c.emph||c.text.includes('\n')||lenState(c)!=='over') continue;
+    const parts=splitLocal(c.text); if(parts.length<2) continue;
+    replaceWithParts(c,parts,{orig:c.orig??c.text,n:parts.length,fixed:c.orig!=null}); n++;
+  }
+  return n;
+}
+
+/* ───────── AI 1차 ───────── */
+function lcsTable(a,b){const A=[...a],B=[...b],n=A.length,m=B.length,t=Array.from({length:n+1},()=>new Uint16Array(m+1));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)t[i][j]=A[i]===B[j]?t[i+1][j+1]+1:Math.max(t[i+1][j],t[i][j+1]); return {A,B,t}}
+function diffOld(a,b){const {A,B,t}=lcsTable(a,b); let i=0,j=0,h='',run='';
+  const flush=()=>{if(run){h+='<del>'+esc(run)+'</del>';run=''}};
+  while(i<A.length){ if(j<B.length&&A[i]===B[j]){flush();h+=esc(A[i]);i++;j++} else if(j<B.length&&t[i][j+1]>=t[i+1][j]){j++} else {run+=A[i];i++} }
+  flush(); return h}
+function runSplit(){
+  const n=splitRemaining(); renderAll(); save();
+  toast(n?`${n}줄을 나눴어요. 끊긴 위치가 어색하면 '되돌리기'나 '윗줄과 합치기'로 고치면 됩니다`:'기준을 넘는 줄이 없어요',4500);
+}
+
+/* ───────── 자막 목록 ───────── */
+function counts(){
+  let over=0,ai=0,cand=0,del=0,emph=0,delSeg=0,prevDel=false;
+  for(const c of S.cues){
+    if(lenState(c)==='over') over++; if(c.g0||c.orig!=null) ai++; if(c.cand) cand++; if(c.emph) emph++;
+    if(c.del){del++; if(!prevDel) delSeg++} prevDel=c.del;
+  }
+  return {all:S.cues.length,over,ai,cand,del,emph,delSeg};
+}
+const FILTERS=[['all','전체'],['over','글자 수 초과'],['ai','AI 수정'],['cand','강조 후보'],['emph','강조자막'],['del','삭제']];
+function match(c){switch(S.filter){case 'over':return lenState(c)==='over';case 'ai':return !!(c.g0||c.grp||c.orig!=null);case 'cand':return !!c.cand;case 'emph':return c.emph;case 'del':return c.del;default:return true}}
+function renderBar(){
+  const n=counts();
+  $('bar').innerHTML=FILTERS.map(([k,l])=>`<button class="chip${S.filter===k?' on':''}" data-f="${k}" type="button">${l} <b>${k==='del'?n.delSeg+'구간':n[k]}</b></button>`).join('')
+    +(n.ai?`<button class="lnk" data-f="clearai" type="button" style="margin-left:auto">AI 수정 표시 모두 지우기</button>`:'');
+}
+function rowHTML(c){
+  const st=lenState(c), n=maxLenText(c.text), open=c.open||c.sub||c.memo;
+  let h=`<div class="row${c.del?' is-del':''}${c.emph?' is-emph':''}${c.id===curId?' cur':''}" data-id="${c.id}">`;
+  if(c.sec!=null) h+=`<div class="secmark"><input class="secname" value="${esc(c.sec)}" aria-label="구간 이름"><button class="lnk" data-act="unsec" type="button">구간 해제</button></div>`;
+  h+=`<div class="rm"><button class="tc" data-act="seek" type="button" title="이 지점으로 이동">${fmtTC(c.s)}</button>`
+    +`<textarea class="txt" rows="1" spellcheck="false" aria-label="자막">${esc(c.text)}</textarea>`
+    +`<span class="cnt ${st}" title="가장 긴 줄의 글자 수">${c.del?'':n}</span>`
+    +`<span class="acts"><button class="pill${c.emph?' on':''}" data-act="emph" aria-pressed="${c.emph}" type="button">강조</button>`
+    +`<button class="pill del${c.del?' on':''}" data-act="del" aria-pressed="${c.del}" type="button" title="Shift를 누른 채 누르면 사이 줄까지 한 번에">삭제</button>`
+    +`<button class="pill" data-act="more" aria-label="서브자막, 메모, 나누기" aria-expanded="${!!c.open}" type="button">⋯</button></span></div>`;
+  if(open) h+=`<div class="extra"><label><span>서브자막</span><input class="inp sub" value="${esc(c.sub)}" placeholder="ㅋㅋ, 찐 애장품"></label>`
+    +`<label><span>메모</span><input class="inp memo" value="${esc(c.memo)}" placeholder="BGM, 효과음"></label>`
+    +(c.open?`<button class="lnk" data-act="split" type="button">커서에서 나누기</button><button class="lnk" data-act="merge" type="button">윗줄과 합치기</button>`
+    +(c.sec==null?`<button class="lnk" data-act="sec" type="button">여기서 구간 시작</button>`:'')
+    +`<button class="lnk" data-act="toguide" type="button">화면 가이드 쓰기</button>`:'')+`</div>`;
+  if(c.g0) h+=`<div class="note ai"><span class="lab">AI</span><span>${c.g0.n}줄로 나눔${c.g0.fixed?' · 수정 전: '+diffOldGroup(c):''}</span><button class="lnk" data-act="revert" type="button">되돌리기</button><button class="lnk" data-act="okai" type="button">확인</button></div>`;
+  else if(c.orig!=null) h+=`<div class="note ai"><span class="lab">AI</span><span>수정 전: ${diffOld(c.orig,c.text)}</span><button class="lnk" data-act="revert" type="button">되돌리기</button><button class="lnk" data-act="okai" type="button">확인</button></div>`;
+  if(c.cand) h+=`<div class="note cand"><span class="lab">강조 후보</span><q>${esc(c.cand.phrase)}</q><button class="lnk" data-act="candok" type="button">강조자막으로</button><button class="lnk" data-act="candno" type="button">넘기기</button></div>`;
+  return h+'</div>';
+}
+function diffOldGroup(c){const i=idxOf(c.id); let j=i,t=[]; while(j<S.cues.length&&S.cues[j].grp===c.grp){t.push(S.cues[j].text);j++} return diffOld(c.g0.orig,t.join(' '))}
+const NO_FS=!(window.CSS&&CSS.supports&&CSS.supports('field-sizing','content'));
+function autosize(el){if(!NO_FS) return; el.style.height='auto'; el.style.height=el.scrollHeight+'px'}
+function renderList(){
+  const sc=$('listScroll'), top=sc.scrollTop;
+  const rows=S.cues.filter(match);
+  $('list').innerHTML=rows.length?rows.map(rowHTML).join(''):`<div class="empty">이 조건에 해당하는 줄이 없어요.</div>`;
+  if(NO_FS) $('list').querySelectorAll('textarea').forEach(autosize);
+  sc.scrollTop=top;
+}
+function refreshRow(id){
+  const el=$('list').querySelector(`.row[data-id="${id}"]`), c=byId(id); if(!el||!c){renderList();return}
+  const tmp=document.createElement('div'); tmp.innerHTML=rowHTML(c); const nw=tmp.firstChild;
+  if(id===playId) nw.classList.add('play');
+  el.replaceWith(nw); if(NO_FS) nw.querySelectorAll('textarea').forEach(autosize);
+}
+function renderAll(){
+  $('fileName').textContent=S.name; $('demoTag').hidden=!S.demo;
+  $('limit').value=S.limit; $('tol').value=S.tol; if(document.activeElement!==$('dict')) $('dict').value=S.dict;
+  renderBar(); renderList(); renderChips(); renderGuide(); showCap();
+}
+function selectRow(id){
+  if(curId===id) return;
+  const o=$('list').querySelector('.row.cur'); if(o) o.classList.remove('cur');
+  curId=id; const el=$('list').querySelector(`.row[data-id="${id}"]`); if(el) el.classList.add('cur');
+  const c=byId(id); if(c){setCurTime(c.s/1000); if(!vidOn()||$('video').paused) showCap()}
+}
+function act(id,a,ev){
+  const c=byId(id); if(!c) return; const i=idxOf(id);
+  const rowEl=$('list').querySelector(`.row[data-id="${id}"]`);
+  switch(a){
+    case 'seek': selectRow(id); if(vidOn()) $('video').currentTime=c.s/1000+0.01; showCap(); return;
+    case 'emph': c.emph=!c.emph; break;
+    case 'del':{
+      const v=!c.del;
+      if(ev&&ev.shiftKey&&lastDelIdx!=null&&S.cues[lastDelIdx]){const a0=Math.min(lastDelIdx,i),b0=Math.max(lastDelIdx,i); for(let k=a0;k<=b0;k++) S.cues[k].del=v; lastDelIdx=i; renderBar(); renderList(); save(); return}
+      c.del=v; lastDelIdx=i; break}
+    case 'more': c.open=!c.open; break;
+    case 'split':{
+      const ta=rowEl.querySelector('.txt'); const pos=ta.selectionStart; const a1=c.text.slice(0,pos).trim(), b1=c.text.slice(pos).trim();
+      if(!a1||!b1){toast('나눌 위치에 커서를 두고 눌러 주세요 (Ctrl+Enter도 돼요)');return}
+      c.g0=null;c.grp=null; const news=replaceWithParts(c,[a1,b1],null); renderBar(); renderList(); save();
+      const nx=$('list').querySelector(`.row[data-id="${news[1].id}"] .txt`); if(nx){nx.focus();nx.setSelectionRange(0,0)} return}
+    case 'merge':{
+      if(i===0) return; const p=S.cues[i-1]; p.text=(p.text+' '+c.text).trim(); p.e=c.e; if(!p.sub) p.sub=c.sub; if(!p.memo) p.memo=c.memo;
+      S.cues.splice(i,1); curId=p.id; renderBar(); renderList(); save(); return}
+    case 'sec': c.sec='#구간'; renderList(); renderChips(); save(); {const inp=$('list').querySelector(`.row[data-id="${id}"] .secname`); if(inp){inp.focus();inp.select()}} return;
+    case 'unsec': c.sec=null; renderList(); renderChips(); save(); return;
+    case 'toguide': selectRow(id); tcManual=false; setCurTime(c.s/1000); $('gText').focus(); return;
+    case 'revert': revert(c); renderBar(); renderList(); save(); return;
+    case 'okai':{ if(c.g0){const g=c.grp; for(const x of S.cues) if(x.grp===g){x.grp=null;x.g0=null}} c.orig=null; break}
+    case 'candok': c.emph=true; if(c.cand.phrase&&c.cand.phrase!==c.text){c.orig=c.orig??c.text; c.text=c.cand.phrase} c.cand=null; break;
+    case 'candno': c.cand=null; break;
+  }
+  refreshRow(id); renderBar(); save(); if(id===curId) showCap();
+}
+$('list').addEventListener('click',e=>{const b=e.target.closest('[data-act]'); if(!b) return; const r=b.closest('.row'); act(r.dataset.id,b.dataset.act,e)});
+$('list').addEventListener('focusin',e=>{const r=e.target.closest('.row'); if(r) selectRow(r.dataset.id)});
+$('list').addEventListener('input',e=>{
+  const r=e.target.closest('.row'); if(!r) return; const c=byId(r.dataset.id); if(!c) return; const t=e.target;
+  if(t.classList.contains('txt')){c.text=t.value; autosize(t); const cn=r.querySelector('.cnt'); cn.className='cnt '+lenState(c); cn.textContent=c.del?'':maxLenText(c.text); renderBar(); showCap()}
+  else if(t.classList.contains('sub')){c.sub=t.value; showCap()}
+  else if(t.classList.contains('memo')) c.memo=t.value;
+  else if(t.classList.contains('secname')){c.sec=t.value; renderChips()}
+  save();
+});
+$('list').addEventListener('keydown',e=>{
+  if(!e.target.classList.contains('txt')) return; const r=e.target.closest('.row'); const mod=e.ctrlKey||e.metaKey;
+  if(mod&&e.key==='Enter'){e.preventDefault();act(r.dataset.id,'split')}
+  else if(mod&&(e.key==='d'||e.key==='D')){e.preventDefault();act(r.dataset.id,'del',e); focusTxt(r.dataset.id)}
+  else if(mod&&(e.key==='e'||e.key==='E')){e.preventDefault();act(r.dataset.id,'emph'); focusTxt(r.dataset.id)}
+  else if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault(); const nx=r.nextElementSibling; if(nx){const t=nx.querySelector('.txt'); if(t) t.focus()}}
+});
+function focusTxt(id){const t=$('list').querySelector(`.row[data-id="${id}"] .txt`); if(t) t.focus()}
+$('bar').addEventListener('click',e=>{const b=e.target.closest('[data-f]'); if(!b) return;
+  if(b.dataset.f==='clearai'){for(const c of S.cues){c.orig=null;c.g0=null;c.grp=null} if(S.filter==='ai') S.filter='all'}
+  else S.filter=b.dataset.f;
+  renderBar(); renderList(); $('listScroll').scrollTop=0; save()});
+
+/* ───────── 미리보기 ───────── */
+let vidUrl=null;
+const vidOn=()=>!$('video').hidden;
+function cueAt(ms){let lo=0,hi=S.cues.length-1,r=null; while(lo<=hi){const m=(lo+hi)>>1; if(S.cues[m].s<=ms){r=S.cues[m];lo=m+1}else hi=m-1} return r&&ms<r.e?r:null}
+function showCap(forced){
+  let c=forced; if(c===undefined){c=(vidOn()&&!$('video').paused)?cueAt($('video').currentTime*1000):byId(curId)}
+  const el=$('cap'); el.className='cap'+(c&&c.emph?' emph':'');
+  if(!c){el.innerHTML='';return}
+  if(c.del){el.innerHTML='<span class="c-del">삭제 구간</span>';return}
+  el.innerHTML=(c.sub?`<span class="c-sub">${esc(c.sub)}</span>`:'')+`<span class="c-txt">${esc(c.text)}</span>`;
+}
+function setCurTime(sec){
+  if(!tcManual&&document.activeElement!==$('gText')) $('gTc').value=fmtTC(sec*1000);
+  if(!secPinned){const s=secAt(sec*1000); if(s&&s!==curSec){curSec=s;renderChips()}}
+}
+function loadVideo(f){
+  if(vidUrl) URL.revokeObjectURL(vidUrl); vidUrl=URL.createObjectURL(f);
+  const v=$('video'); v.src=vidUrl; v.hidden=false; $('ph').hidden=true;
+}
+$('video').addEventListener('error',()=>{if(!vidOn()) return; $('video').hidden=true; $('ph').hidden=false; $('ph').innerHTML='이 영상은 여기서 재생할 수 없어요.<br>자막 작업은 그대로 할 수 있어요.'});
+$('video').addEventListener('timeupdate',()=>{
+  const v=$('video'), ms=v.currentTime*1000, c=cueAt(ms);
+  setCurTime(v.currentTime);
+  const id=c?c.id:null;
+  if(id!==playId){
+    const o=$('list').querySelector('.row.play'); if(o) o.classList.remove('play'); playId=id;
+    if(id){const el=$('list').querySelector(`.row[data-id="${id}"]`); if(el){el.classList.add('play'); if($('follow').checked&&!v.paused&&!$('list').contains(document.activeElement)) el.scrollIntoView({block:'nearest'})}}
+  }
+  if(!v.paused) showCap(c);
+});
+
+/* ───────── 화면 가이드 ───────── */
+function secAt(ms){let r=null; for(const c of S.cues){if(c.s>ms) break; if(c.sec!=null&&c.sec.trim()) r=c.sec.trim()} return r}
+function allSecs(){const out=['#전체']; const add=x=>{x=(x||'').trim(); if(x&&!out.includes(x)) out.push(x)};
+  S.cues.forEach(c=>c.sec!=null&&add(c.sec)); S.chips.forEach(add); S.guide.forEach(g=>add(g.sec)); return out}
+function renderChips(){
+  const secs=allSecs(); if(!secs.includes(curSec)) curSec='#전체';
+  const keep=document.activeElement&&document.activeElement.id==='newSec'?document.activeElement.value:null;
+  $('chips').innerHTML=secs.map(s=>`<button class="chip${s===curSec?' on':''}" data-sec="${esc(s)}" type="button">${esc(s)}</button>`).join('')
+    +`<input class="inp newsec" id="newSec" placeholder="+ 구간 추가" aria-label="새 구간 이름">`;
+  if(keep!=null){$('newSec').value=keep;$('newSec').focus()}
+}
+$('chips').addEventListener('click',e=>{const b=e.target.closest('[data-sec]'); if(!b) return; curSec=b.dataset.sec; secPinned=true; renderChips(); $('gText').focus()});
+$('chips').addEventListener('keydown',e=>{if(e.target.id!=='newSec'||e.key!=='Enter'||e.isComposing) return; e.preventDefault(); let v=e.target.value.trim(); if(!v) return; if(!v.startsWith('#')) v='#'+v;
+  if(!S.chips.includes(v)) S.chips.push(v); curSec=v; secPinned=true; e.target.value=''; e.target.blur(); renderChips(); save(); $('gText').focus()});
+function guideGroups(){
+  const g={}; for(const it of S.guide){(g[it.sec]=g[it.sec]||[]).push(it)}
+  const arr=Object.entries(g).map(([sec,items])=>{items=[...items].sort((a,b)=>(a.tc??-1)-(b.tc??-1)); const tcs=items.filter(x=>x.tc!=null).map(x=>x.tc); return {sec,items,min:sec==='#전체'?-1:(tcs.length?Math.min(...tcs):1e9)}});
+  return arr.sort((a,b)=>a.min-b.min);
+}
+function renderGuide(){
+  const gs=guideGroups();
+  $('gList').innerHTML=gs.length?gs.map(g=>`<div class="gsec"><h3>${esc(g.sec)}</h3>`+g.items.map(it=>
+    `<div class="gent" data-g="${it.id}"><input class="gtc" value="${it.tc==null?'':fmtTC(it.tc*1000)}" placeholder="--:--" aria-label="타임코드"><textarea class="gtx" rows="1" aria-label="가이드 내용">${esc(it.text)}</textarea><button class="x" type="button" aria-label="지우기" data-gx>×</button></div>`).join('')+'</div>').join('')
+    :`<p class="hint">자막에 넣기 어려운 인서트, 누끼, 화면 효과, 순서 변경은 여기에 적어요. 타임코드는 보고 있는 지점으로 자동 입력됩니다.</p>`;
+  if(NO_FS) $('gList').querySelectorAll('textarea').forEach(autosize);
+}
+function addGuide(){
+  const text=$('gText').value.trim(); if(!text){$('gText').focus();return}
+  S.guide.push({id:nid(),sec:curSec,tc:parseTC($('gTc').value),text});
+  $('gText').value=''; tcManual=false; secPinned=false; renderGuide(); save(); $('gText').focus();
+}
+$('gAdd').addEventListener('click',addGuide);
+$('gText').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();addGuide()}});
+$('gTc').addEventListener('input',()=>{tcManual=true});
+$('gTc').addEventListener('blur',()=>{const t=parseTC($('gTc').value); if(t!=null) $('gTc').value=fmtTC(t*1000)});
+$('gList').addEventListener('click',e=>{if(!e.target.closest('[data-gx]')) return; const id=e.target.closest('.gent').dataset.g; S.guide=S.guide.filter(x=>x.id!==id); renderGuide(); renderChips(); save()});
+$('gList').addEventListener('input',e=>{const el=e.target.closest('.gent'); if(!el) return; const it=S.guide.find(x=>x.id===el.dataset.g); if(!it) return;
+  if(e.target.classList.contains('gtx')){it.text=e.target.value;autosize(e.target)} save()});
+$('gList').addEventListener('change',e=>{if(!e.target.classList.contains('gtc')) return; const it=S.guide.find(x=>x.id===e.target.closest('.gent').dataset.g); if(!it) return; it.tc=parseTC(e.target.value); renderGuide(); save()});
+$('gList').addEventListener('focusin',e=>{if(!e.target.classList.contains('gtc')) return; const it=S.guide.find(x=>x.id===e.target.closest('.gent').dataset.g); if(it&&it.tc!=null&&vidOn()) $('video').currentTime=it.tc});
+function guideRows(){return guideGroups().map(g=>[g.sec,g.items.map(it=>'- '+(it.tc!=null?fmtTC(it.tc*1000)+' ':'')+it.text).join('\n\n')])}
+const q=s=>'"'+String(s).replace(/"/g,'""')+'"';
+const guideTsv=()=>guideRows().map(r=>r.map(q).join('\t')).join('\n');
+const guideCsv=()=>String.fromCharCode(0xFEFF)+[['#S','내용'],...guideRows()].map(r=>r.map(q).join(',')).join('\r\n')+'\r\n';
+const guideTxt=()=>guideRows().map(r=>r[0]+'\n'+r[1]).join('\n\n\n')+'\n';
+const guideHtml=()=>'<table>'+guideRows().map(r=>'<tr>'+r.map(x=>'<td>'+esc(x).replace(/\n/g,'<br>')+'</td>').join('')+'</tr>').join('')+'</table>';
+
+/* ───────── 내보내기 ───────── */
+function buildSrt(){
+  const out=[]; let i=0,n=1; const C=S.cues;
+  const blk=(s,e,L)=>out.push((n++)+'\n'+srtTime(s)+' --> '+srtTime(e)+'\n'+L.join('\n'));
+  while(i<C.length){
+    const c=C[i];
+    if(c.del){let j=i; while(j+1<C.length&&C[j+1].del) j++; blk(c.s,C[j].e,['삭제']); i=j+1; continue}
+    const L=[]; if(c.emph) L.push('(강조자막)'); if(c.sub.trim()) L.push('(서브자막) '+c.sub.trim()); if(c.memo.trim()) L.push('(메모) '+c.memo.trim());
+    if(c.text.trim()) L.push(...c.text.trim().split('\n').map(x=>x.trim()).filter(Boolean));
+    if(L.length) blk(c.s,c.e,L); i++;
+  }
+  return out.join('\n\n')+'\n';
+}
+async function copyText(text,html){
+  try{
+    if(html&&window.ClipboardItem&&navigator.clipboard.write){await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([text],{type:'text/plain'})})]);return true}
+  }catch(e){}
+  try{await navigator.clipboard.writeText(text);return true}catch(e){}
+  $('copyBox').value=text; $('copyDlg').showModal(); $('copyBox').select(); return false;
+}
+function openExport(){
+  const n=counts(); const over=n.over;
+  $('exportSum').innerHTML=`<li>자막 ${n.all-n.del}줄 (강조자막 ${n.emph}줄 포함)</li><li>삭제 ${n.delSeg}구간</li><li>화면 가이드 ${S.guide.length}개</li>`
+    +(over?`<li>글자 수 기준을 넘는 줄이 ${over}줄 남아 있어요</li>`:'')+(n.cand?`<li>아직 보지 않은 강조 후보 ${n.cand}개 (SRT에는 들어가지 않아요)</li>`:'');
+  $('exportNote').textContent='SRT와 화면 가이드(csv)를 내려받아요. SRT는 프리미어 캡션으로 바로 불러올 수 있습니다.';
+  $('exportDlg').showModal();
+}
+function anchorSave(name,blob){const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+function doSave(){
+  const base=(S.name||'자막').replace(/[\\/:*?"<>|]/g,'_');
+  const files=[[base+'_가이드.srt',buildSrt()]]; if(S.guide.length) files.push([base+'_화면가이드.csv',guideCsv()]);
+  files.forEach(([n,d],k)=>setTimeout(()=>anchorSave(n,new Blob([d],{type:'text/plain;charset=utf-8'})),k*300));
+  toast('파일을 내려받았어요'); $('exportDlg').close();
+}
+$('btnExport').addEventListener('click',openExport);
+$('exSave').addEventListener('click',doSave);
+$('exCopySrt').addEventListener('click',async()=>{if(await copyText(buildSrt())) toast('SRT 내용을 복사했어요')});
+$('gCopy').addEventListener('click',async()=>{if(!S.guide.length){toast('복사할 가이드가 없어요');return} if(await copyText(guideTsv(),guideHtml())) toast('복사했어요. 시트의 #S 칸에 붙여넣으면 됩니다')});
+$('gCopyTxt').addEventListener('click',async()=>{if(!S.guide.length){toast('복사할 가이드가 없어요');return} if(await copyText(guideTxt())) toast('텍스트로 복사했어요')});
+
+/* ───────── 공통 ───────── */
+let toastT=null;
+function toast(m,ms){const t=$('toast'); t.textContent=m; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>{t.hidden=true},ms||3200)}
+let cfYes=null;
+function ask(title,msg,yes){$('cfTitle').textContent=title;$('cfMsg').textContent=msg;cfYes=yes;$('confirmDlg').showModal()}
+$('cfYes').addEventListener('click',()=>{$('confirmDlg').close(); const f=cfYes; cfYes=null; if(f) f()});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-close]'); if(b) b.closest('dialog').close()});
+$('btnSrt').addEventListener('click',()=>$('fileSrt').click());
+$('btnVid').addEventListener('click',()=>$('fileVid').click());
+$('fileSrt').addEventListener('change',async e=>{const f=e.target.files[0]; e.target.value=''; if(f) loadSrtText(await readSrtFile(f),f.name)});
+$('fileVid').addEventListener('change',e=>{const f=e.target.files[0]; e.target.value=''; if(f) loadVideo(f)});
+$('btnAi').addEventListener('click',runSplit);
+$('limit').addEventListener('change',e=>{S.limit=Math.min(40,Math.max(8,parseInt(e.target.value,10)||20)); renderAll(); save()});
+$('tol').addEventListener('change',e=>{S.tol=Math.min(8,Math.max(0,parseInt(e.target.value,10)||0)); renderAll(); save()});
+$('dict').addEventListener('input',e=>{S.dict=e.target.value; save()});
+let dragN=0;
+document.addEventListener('dragenter',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){dragN++;document.body.classList.add('drag')}});
+document.addEventListener('dragleave',()=>{dragN=Math.max(0,dragN-1); if(!dragN) document.body.classList.remove('drag')});
+document.addEventListener('dragover',e=>{e.preventDefault()});
+document.addEventListener('drop',async e=>{e.preventDefault(); dragN=0; document.body.classList.remove('drag');
+  for(const f of e.dataTransfer.files){ if(/\.(srt|txt)$/i.test(f.name)) loadSrtText(await readSrtFile(f),f.name); else if(/^(video|audio)\//.test(f.type)) loadVideo(f); else toast('SRT나 영상 파일만 불러올 수 있어요') }});
+
+if(!restore()) S=demo();
+curId=S.cues[0]?S.cues[0].id:null;
+renderAll();
+</script>
+</body>
+</html>
