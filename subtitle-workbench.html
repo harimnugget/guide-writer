@@ -138,6 +138,10 @@ pre.fmt{margin:8px 0 0;background:var(--field);border-radius:var(--r-xs);padding
 .extra label{display:flex;align-items:center;gap:5px;flex:1 1 180px;min-width:0}
 .extra label span{white-space:nowrap}
 .extra .inp{flex:1;padding:3px 7px}
+.timing{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:4px 0 4px 58px;padding:7px 10px;background:var(--field);border-radius:var(--r-xs);font-size:12.5px;color:var(--sub)}
+.timing .tin{width:10ch;font-family:var(--mono);font-size:12.5px;padding:3px 6px;text-align:center;background:var(--card)}
+.timing .grp{display:flex;align-items:center;gap:4px}
+.timing .tlen{font-variant-numeric:tabular-nums}
 .note{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:3px 0 2px 58px;font-size:12.5px;color:var(--sub)}
 .note .lab{font-size:11px;font-weight:700;padding:1px 6px;border-radius:99px;white-space:nowrap}
 .note.ai .lab{background:var(--ok-soft);color:var(--ok)}
@@ -193,7 +197,7 @@ body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 영상)';p
   .center .scroll{max-height:70vh;overflow:auto}
   .rm{grid-template-columns:44px minmax(0,1fr) 26px}
   .acts{grid-column:2/-1;padding:0 0 2px}
-  .extra,.note{margin-left:52px}
+  .extra,.note,.timing{margin-left:52px}
 }
 </style>
 </head>
@@ -249,7 +253,9 @@ body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 영상)';p
 Shift+Enter  한 자막 안에서 줄바꿈
 ⌘/Ctrl+E     아랫줄과 합치기
 ⌘/Ctrl+B     강조 켜고 끄기
-⌘/Ctrl+D     삭제 표시 (Shift+클릭은 범위)</pre>
+⌘/Ctrl+D     삭제 표시 (Shift+클릭은 범위)
+타임코드 클릭     그 위치로 이동
+타임코드 더블클릭 시작·끝 조정 (↑/↓ ±0.1초)</pre>
       </details>
     </div>
   </section>
@@ -334,7 +340,7 @@ function restore(){
   try{const raw=localStorage.getItem(LS); if(!raw) return false; const d=JSON.parse(raw);
     if(!d||!Array.isArray(d.cues)||!d.cues.length) return false;
     S=Object.assign(S,d); S.guide=Array.isArray(d.guide)?d.guide:[]; S.chips=Array.isArray(d.chips)?d.chips:[];
-    let mx=0; for(const x of [...S.cues,...S.guide]){const n=parseInt(String(x.id).slice(1),10); if(n>mx) mx=n; if(x.open) x.open=false; if(x.subOn) x.subOn=false}
+    let mx=0; for(const x of [...S.cues,...S.guide]){const n=parseInt(String(x.id).slice(1),10); if(n>mx) mx=n; if(x.open) x.open=false; if(x.subOn) x.subOn=false; if(x.tOpen) x.tOpen=false}
     uid=mx+1; return true;
   }catch(e){return false}
 }
@@ -343,6 +349,12 @@ function restore(){
 const p2=n=>String(n).padStart(2,'0');
 function fmtTC(ms){const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60;return (h?h+':':'')+p2(m)+':'+p2(s)}
 function srtTime(ms){ms=Math.max(0,Math.round(ms));const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),x=ms%1000;return p2(h)+':'+p2(m)+':'+p2(s)+','+String(x).padStart(3,'0')}
+// 상세 조정용: 100분의 1초까지 (Vrew 상세편집과 같은 표기)
+function fmtMs(ms){ms=Math.max(0,Math.round(ms/10)*10);const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),c=Math.floor(ms%1000/10);return (h?h+':':'')+p2(m)+':'+p2(s)+'.'+p2(c)}
+function parseMs(v){v=String(v||'').trim().replace(',','.'); if(!/^[\d:.]+$/.test(v)) return null;
+  const p=v.split(':'); if(p.length>3) return null; const sec=parseFloat(p.pop()); if(isNaN(sec)) return null;
+  let t=sec; let mul=60; while(p.length){const n=parseInt(p.pop(),10); if(isNaN(n)) return null; t+=n*mul; mul*=60}
+  return Math.round(t*1000)}
 function parseTC(v){v=String(v||'').trim(); if(!v) return null;
   if(v.includes(':')){const p=v.split(':').map(x=>parseInt(x,10)||0); return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+(p[1]||0)}
   const d=v.replace(/\D/g,''); if(!d) return null;
@@ -516,6 +528,12 @@ function rowHTML(c){
     +`<button class="pill${c.sub.trim()?' on':''}" data-act="sub" aria-pressed="${!!c.sub.trim()}" type="button" title="서브자막 칸 열기">서브</button>`
     +`<button class="pill del${c.del?' on':''}" data-act="del" aria-pressed="${c.del}" type="button" title="Shift를 누른 채 누르면 사이 줄까지 한 번에">삭제</button>`
     +`<button class="pill" data-act="more" aria-label="메모, 나누기, 합치기" aria-expanded="${!!c.open}" type="button">⋯</button></span></div>`;
+  if(c.tOpen) h+=`<div class="timing"><span class="grp">시작 <input class="inp tin" data-w="s" value="${fmtMs(c.s)}" aria-label="시작 시각" spellcheck="false">`
+    +`<button class="pill" data-act="nudge" data-w="s" data-d="-100" type="button">−0.1</button><button class="pill" data-act="nudge" data-w="s" data-d="100" type="button">+0.1</button></span>`
+    +`<span class="grp">끝 <input class="inp tin" data-w="e" value="${fmtMs(c.e)}" aria-label="끝 시각" spellcheck="false">`
+    +`<button class="pill" data-act="nudge" data-w="e" data-d="-100" type="button">−0.1</button><button class="pill" data-act="nudge" data-w="e" data-d="100" type="button">+0.1</button></span>`
+    +`<span class="tlen">${((c.e-c.s)/1000).toFixed(2)}초</span>`
+    +`<button class="lnk" data-act="playseg" type="button">▶ 이 구간 듣기</button><button class="lnk" data-act="tclose" type="button">닫기</button></div>`;
   if(open) h+=`<div class="extra"><label><span>서브자막</span><input class="inp sub" value="${esc(c.sub)}" placeholder="ㅋㅋ, 찐 애장품"></label>`
     +`<label><span>메모</span><input class="inp memo" value="${esc(c.memo)}" placeholder="BGM, 효과음 (화면 가이드로 나가요)"></label>`
     +(c.open?`<button class="lnk" data-act="split" type="button">커서에서 나누기 (Enter)</button><button class="lnk" data-act="merge" type="button">윗줄과 합치기</button><button class="lnk" data-act="mergenext" type="button">아랫줄과 합치기 (⌘E)</button>`
@@ -576,6 +594,11 @@ function act(id,a,ev){
       const nx=S.cues[i+1]; if(!nx) return; const ta=rowEl&&rowEl.querySelector('.txt'); if(ta) c.text=ta.value;
       const pos=c.text.trim().length+(c.text.trim()&&nx.text.trim()?1:0);
       act(nx.id,'merge'); const t=$('list').querySelector(`.row[data-id="${id}"] .txt`); if(t){t.focus();t.setSelectionRange(pos,pos)} return}
+    case 'nudge':{const d=ev.target.closest('[data-act]').dataset; setTiming(c,d.w,(d.w==='s'?c.s:c.e)+(+d.d)); return}
+    case 'tclose': c.tOpen=false; refreshRow(id); save(); return;
+    case 'playseg':{
+      if(!vidOn()){toast('가편 영상을 먼저 불러와 주세요');return}
+      const v=$('video'); segEnd=c.e/1000; v.currentTime=c.s/1000; v.play().catch(()=>{}); watchSeg(); return}
     case 'sub':{
       if(!c.sub.trim()) c.subOn=!c.subOn; else c.subOn=true;
       refreshRow(id); save(); if(c.subOn){const inp=$('list').querySelector(`.row[data-id="${id}"] .sub`); if(inp) inp.focus()} return}
@@ -600,6 +623,13 @@ $('list').addEventListener('input',e=>{
   save();
 });
 $('list').addEventListener('keydown',e=>{
+  if(e.target.classList.contains('tin')){
+    const r=e.target.closest('.row'), c=byId(r.dataset.id), w=e.target.dataset.w; if(!c) return;
+    if(e.key==='Enter'){e.preventDefault(); applyTin(e.target)}
+    else if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault(); setTiming(c,w,(w==='s'?c.s:c.e)+(e.key==='ArrowUp'?100:-100))}
+    else if(e.key==='Escape'){e.preventDefault(); c.tOpen=false; refreshRow(c.id); save(); focusTxt(c.id)}
+    return;
+  }
   if(!e.target.classList.contains('txt')) return; const r=e.target.closest('.row'); const mod=e.ctrlKey||e.metaKey;
   // 한글 입력 상태에서도 단축키가 먹도록 e.key 대신 e.code로 판단
   if(e.isComposing||e.keyCode===229) return;
@@ -615,6 +645,37 @@ $('list').addEventListener('keydown',e=>{
     else{const nx=r.nextElementSibling; if(nx){const t=nx.querySelector('.txt'); if(t) t.focus()}}
   }
 });
+$('list').addEventListener('dblclick',e=>{
+  const b=e.target.closest('.tc'); if(!b) return; const id=b.closest('.row').dataset.id, c=byId(id); if(!c) return;
+  c.tOpen=!c.tOpen; refreshRow(id); save();
+  if(c.tOpen){const t=$('list').querySelector(`.row[data-id="${id}"] .tin`); if(t){t.focus(); t.select()}}
+});
+$('list').addEventListener('change',e=>{if(e.target.classList.contains('tin')) applyTin(e.target)});
+let timingBusy=false; // 줄을 다시 그릴 때 사라지는 입력 칸의 change가 한 번 더 들어오는 것을 막음
+function applyTin(inp){
+  if(timingBusy||!inp.isConnected) return;
+  const r=inp.closest('.row'); if(!r) return; const c=byId(r.dataset.id); if(!c) return; const w=inp.dataset.w;
+  const ms=parseMs(inp.value);
+  if(ms==null){toast('시각은 00:04.98 또는 4.98처럼 적어 주세요'); inp.value=fmtMs(w==='s'?c.s:c.e); return}
+  if(ms===(w==='s'?c.s:c.e)) return;
+  setTiming(c,w,ms);
+}
+// 한 줄의 시작·끝을 옮김. 붙어 있던 바로 옆 줄의 경계만 같이 움직이고 그 뒤 줄은 그대로(가편본 기준 TC 유지)
+const MIN_CUE=100;
+function setTiming(c,w,ms){
+  const i=idxOf(c.id), P=S.cues[i-1], N=S.cues[i+1]; ms=Math.round(ms/10)*10;
+  const focusW=document.activeElement&&document.activeElement.classList.contains('tin')?document.activeElement.dataset.w:null;
+  if(w==='s'){
+    ms=Math.min(Math.max(ms,P?P.s+MIN_CUE:0),c.e-MIN_CUE);
+    if(P&&(P.e===c.s||ms<P.e)) P.e=ms; c.s=ms;
+  }else{
+    ms=Math.max(Math.min(ms,N?N.e-MIN_CUE:Infinity),c.s+MIN_CUE);
+    if(N&&(N.s===c.e||ms>N.s)) N.s=ms; c.e=ms;
+  }
+  timingBusy=true; try{for(const x of [P,c,N]) if(x) refreshRow(x.id)}finally{timingBusy=false}
+  if(focusW){const t=$('list').querySelector(`.row[data-id="${c.id}"] .tin[data-w="${focusW}"]`); if(t){t.focus(); t.select()}}
+  renderBar(); renderGuide(); if(c.id===curId) showCap(); save();
+}
 function focusTxt(id){const t=$('list').querySelector(`.row[data-id="${id}"] .txt`); if(t) t.focus()}
 $('bar').addEventListener('click',e=>{const b=e.target.closest('[data-f]'); if(!b) return;
   if(b.dataset.f==='clearai'){for(const c of S.cues){c.orig=null;c.g0=null;c.grp=null} if(S.filter==='ai') S.filter='all'}
@@ -641,6 +702,10 @@ function loadVideo(f){
   const v=$('video'); v.src=vidUrl; v.hidden=false; $('ph').hidden=true;
 }
 $('video').addEventListener('error',()=>{if(!vidOn()) return; $('video').hidden=true; $('ph').hidden=false; $('ph').innerHTML='이 영상은 여기서 재생할 수 없어요.<br>자막 작업은 그대로 할 수 있어요.'});
+// '이 구간 듣기': 끝 시각에서 정확히 멈추도록 timeupdate 대신 매 프레임 확인
+let segEnd=null;
+function watchSeg(){const v=$('video'); if(segEnd==null) return; if(v.paused&&v.currentTime>0&&!v.seeking){segEnd=null;return}
+  if(v.currentTime>=segEnd){v.pause(); v.currentTime=segEnd; segEnd=null; return} requestAnimationFrame(watchSeg)}
 $('video').addEventListener('timeupdate',()=>{
   const v=$('video'), ms=v.currentTime*1000, c=cueAt(ms);
   setCurTime(v.currentTime);
