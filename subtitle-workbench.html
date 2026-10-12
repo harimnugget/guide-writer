@@ -63,6 +63,14 @@ button{cursor:pointer}
 .file b{font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:38ch}
 .tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
 .top .sp{flex:1}
+.saved{font-size:12.5px;color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums}
+.saved.err{color:var(--danger);font-weight:700}
+.bklist{list-style:none;margin:0 0 14px;padding:0;max-height:min(50vh,360px);overflow:auto;border:1px solid var(--border);border-radius:var(--r-sm)}
+.bklist li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+.bklist li:last-child{border-bottom:0}
+.bklist .bt{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.bklist .bn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub);font-size:13px}
+.bklist .empty{justify-content:center;color:var(--sub)}
 .btn{border:1px solid var(--border-strong);background:var(--card);border-radius:var(--r-sm);padding:7px 13px;font-weight:500;white-space:nowrap}
 .btn:hover{background:var(--field)}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
@@ -207,6 +215,8 @@ body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 영상)';p
   <h1>자막 가이드 작업대</h1>
   <div class="file"><b id="fileName">예시 인터뷰</b><span class="tag" id="demoTag">예시 데이터</span></div>
   <span class="sp"></span>
+  <span class="saved" id="savedAt" aria-live="polite"></span>
+  <button class="btn ghost" id="btnBk" type="button" title="3분마다 자동으로 쌓이는 백업에서 되돌리기">백업</button>
   <button class="btn" id="btnSrt" type="button">SRT 불러오기</button>
   <button class="btn" id="btnAi" type="button" title="글자 수 기준을 넘는 줄을 규칙으로 나눕니다">긴 줄 나누기</button>
   <button class="btn pri" id="btnExport" type="button">내보내기</button>
@@ -255,7 +265,10 @@ Shift+Enter  한 자막 안에서 줄바꿈
 ⌘/Ctrl+B     강조 켜고 끄기
 ⌘/Ctrl+D     삭제 표시 (Shift+클릭은 범위)
 타임코드 클릭     그 위치로 이동
-타임코드 더블클릭 시작·끝 조정 (↑/↓ ±0.1초)</pre>
+타임코드 더블클릭 시작·끝 조정 (↑/↓ ±0.1초)
+줄 빈 곳 클릭     그 위치로 이동
+Space        재생/일시정지 (글자 칸 밖에서)
+Esc          글자 칸에서 커서 빼기</pre>
       </details>
     </div>
   </section>
@@ -298,6 +311,12 @@ Shift+Enter  한 자막 안에서 줄바꿈
   <h2 id="cfTitle"></h2><p id="cfMsg"></p>
   <div class="drow"><button class="btn ghost" type="button" data-close>취소</button><button class="btn pri" id="cfYes" type="button">계속</button></div>
 </dialog>
+<dialog id="bkDlg">
+  <h2>백업</h2>
+  <p>바뀐 내용이 있으면 3분마다, 그리고 새 SRT를 불러오거나 되돌리기 직전에 이 브라우저에 자동으로 백업돼요. 최근 40개까지 남아요.</p>
+  <ul class="bklist" id="bkList"></ul>
+  <div class="drow"><button class="btn ghost" type="button" data-close>닫기</button><button class="btn" id="bkNow" type="button">지금 백업</button></div>
+</dialog>
 <dialog id="copyDlg">
   <h2>직접 복사해 주세요</h2><p>이 화면에서는 자동 복사가 막혀 있어요. 아래 내용을 전체 선택해 복사하면 됩니다.</p>
   <textarea class="inp" id="copyBox" readonly></textarea>
@@ -335,15 +354,68 @@ function demo(){
            {id:nid(),sec:'#첫 번째 물건',tc:9,text:'텀블러 누끼컷 띄워주시고 주변에 반짝이 효과'}]};
 }
 let saveT=null;
-function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}},400)}
-function restore(){
-  try{const raw=localStorage.getItem(LS); if(!raw) return false; const d=JSON.parse(raw);
-    if(!d||!Array.isArray(d.cues)||!d.cues.length) return false;
-    S=Object.assign(S,d); S.guide=Array.isArray(d.guide)?d.guide:[]; S.chips=Array.isArray(d.chips)?d.chips:[];
-    let mx=0; for(const x of [...S.cues,...S.guide]){const n=parseInt(String(x.id).slice(1),10); if(n>mx) mx=n; if(x.open) x.open=false; if(x.subOn) x.subOn=false; if(x.tOpen) x.tOpen=false}
-    uid=mx+1; return true;
-  }catch(e){return false}
+let dirty=false; // 마지막 백업 뒤에 바뀐 게 있는지
+function save(){dirty=true; clearTimeout(saveT);saveT=setTimeout(()=>{
+  try{localStorage.setItem(LS,JSON.stringify(S)); setSaved('저장됨 '+hhmm(Date.now()),false)}
+  catch(e){setSaved('저장 안 됨: 브라우저 저장 공간이 부족해요 ('+(e&&e.name||'오류')+')',true)}},400)}
+function setSaved(t,err){const el=$('savedAt'); el.textContent=t; el.classList.toggle('err',!!err)}
+const hhmm=t=>{const d=new Date(t);return p2(d.getHours())+':'+p2(d.getMinutes())};
+// 저장된 상태(localStorage·백업)를 S로 들임. 열림 같은 화면용 표시는 닫아 둠
+function applyState(d){
+  if(!d||!Array.isArray(d.cues)||!d.cues.length) return false;
+  S=Object.assign({name:'',demo:false,limit:20,tol:2,dict:'',cues:[],guide:[],chips:[],filter:'all'},d); S.guide=Array.isArray(d.guide)?d.guide:[]; S.chips=Array.isArray(d.chips)?d.chips:[];
+  let mx=0; for(const x of [...S.cues,...S.guide]){const n=parseInt(String(x.id).slice(1),10); if(n>mx) mx=n; if(x.open) x.open=false; if(x.subOn) x.subOn=false; if(x.tOpen) x.tOpen=false}
+  uid=mx+1; return true;
 }
+function restore(){
+  try{const raw=localStorage.getItem(LS); if(!raw) return false; return applyState(JSON.parse(raw))}catch(e){return false}
+}
+
+/* ───────── 백업 (IndexedDB, 이 브라우저 안에만) ───────── */
+const BK_MAX=40, BK_EVERY=3*60*1000;
+const bkDb=new Promise(res=>{
+  try{const r=indexedDB.open('subtitle-workbench-backups',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('snaps',{keyPath:'id',autoIncrement:true});
+    r.onsuccess=()=>res(r.result); r.onerror=()=>res(null); r.onblocked=()=>res(null);
+  }catch(e){res(null)}
+});
+const bkReq=q=>new Promise((res,rej)=>{q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});
+async function backup(why){
+  if(S.demo||!S.cues.length) return false;
+  const snap={t:Date.now(),name:S.name,n:S.cues.length,why,data:JSON.stringify(S)}; // await 전에 지금 상태를 떠 둠
+  const db=await bkDb; if(!db) return false;
+  try{
+    const st=db.transaction('snaps','readwrite').objectStore('snaps');
+    await bkReq(st.add(snap));
+    const keys=await bkReq(st.getAllKeys());
+    for(const k of keys.slice(0,Math.max(0,keys.length-BK_MAX))) st.delete(k);
+    dirty=false; return true;
+  }catch(e){toast('백업하지 못했어요: '+(e&&e.name||'오류')+'. 브라우저 저장 공간을 확인해 주세요',5000); return false}
+}
+setInterval(()=>{if(dirty) backup('자동')},BK_EVERY);
+async function openBackups(){
+  const db=await bkDb, ul=$('bkList');
+  if(!db){ul.innerHTML='<li class="empty">이 브라우저에서는 백업을 쓸 수 없어요(사생활 보호 창 등). 작업 내용 저장은 그대로 돼요.</li>'; $('bkNow').disabled=true; $('bkDlg').showModal(); return}
+  const all=(await bkReq(db.transaction('snaps').objectStore('snaps').getAll())).reverse();
+  const today=new Date().toDateString();
+  const when=t=>{const d=new Date(t);return (d.toDateString()===today?'':(d.getMonth()+1)+'/'+d.getDate()+' ')+hhmm(t)};
+  ul.innerHTML=all.length?all.map(b=>`<li><span class="bt">${when(b.t)}</span><span class="bn">${esc(b.name)} · ${b.n}줄 · ${esc(b.why)}</span><button class="btn sm" type="button" data-bk="${b.id}">되돌리기</button></li>`).join('')
+    :'<li class="empty">아직 백업이 없어요. 작업하다 보면 3분마다 쌓여요.</li>';
+  $('bkNow').disabled=S.demo; $('bkDlg').showModal();
+}
+$('btnBk').addEventListener('click',openBackups);
+$('bkNow').addEventListener('click',async()=>{if(await backup('직접')){toast('지금 상태를 백업했어요'); openBackups()}});
+$('bkList').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-bk]'); if(!b) return; const db=await bkDb; if(!db) return;
+  const snap=await bkReq(db.transaction('snaps').objectStore('snaps').get(+b.dataset.bk)); if(!snap) return;
+  $('bkDlg').close();
+  ask('이 백업으로 되돌릴까요?',`${hhmm(snap.t)} · ${snap.name} · ${snap.n}줄. 지금 상태도 먼저 백업해 두니 다시 돌아올 수 있어요.`,async()=>{
+    await backup('되돌리기 전');
+    let d; try{d=JSON.parse(snap.data)}catch(err){toast('백업 내용을 읽지 못했어요 ('+err.name+')');return}
+    if(!applyState(d)){toast('비어 있는 백업이라 되돌리지 않았어요');return}
+    curId=S.cues[0].id; curSec='#전체'; secPinned=false; renderAll(); save(); toast(hhmm(snap.t)+' 백업으로 되돌렸어요');
+  });
+});
 
 /* ───────── 시간·글자 수 ───────── */
 const p2=n=>String(n).padStart(2,'0');
@@ -408,7 +480,8 @@ async function readSrtFile(f){
 function loadSrtText(txt,name){
   const cues=parseSrt(txt);
   if(!cues.length){toast('자막을 찾지 못했어요. SRT 파일이 맞는지 확인해 주세요.');return}
-  const go=()=>{
+  const go=async()=>{
+    await backup('불러오기 전');
     S.cues=cues;S.guide=[];S.chips=[];S.name=name.replace(/\.(srt|txt)$/i,'').replace(/_검수본$/,'');S.demo=false;S.filter='all';curId=cues[0].id;curSec='#전체';secPinned=false;
     // 검수본의 분할 표시(||)를 실제 줄로 나눔. 시간은 글자 수 비율.
     for(const c of [...S.cues]){
@@ -612,7 +685,15 @@ function act(id,a,ev){
   }
   refreshRow(id); renderBar(); save(); if(id===curId) showCap();
 }
-$('list').addEventListener('click',e=>{const b=e.target.closest('[data-act]'); if(!b) return; const r=b.closest('.row'); act(r.dataset.id,b.dataset.act,e)});
+$('list').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');
+  if(b){const r=b.closest('.row'); act(r.dataset.id,b.dataset.act,e); return}
+  // 글자 칸·버튼·입력 영역을 뺀 줄의 빈 곳을 누르면 그 줄 시작으로 이동
+  const r=e.target.closest('.row'); if(!r) return;
+  if(e.target.closest('textarea,input,button,label,select,a,.extra,.timing,.note,.secmark')) return;
+  if(window.getSelection&&String(window.getSelection()).length) return;
+  act(r.dataset.id,'seek');
+});
 $('list').addEventListener('focusin',e=>{const r=e.target.closest('.row'); if(r) selectRow(r.dataset.id)});
 $('list').addEventListener('input',e=>{
   const r=e.target.closest('.row'); if(!r) return; const c=byId(r.dataset.id); if(!c) return; const t=e.target;
@@ -627,12 +708,13 @@ $('list').addEventListener('keydown',e=>{
     const r=e.target.closest('.row'), c=byId(r.dataset.id), w=e.target.dataset.w; if(!c) return;
     if(e.key==='Enter'){e.preventDefault(); applyTin(e.target)}
     else if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault(); setTiming(c,w,(w==='s'?c.s:c.e)+(e.key==='ArrowUp'?100:-100))}
-    else if(e.key==='Escape'){e.preventDefault(); c.tOpen=false; refreshRow(c.id); save(); focusTxt(c.id)}
+    else if(e.key==='Escape'){e.preventDefault(); c.tOpen=false; refreshRow(c.id); save(); if(document.activeElement&&document.activeElement!==document.body) document.activeElement.blur()}
     return;
   }
+  if(e.isComposing||e.keyCode===229) return;
+  if(e.key==='Escape'&&e.target.matches('textarea,input')){e.preventDefault(); e.target.blur(); return} // 커서를 빼서 스페이스로 재생할 수 있게
   if(!e.target.classList.contains('txt')) return; const r=e.target.closest('.row'); const mod=e.ctrlKey||e.metaKey;
   // 한글 입력 상태에서도 단축키가 먹도록 e.key 대신 e.code로 판단
-  if(e.isComposing||e.keyCode===229) return;
   const ta=e.target, id=r.dataset.id;
   if(mod&&e.key==='Enter'){e.preventDefault();act(id,'split')}
   else if(mod&&e.code==='KeyD'){e.preventDefault();act(id,'del',e); focusTxt(id)}
@@ -834,7 +916,17 @@ document.addEventListener('dragover',e=>{e.preventDefault()});
 document.addEventListener('drop',async e=>{e.preventDefault(); dragN=0; document.body.classList.remove('drag');
   for(const f of e.dataTransfer.files){ if(/\.(srt|txt)$/i.test(f.name)) loadSrtText(await readSrtFile(f),f.name); else if(/^(video|audio)\//.test(f.type)) loadVideo(f); else toast('SRT나 영상 파일만 불러올 수 있어요') }});
 
-if(!restore()) S=demo();
+// 스페이스: 글자를 입력하는 칸 밖이면 재생/일시정지 (버튼에 포커스가 있어도 버튼은 누르지 않음)
+const TYPING='textarea,select,[contenteditable=""],[contenteditable="true"],input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=file]):not([type=submit])';
+document.addEventListener('keydown',e=>{
+  if(e.code!=='Space'||e.ctrlKey||e.metaKey||e.altKey||e.isComposing) return;
+  const a=document.activeElement;
+  if(!vidOn()||(a&&a.matches&&(a.matches(TYPING)||a===$('video')))||document.querySelector('dialog[open]')) return;
+  e.preventDefault(); if(a&&a!==document.body) a.blur();
+  const v=$('video'); if(v.paused) v.play().catch(()=>{}); else v.pause();
+});
+
+if(!restore()) S=demo(); else setSaved('저장된 작업을 불러왔어요',false);
 curId=S.cues[0]?S.cues[0].id:null;
 renderAll();
 </script>
