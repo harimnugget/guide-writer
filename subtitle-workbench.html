@@ -116,6 +116,7 @@ pre.fmt{margin:8px 0 0;background:var(--field);border-radius:var(--r-xs);padding
 
 /* 자막 목록 */
 .bar{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;border-bottom:1px solid var(--border)}
+.bar .right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .chip{border:1px solid var(--border);background:var(--card);border-radius:99px;padding:3px 10px;font-size:12.5px;color:var(--sub);white-space:nowrap}
 .chip b{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 .chip:hover{background:var(--field)}
@@ -268,7 +269,8 @@ Shift+Enter  한 자막 안에서 줄바꿈
 타임코드 더블클릭 시작·끝 조정 (↑/↓ ±0.1초)
 줄 빈 곳 클릭     그 위치로 이동
 Space        재생/일시정지 (글자 칸 밖에서)
-Esc          글자 칸에서 커서 빼기</pre>
+Esc          글자 칸에서 커서 빼기
+자막 추가    커서 줄 아래에 빈 자막 (재생바가 그 줄 안이면 거기서 나눔)</pre>
       </details>
     </div>
   </section>
@@ -588,7 +590,8 @@ function match(c){switch(S.filter){case 'over':return lenState(c)==='over';case 
 function renderBar(){
   const n=counts();
   $('bar').innerHTML=FILTERS.map(([k,l])=>`<button class="chip${S.filter===k?' on':''}" data-f="${k}" type="button">${l} <b>${k==='del'?n.delSeg+'구간':n[k]}</b></button>`).join('')
-    +(n.ai?`<button class="lnk" data-f="clearai" type="button" style="margin-left:auto">AI 수정 표시 모두 지우기</button>`:'');
+    +`<span class="right">`+(n.ai?`<button class="lnk" data-f="clearai" type="button">AI 수정 표시 모두 지우기</button>`:'')
+    +`<button class="btn sm" data-add type="button" title="글자 칸에 커서를 둔 줄 바로 아래에 빈 자막을 넣어요">자막 추가</button></span>`;
 }
 function rowHTML(c){
   const st=lenState(c), n=maxLenText(c.text), open=c.open||c.subOn||c.sub||c.memo;
@@ -758,8 +761,30 @@ function setTiming(c,w,ms){
   if(focusW){const t=$('list').querySelector(`.row[data-id="${c.id}"] .tin[data-w="${focusW}"]`); if(t){t.focus(); t.select()}}
   renderBar(); renderGuide(); if(c.id===curId) showCap(); save();
 }
+// 말이 없어 원본에 자막이 없는 자리에 빈 자막을 넣음. 다음 자막의 시작·끝은 절대 건드리지 않음
+function addCueAfter(cur){
+  const i=idxOf(cur.id), N=S.cues[i+1], v=$('video');
+  const limit=N?N.s:(vidOn()&&isFinite(v.duration)?Math.max(cur.e,Math.round(v.duration*1000)):cur.e+2000);
+  const ph=vidOn()?Math.round(v.currentTime*100)*10:null;
+  let s,e,cutCur=false;
+  if(ph!=null&&ph>cur.s+MIN_CUE&&ph<cur.e-MIN_CUE){s=ph;e=cur.e;cutCur=true}        // 재생바가 커서 줄 안 → 거기서 나눔
+  else if(ph!=null&&ph>=cur.e&&ph<limit-MIN_CUE){s=ph;e=limit}                         // 재생바가 줄 뒤 빈 틈 안 → 재생바부터 다음 자막 전까지
+  else if(limit-cur.e>=500){s=cur.e;e=limit}                                          // 빈 틈이 0.5초 이상 → 그 틈을 채움
+  else{s=Math.round((cur.s+cur.e)/20)*10;e=cur.e;cutCur=true}                        // 아니면 커서 줄을 절반으로
+  if(e-s<MIN_CUE||(cutCur&&s-cur.s<MIN_CUE)){toast('이 줄이 너무 짧아 나눌 수 없어요. 타임코드 더블클릭으로 늘린 뒤 다시 눌러 주세요',4500);return}
+  if(cutCur) cur.e=s;
+  const nc=mk(s,e,'',{del:!!(cur.del&&N&&N.del)}); S.cues.splice(i+1,0,nc); // 삭제 구간 한가운데면 같이 삭제로 둬서 구간이 갈라지지 않게
+  if(!match(nc)) S.filter='all';
+  curId=nc.id; renderBar(); renderList(); save();
+  const t=$('list').querySelector(`.row[data-id="${nc.id}"] .txt`); if(t){t.focus(); t.closest('.row').scrollIntoView({block:'nearest'})}
+  showCap(); toast(`${fmtMs(s)} ~ ${fmtMs(e)}에 자막을 추가했어요`);
+}
 function focusTxt(id){const t=$('list').querySelector(`.row[data-id="${id}"] .txt`); if(t) t.focus()}
-$('bar').addEventListener('click',e=>{const b=e.target.closest('[data-f]'); if(!b) return;
+// 버튼을 눌러도 글자 칸 커서·선택 줄이 그대로 남도록 포커스 이동을 막음
+$('bar').addEventListener('mousedown',e=>{if(e.target.closest('[data-add]')) e.preventDefault()});
+$('bar').addEventListener('click',e=>{
+  if(e.target.closest('[data-add]')){const c=byId(curId); if(!c){toast('자막을 넣을 줄의 글자 칸을 먼저 눌러 주세요');return} addCueAfter(c); return}
+  const b=e.target.closest('[data-f]'); if(!b) return;
   if(b.dataset.f==='clearai'){for(const c of S.cues){c.orig=null;c.g0=null;c.grp=null} if(S.filter==='ai') S.filter='all'}
   else S.filter=b.dataset.f;
   renderBar(); renderList(); $('listScroll').scrollTop=0; save()});
