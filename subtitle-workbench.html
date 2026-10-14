@@ -95,6 +95,9 @@ button{cursor:pointer}
 /* 미리보기 화면 */
 .screen{position:relative;background:var(--screen);border-radius:var(--r-sm);aspect-ratio:16/9;max-width:100%;overflow:hidden;container-type:inline-size}
 .screen video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--screen)}
+.wave{display:flex;flex-direction:column;gap:4px}
+.wave canvas{width:100%;height:56px;background:var(--field);border-radius:var(--r-xs);display:block}
+.wave .wcap{font-size:12px;color:var(--sub);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .screen .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--screen-mute);font-size:12.5px;text-align:center;padding:12px}
 .cap{position:absolute;left:0;right:0;bottom:7%;display:flex;flex-direction:column;align-items:center;gap:1cqw;pointer-events:none}
 .cap .c-sub{font-size:3cqw;color:var(--screen-emph);font-weight:700;text-shadow:0 0 .6cqw #000,0 0 .6cqw #000}
@@ -205,7 +208,7 @@ dialog ul{margin:0 0 14px;padding-left:18px;color:var(--sub)}
 .drow{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
 #copyBox{width:100%;height:140px;margin-bottom:12px;font-family:var(--mono);font-size:12px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 16px;border-radius:99px;font-size:13px;font-weight:500;max-width:calc(100vw - 32px);box-shadow:var(--shadow);z-index:20}
-body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 영상)';position:fixed;inset:10px;border:2px dashed var(--accent);border-radius:var(--r-lg);background:color-mix(in srgb,var(--accent-soft) 88%,transparent);display:grid;place-items:center;font-size:16px;font-weight:700;color:var(--accent);z-index:30;pointer-events:none}
+body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 작업 파일 · 영상)';position:fixed;inset:10px;border:2px dashed var(--accent);border-radius:var(--r-lg);background:color-mix(in srgb,var(--accent-soft) 88%,transparent);display:grid;place-items:center;font-size:16px;font-weight:700;color:var(--accent);z-index:30;pointer-events:none}
 
 @media (max-width:980px){
   html,body{height:auto}
@@ -226,12 +229,15 @@ body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 영상)';p
   <div class="file"><b id="fileName">예시 인터뷰</b><span class="tag" id="demoTag">예시 데이터</span></div>
   <span class="sp"></span>
   <span class="saved" id="savedAt" aria-live="polite"></span>
+  <button class="btn ghost" id="btnReset" type="button" title="자막·화면 가이드·영상을 모두 비운 빈 화면으로">초기화</button>
   <button class="btn ghost" id="btnBk" type="button" title="3분마다 자동으로 쌓이는 백업에서 되돌리기">백업</button>
-  <button class="btn" id="btnSrt" type="button">SRT 불러오기</button>
+  <button class="btn" id="btnSaveProj" type="button" title="지금 작업 화면을 파일(.작업대.json)로 내려받기. 나중에 '불러오기'로 그대로 다시 열 수 있어요">작업 저장</button>
+  <button class="btn" id="btnSrt" type="button" title="SRT 또는 작업 파일(.작업대.json)">불러오기</button>
   <button class="btn" id="btnAi" type="button" title="글자 수 기준을 넘는 줄을 규칙으로 나눕니다">긴 줄 나누기</button>
   <button class="btn pri" id="btnExport" type="button">내보내기</button>
-  <input type="file" id="fileSrt" accept=".srt,.txt" hidden>
+  <input type="file" id="fileSrt" accept=".srt,.txt,.json" hidden>
   <input type="file" id="fileVid" accept="video/*,audio/*" hidden>
+  <input type="file" id="fileAud" accept="audio/*,video/*" hidden>
 </header>
 
 <div class="main">
@@ -244,15 +250,21 @@ body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 영상)';p
         <div class="safe"></div>
         <div class="cap" id="cap"></div>
       </div>
+      <div class="wave" id="waveBox" hidden>
+        <canvas id="wave" aria-label="선택한 줄 주변의 음성 파형"></canvas>
+        <div class="wcap"><span id="waveMsg"></span><span>파란 칸이 선택한 줄, 점선 아래는 말 끊김</span></div>
+      </div>
       <div class="vrow">
         <button class="btn sm" id="btnVid" type="button">가편 영상 불러오기</button>
+        <button class="btn sm" id="btnAud" type="button" title="영상이 너무 커서 소리를 못 읽을 때 오디오 파일만 올리세요">음성만 불러오기</button>
+        <button class="btn sm" id="btnSync" type="button" disabled title="말하는 도중에 걸린 자막 경계를 가장 가까운 말 끊김으로 옮깁니다">말 끊김에 다시 맞추기</button>
         <label><input type="checkbox" id="follow" checked> 재생 위치 따라가기</label>
       </div>
-      <p class="hint">영상은 이 컴퓨터에서만 재생되고 어디에도 올라가지 않아요.</p>
+      <p class="hint">영상과 소리는 이 컴퓨터 안에서만 읽고, 어디에도 올라가지 않아요. 영상을 올리면 소리를 읽어서 줄을 나눌 때 말이 끊기는 지점에 맞춥니다.</p>
       <details class="set" id="setBox">
         <summary>검수 기준</summary>
-        <div class="f"><span>말자막 한 줄 글자 수</span>
-          <div class="inl"><input class="inp" type="number" id="limit" min="8" max="40" value="20">자 기준, <input class="inp" type="number" id="tol" min="0" max="8" value="2">자까지는 그대로 둠</div></div>
+        <div class="f"><span>말자막 한 줄 글자 수 (공백 포함)</span>
+          <div class="inl">최대 <input class="inp" type="number" id="limit" min="8" max="40" value="26">자. 넘는 줄만 표시하고 나눕니다<input type="hidden" id="tol" value="0"></div></div>
         <div class="f"><label for="dict">고유명사 사전 (쉼표로 구분)</label>
           <textarea class="inp" id="dict" rows="3" placeholder="예: 천녹, 제로투히어로, 이대헌, 레드부스터스"></textarea></div>
       </details>
@@ -279,7 +291,9 @@ Shift+Enter  한 자막 안에서 줄바꿈
 줄 빈 곳 클릭     그 위치로 이동
 Space        재생/일시정지 (글자 칸 밖에서)
 ⌘/Ctrl+F     찾아 바꾸기 (자막·서브자막, 삭제 줄 제외)
-Shift+클릭   줄 빈 곳을 하나씩 골라 강조·삭제·합치기
+Shift+클릭   기준 줄부터 그 줄까지 범위 선택
+⌘/Ctrl+클릭  한 줄씩 넣고 빼기
+⌘/Ctrl+Z     되돌리기 (⌘⇧Z 다시 실행)
 Esc          글자 칸에서 커서 빼기
 자막 추가    커서 줄 아래에 빈 자막 (재생바가 그 줄 안이면 거기서 나눔)</pre>
       </details>
@@ -361,9 +375,9 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&g
 let uid=1; const nid=()=>'c'+(uid++);
 
 /* ───────── 상태 ───────── */
-let S={name:'예시 인터뷰',demo:true,limit:20,tol:2,dict:'',cues:[],guide:[],chips:[],filter:'all'};
+let S={name:'예시 인터뷰',demo:true,limit:26,tol:0,dict:'',cues:[],guide:[],chips:[],filter:'all'};
 let curId=null, playId=null, curSec='#전체', secPinned=false, tcManual=false, lastDelIdx=null;
-const mk=(s,e,text,o={})=>Object.assign({id:nid(),s,e,text,emph:false,del:false,sub:'',memo:'',sec:null,orig:null,cand:null,grp:null,g0:null,open:false},o);
+const mk=(s,e,text,o={})=>Object.assign({id:nid(),s,e,text,tEst:false,emph:false,del:false,sub:'',memo:'',sec:null,orig:null,cand:null,grp:null,g0:null,open:false},o);
 
 function demo(){
   uid=1;
@@ -377,7 +391,7 @@ function demo(){
     mk(16000,19800,'아침에 얼음을 넣으면 저녁까지 그대로 있더라고요',{sub:'얼음 그대로',memo:'여기부터 BGM 밝게'}),
     mk(19800,22400,'그래서 주변에 선물도 몇 계 했어요'),
   ];
-  return {name:'예시 인터뷰',demo:true,limit:20,tol:2,dict:'',cues:c,filter:'all',chips:[],
+  return {name:'예시 인터뷰',demo:true,limit:26,tol:0,dict:'',cues:c,filter:'all',chips:[],
     guide:[{id:nid(),sec:'#전체',tc:null,text:'지난 편과 같은 느낌으로 BGM, 효과음 부탁드려요'},
            {id:nid(),sec:'#인트로',tc:2,text:'이름 자막 넣어주세요'},
            {id:nid(),sec:'#첫 번째 물건',tc:9,text:'텀블러 누끼컷 띄워주시고 주변에 반짝이 효과'}]};
@@ -390,14 +404,34 @@ function save(){dirty=true; clearTimeout(saveT);saveT=setTimeout(()=>{
 function setSaved(t,err){const el=$('savedAt'); el.textContent=t; el.classList.toggle('err',!!err)}
 const hhmm=t=>{const d=new Date(t);return p2(d.getHours())+':'+p2(d.getMinutes())};
 // 저장된 상태(localStorage·백업)를 S로 들임. 열림 같은 화면용 표시는 닫아 둠
-function applyState(d){
-  if(!d||!Array.isArray(d.cues)||!d.cues.length) return false;
-  S=Object.assign({name:'',demo:false,limit:20,tol:2,dict:'',cues:[],guide:[],chips:[],filter:'all'},d); S.guide=Array.isArray(d.guide)?d.guide:[]; S.chips=Array.isArray(d.chips)?d.chips:[];
+function applyState(d,allowEmpty){
+  if(!d||!Array.isArray(d.cues)||(!d.cues.length&&!allowEmpty)) return false;
+  S=Object.assign({name:'',demo:false,limit:26,tol:0,dict:'',cues:[],guide:[],chips:[],filter:'all'},d); if(S.limit===20&&S.tol===2){S.limit=26;S.tol=0} // 예전 20자+2 기준을 26자로 S.guide=Array.isArray(d.guide)?d.guide:[]; S.chips=Array.isArray(d.chips)?d.chips:[];
   let mx=0; for(const x of [...S.cues,...S.guide]){const n=parseInt(String(x.id).slice(1),10); if(n>mx) mx=n; if(x.open) x.open=false; if(x.subOn) x.subOn=false; if(x.tOpen) x.tOpen=false}
   uid=mx+1; return true;
 }
 function restore(){
-  try{const raw=localStorage.getItem(LS); if(!raw) return false; return applyState(JSON.parse(raw))}catch(e){return false}
+  try{const raw=localStorage.getItem(LS); if(!raw) return false; return applyState(JSON.parse(raw),true)}catch(e){return false} // 초기화한 빈 화면도 그대로
+}
+
+/* ───────── 되돌리기 (⌘Z / ⌘⇧Z) ───────── */
+let undoStack=[], redoStack=[], typedSinceOp=false, undoPending=false;
+const UNDO_MAX=50;
+const snapState=()=>JSON.stringify({cues:S.cues,guide:S.guide,chips:S.chips});
+// 바꾸기 직전에 부름. 한 동작 안에서 여러 번 불려도(합치기 반복 등) 한 번만 쌓음
+function pushUndo(){
+  if(undoPending) return; undoPending=true; queueMicrotask(()=>{undoPending=false});
+  undoStack.push(snapState()); if(undoStack.length>UNDO_MAX) undoStack.shift(); redoStack=[]; typedSinceOp=false;
+}
+function clearUndo(){undoStack=[];redoStack=[];typedSinceOp=false}
+function stepUndo(redo){
+  const from=redo?redoStack:undoStack, to=redo?undoStack:redoStack, now=snapState();
+  let snap; while(from.length&&(snap=from.pop())===now) snap=null; // 아무것도 안 바뀐 기록은 건너뜀
+  if(!snap){toast(redo?'다시 실행할 작업이 없어요':'되돌릴 작업이 없어요');return}
+  to.push(now); const d=JSON.parse(snap); S.cues=d.cues; S.guide=d.guide; S.chips=d.chips;
+  for(const c of S.cues){c.open=false;c.subOn=false;c.tOpen=false}
+  if(!byId(curId)) curId=S.cues[0]?S.cues[0].id:null;
+  sel.clear(); typedSinceOp=false; renderAll(); refreshFind(); save(); requestAnimationFrame(drawWave); toast(redo?'다시 실행했어요':'되돌렸어요',1500);
 }
 
 /* ───────── 백업 (IndexedDB, 이 브라우저 안에만) ───────── */
@@ -441,8 +475,8 @@ $('bkList').addEventListener('click',async e=>{
   ask('이 백업으로 되돌릴까요?',`${hhmm(snap.t)} · ${snap.name} · ${snap.n}줄. 지금 상태도 먼저 백업해 두니 다시 돌아올 수 있어요.`,async()=>{
     await backup('되돌리기 전');
     let d; try{d=JSON.parse(snap.data)}catch(err){toast('백업 내용을 읽지 못했어요 ('+err.name+')');return}
-    if(!applyState(d)){toast('비어 있는 백업이라 되돌리지 않았어요');return}
-    curId=S.cues[0].id; curSec='#전체'; secPinned=false; renderAll(); save(); toast(hhmm(snap.t)+' 백업으로 되돌렸어요');
+    if(!applyState(d,true)){toast('백업 내용이 올바르지 않아 되돌리지 않았어요');return}
+    curId=S.cues[0]?S.cues[0].id:null; curSec='#전체'; secPinned=false; clearUndo(); sel.clear(); unloadVideo(); renderAll(); save(); toast(hhmm(snap.t)+' 백업으로 되돌렸어요');
   });
 });
 
@@ -519,9 +553,9 @@ function loadSrtText(txt,name){
       if(parts.length<2||c.text.includes('\n')){c.text=c.text.replace(/\s*\|\|\s*/g,' ').trim();continue}
       replaceWithParts(c,parts,{orig:c.orig??parts.join(' '),n:parts.length,fixed:c.orig!=null});
     }
-    const n=counts(); renderAll(); save();
+    clearUndo(); sel.clear(); const n=counts(); renderAll(); save();
     toast(`자막 ${cues.length}줄을 불러왔어요`+(n.ai||n.cand?` · AI 수정 ${n.ai}줄 · 강조 후보 ${n.cand}개`:''),4000)};
-  if(S.demo) go(); else ask('새 SRT를 불러올까요?','지금 작업 중인 자막과 화면 가이드가 지워져요.',go);
+  if(S.demo||!S.cues.length) go(); else ask('새 SRT를 불러올까요?','지금 작업 중인 자막과 화면 가이드가 지워져요.',go);
 }
 
 /* ───────── 분할 ───────── */
@@ -568,9 +602,14 @@ const byId=id=>S.cues.find(c=>c.id===id);
 const idxOf=id=>S.cues.findIndex(c=>c.id===id);
 function replaceWithParts(c,parts,meta){
   const i=idxOf(c.id); const tm=spreadTimes(c.s,c.e,parts); const grp=meta?nid():null;
+  // 나눈 지점은 글자 수 비율로 어림한 뒤, 소리를 읽었으면 가장 가까운 말 끊김으로 옮김
+  let est=!ENV;
+  for(let k=1;k<tm.length;k++){
+    if(ENV){const lo=tm[k-1][0], hi=tm[k][1]; const t=snapTime(tm[k][0],lo,hi); tm[k-1][1]=t; tm[k][0]=t}
+  }
   const news=parts.map((p,k)=>k===0
     ? Object.assign(c,{text:p,s:tm[0][0],e:tm[0][1],grp,g0:meta||null,orig:meta?null:c.orig})
-    : mk(tm[k][0],tm[k][1],p,{grp}));
+    : mk(tm[k][0],tm[k][1],p,{grp,tEst:est}));
   S.cues.splice(i,1,...news);
   return news;
 }
@@ -599,7 +638,7 @@ function diffOld(a,b){const {A,B,t}=lcsTable(a,b); let i=0,j=0,h='',run='';
   while(i<A.length){ if(j<B.length&&A[i]===B[j]){flush();h+=esc(A[i]);i++;j++} else if(j<B.length&&t[i][j+1]>=t[i+1][j]){j++} else {run+=A[i];i++} }
   flush(); return h}
 function runSplit(){
-  const n=splitRemaining(); renderAll(); save();
+  pushUndo(); const n=splitRemaining(); renderAll(); save();
   toast(n?`${n}줄을 나눴어요. 끊긴 위치가 어색하면 '되돌리기'나 '윗줄과 합치기'로 고치면 됩니다`:'기준을 넘는 줄이 없어요',4500);
 }
 
@@ -653,7 +692,7 @@ function autosize(el){if(!NO_FS) return; el.style.height='auto'; el.style.height
 function renderList(){
   const sc=$('listScroll'), top=sc.scrollTop;
   const rows=S.cues.filter(match);
-  $('list').innerHTML=rows.length?rows.map(rowHTML).join(''):`<div class="empty">이 조건에 해당하는 줄이 없어요.</div>`;
+  $('list').innerHTML=rows.length?rows.map(rowHTML).join(''):`<div class="empty">${S.cues.length?'이 조건에 해당하는 줄이 없어요.':'SRT나 작업 파일(.작업대.json)을 불러와 주세요. 이 화면에 끌어다 놓아도 돼요.'}</div>`;
   if(NO_FS) $('list').querySelectorAll('textarea').forEach(autosize);
   sc.scrollTop=top; if(typeof updateSel==='function') updateSel();
 }
@@ -669,13 +708,16 @@ function renderAll(){
   renderBar(); renderList(); renderChips(); renderGuide(); showCap();
 }
 function selectRow(id){
+  anchorId=id; requestAnimationFrame(drawWave);
   if(curId===id) return;
   const o=$('list').querySelector('.row.cur'); if(o) o.classList.remove('cur');
   curId=id; const el=$('list').querySelector(`.row[data-id="${id}"]`); if(el) el.classList.add('cur');
   const c=byId(id); if(c){setCurTime(c.s/1000); if(!vidOn()||$('video').paused) showCap()}
 }
+const UNDO_ACTS=new Set(['emph','del','split','merge','mergenext','sec','unsec','revert','okai','candok','candno']);
 function act(id,a,ev){
   const c=byId(id); if(!c) return; const i=idxOf(id);
+  if(UNDO_ACTS.has(a)) pushUndo();
   const rowEl=$('list').querySelector(`.row[data-id="${id}"]`);
   switch(a){
     case 'seek': selectRow(id); if(vidOn()) $('video').currentTime=c.s/1000+0.01; showCap(); return;
@@ -715,13 +757,14 @@ function act(id,a,ev){
   }
   refreshRow(id); renderBar(); save(); if(id===curId) showCap();
 }
-$('list').addEventListener('mousedown',e=>{ // Shift+클릭으로 고를 때 페이지 글자가 드래그 선택되지 않게
-  if(e.shiftKey&&isBlankRowSpot(e.target)) e.preventDefault()});
-const isBlankRowSpot=t=>!!t.closest('.row')&&!t.closest('textarea,input,button,label,select,a,.extra,.timing,.note,.secmark,[data-act]');
+// Shift·⌘ 클릭은 줄 어디든(버튼·시간 조정·구간 이름 칸 제외) 줄 선택으로 씀. 글자 칸 포커스·드래그 선택은 막음
+const isSelSpot=t=>!!t.closest('.row')&&!t.closest('button,[data-act],a,.timing,.secmark');
+const selMod=e=>e.shiftKey||e.metaKey||e.ctrlKey;
+$('list').addEventListener('mousedown',e=>{if(selMod(e)&&isSelSpot(e.target)) e.preventDefault()});
 $('list').addEventListener('click',e=>{
   const r0=e.target.closest('.row');
-  if(r0&&e.shiftKey&&isBlankRowSpot(e.target)){toggleSel(r0.dataset.id); return}
-  if(!e.shiftKey&&sel.size) clearSel();
+  if(r0&&selMod(e)&&isSelSpot(e.target)){ if(e.shiftKey) rangeSel(r0.dataset.id); else toggleSel(r0.dataset.id); return}
+  if(!selMod(e)&&sel.size) clearSel();
   const b=e.target.closest('[data-act]');
   if(b){const r=b.closest('.row'); act(r.dataset.id,b.dataset.act,e); return}
   // 글자 칸·버튼·입력 영역을 뺀 줄의 빈 곳을 누르면 그 줄 시작으로 이동
@@ -732,6 +775,7 @@ $('list').addEventListener('click',e=>{
 });
 $('list').addEventListener('focusin',e=>{const r=e.target.closest('.row'); if(r) selectRow(r.dataset.id)});
 $('list').addEventListener('input',e=>{
+  typedSinceOp=true;
   const r=e.target.closest('.row'); if(!r) return; const c=byId(r.dataset.id); if(!c) return; const t=e.target;
   if(t.classList.contains('txt')){c.text=t.value; autosize(t); const cn=r.querySelector('.cnt'); cn.className='cnt '+lenState(c); cn.textContent=c.del?'':maxLenText(c.text); renderBar(); showCap()}
   else if(t.classList.contains('sub')){c.sub=t.value; const b=r.querySelector('[data-act="sub"]'); b.classList.toggle('on',!!c.sub.trim()); b.setAttribute('aria-pressed',!!c.sub.trim()); showCap()}
@@ -781,6 +825,7 @@ function applyTin(inp){
 // 한 줄의 시작·끝을 옮김. 붙어 있던 바로 옆 줄의 경계만 같이 움직이고 그 뒤 줄은 그대로(가편본 기준 TC 유지)
 const MIN_CUE=100;
 function setTiming(c,w,ms){
+  pushUndo();
   const i=idxOf(c.id), P=S.cues[i-1], N=S.cues[i+1]; ms=Math.round(ms/10)*10;
   const focusW=document.activeElement&&document.activeElement.classList.contains('tin')?document.activeElement.dataset.w:null;
   if(w==='s'){
@@ -790,7 +835,9 @@ function setTiming(c,w,ms){
     ms=Math.max(Math.min(ms,N?N.e-MIN_CUE:Infinity),c.s+MIN_CUE);
     if(N&&(N.s===c.e||ms>N.s)) N.s=ms; c.e=ms;
   }
+  c.tEst=false; if(N) N.tEst=false; // 사람이 정한 시각은 자동 맞춤 대상에서 뺌
   timingBusy=true; try{for(const x of [P,c,N]) if(x) refreshRow(x.id)}finally{timingBusy=false}
+  requestAnimationFrame(drawWave);
   if(focusW){const t=$('list').querySelector(`.row[data-id="${c.id}"] .tin[data-w="${focusW}"]`); if(t){t.focus(); t.select()}}
   renderBar(); renderGuide(); if(c.id===curId) showCap(); save();
 }
@@ -805,6 +852,7 @@ function addCueAfter(cur){
   else if(limit-cur.e>=500){s=cur.e;e=limit}                                          // 빈 틈이 0.5초 이상 → 그 틈을 채움
   else{s=Math.round((cur.s+cur.e)/20)*10;e=cur.e;cutCur=true}                        // 아니면 커서 줄을 절반으로
   if(e-s<MIN_CUE||(cutCur&&s-cur.s<MIN_CUE)){toast('이 줄이 너무 짧아 나눌 수 없어요. 타임코드 더블클릭으로 늘린 뒤 다시 눌러 주세요',4500);return}
+  pushUndo();
   if(cutCur) cur.e=s;
   const nc=mk(s,e,'',{del:!!(cur.del&&N&&N.del)}); S.cues.splice(i+1,0,nc); // 삭제 구간 한가운데면 같이 삭제로 둬서 구간이 갈라지지 않게
   if(!match(nc)) S.filter='all';
@@ -818,7 +866,7 @@ $('bar').addEventListener('mousedown',e=>{if(e.target.closest('[data-add]')) e.p
 $('bar').addEventListener('click',e=>{
   if(e.target.closest('[data-add]')){const c=byId(curId); if(!c){toast('자막을 넣을 줄의 글자 칸을 먼저 눌러 주세요');return} addCueAfter(c); return}
   const b=e.target.closest('[data-f]'); if(!b) return;
-  if(b.dataset.f==='clearai'){for(const c of S.cues){c.orig=null;c.g0=null;c.grp=null} if(S.filter==='ai') S.filter='all'}
+  if(b.dataset.f==='clearai'){pushUndo(); for(const c of S.cues){c.orig=null;c.g0=null;c.grp=null} if(S.filter==='ai') S.filter='all'}
   else S.filter=b.dataset.f;
   renderBar(); renderList(); $('listScroll').scrollTop=0; save()});
 
@@ -838,8 +886,88 @@ function setCurTime(sec){
   if(!secPinned){const s=secAt(sec*1000); if(s&&s!==curSec){curSec=s;renderChips()}}
 }
 function loadVideo(f){
+  S.video=f.name; save();
   if(vidUrl) URL.revokeObjectURL(vidUrl); vidUrl=URL.createObjectURL(f);
   const v=$('video'); v.src=vidUrl; v.hidden=false; $('ph').hidden=true;
+  analyzeAudio(f);
+}
+
+/* ───────── 음성 파형: 말 끊김 찾기 ───────── */
+// 10ms 단위 소리 크기(dB). 영상 파일은 브라우저 안에서만 읽고 버림.
+let ENV=null, ENV_THR=0, ENV_LOW=0, ENV_HIGH=0, envBusy=false;
+const MAX_DECODE=1.8e9;
+function waveMsg(m){$('waveBox').hidden=false; $('waveMsg').textContent=m}
+async function analyzeAudio(f){
+  if(envBusy) return;
+  if(f.size>MAX_DECODE){waveMsg('영상이 커서 소리를 읽지 못했어요. 오디오만 뽑은 파일(mp3, wav)을 "음성만 불러오기"로 올려 주세요.');toast('영상이 커서 소리를 읽지 못했어요. 오디오 파일을 "음성만 불러오기"로 올려 주세요',7000);return}
+  envBusy=true; waveMsg('소리를 읽는 중이에요. 긴 영상은 1분 정도 걸려요…');
+  try{
+    const buf=await f.arrayBuffer();
+    const ab=await new OfflineAudioContext(1,1,16000).decodeAudioData(buf);
+    const sr=ab.sampleRate, hop=Math.max(1,Math.round(sr/100)), n=Math.floor(ab.length/hop);
+    const chs=[]; for(let c=0;c<ab.numberOfChannels;c++) chs.push(ab.getChannelData(c));
+    const env=new Float32Array(n);
+    for(let i=0;i<n;i++){let sum=0; const o=i*hop; for(const ch of chs) for(let k=0;k<hop;k++){const v=ch[o+k]; sum+=v*v} env[i]=10*Math.log10(sum/(hop*chs.length)+1e-10)}
+    const so=Float32Array.from(env).sort(); const pq=q=>so[Math.floor(q*(n-1))];
+    ENV=env; ENV_LOW=pq(0.05); ENV_HIGH=pq(0.95); ENV_THR=pq(0.1)+(pq(0.9)-pq(0.1))*0.3;
+    $('btnSync').disabled=false;
+    const pend=S.cues.filter(c=>c.tEst).length;
+    if(pend) pushUndo(); // 자동 맞춤도 ⌘Z로 되돌릴 수 있게
+    const moved=pend?resync(true):0;
+    waveMsg(`소리를 읽었어요 (${fmtTC(n*10)})`);
+    if(pend){renderList(); save(); toast(`글자 수로 어림했던 ${pend}곳 중 ${moved}곳을 말 끊김에 맞췄어요`,5000)}
+    drawWave();
+  }catch(e){
+    waveMsg('이 파일에서는 소리를 읽지 못했어요. 오디오만 뽑은 파일(mp3, wav)을 "음성만 불러오기"로 올려 주세요.');
+    toast('소리를 읽지 못했어요 ('+((e&&e.name)||'decode')+'). 오디오 파일로 다시 시도해 주세요',7000);
+  }finally{envBusy=false}
+}
+const envAt=ms=>{const i=Math.round(ms/10); if(!ENV||i<1||i>=ENV.length-1) return null; return (ENV[i-1]+ENV[i]+ENV[i+1])/3};
+// t 근처(±1.2초, lo~hi 안)에서 가장 조용한 곳을 찾고, 그 조용한 구간이 끝나기 0.15초 전으로 맞춤
+function snapTime(t,lo,hi){
+  if(!ENV) return t;
+  const a=Math.max(lo+200,t-1200), b=Math.min(hi-200,t+1200); if(b<=a) return t;
+  let best=null,bc=Infinity;
+  for(let m=Math.round(a/10)*10;m<=b;m+=10){const e=envAt(m); if(e==null) continue; const c=e+Math.abs(m-t)/1000*4; if(c<bc){bc=c;best=m}}
+  if(best==null) return t;
+  if(envAt(best)<ENV_THR){
+    const A=lo+200, B=hi-200; // 조용한 구간은 탐색 범위 밖까지 이어서 봄
+    let r=best; while(r+10<=B&&envAt(r+10)<ENV_THR) r+=10;
+    let l=best; while(l-10>=A&&envAt(l-10)<ENV_THR) l-=10;
+    best=Math.max(l,r-150);
+  }
+  return best;
+}
+// onlyEst: 글자 수로 어림한 경계만. 아니면 말하는 도중에 걸린 모든 붙은 경계.
+function resync(onlyEst){
+  let moved=0;
+  for(let i=1;i<S.cues.length;i++){
+    const p=S.cues[i-1], c=S.cues[i];
+    if(onlyEst&&!c.tEst) continue;
+    if(p.e!==c.s){c.tEst=false; continue}
+    const cur=envAt(c.s); if(cur==null) continue;
+    if(!onlyEst&&cur<ENV_THR) continue;
+    const t=snapTime(c.s,p.s,c.e);
+    c.tEst=false;
+    if(t!==c.s&&(envAt(t)<ENV_THR||onlyEst)){p.e=t;c.s=t;moved++}
+  }
+  return moved;
+}
+function drawWave(){
+  const cv=$('wave'); if(!ENV||!cv||$('waveBox').hidden) return;
+  const c=byId(curId); const W=cv.clientWidth, H=cv.clientHeight; if(!W) return;
+  const dpr=window.devicePixelRatio||1; cv.width=W*dpr; cv.height=H*dpr;
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  if(!c) return;
+  const cs=getComputedStyle(document.documentElement), col=k=>cs.getPropertyValue(k).trim();
+  const t0=c.s-1500, t1=c.e+1500, X=t=>(t-t0)/(t1-t0)*W;
+  const Y=e=>H-2-Math.max(0,Math.min(1,(e-ENV_LOW)/(ENV_HIGH-ENV_LOW||1)))*(H-6);
+  g.fillStyle=col('--accent-soft'); g.fillRect(X(c.s),0,X(c.e)-X(c.s),H);
+  g.fillStyle=col('--mute');
+  for(let x=0;x<W;x++){const e=envAt(t0+(t1-t0)*x/W); if(e==null) continue; const y=Y(e); g.fillRect(x,y,1,H-2-y)}
+  g.strokeStyle=col('--sub'); g.setLineDash([3,3]); g.beginPath(); g.moveTo(0,Y(ENV_THR)); g.lineTo(W,Y(ENV_THR)); g.stroke(); g.setLineDash([]);
+  g.strokeStyle=col('--accent'); g.lineWidth=2;
+  for(const x of [X(c.s),X(c.e)]){g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke()}
 }
 $('video').addEventListener('error',()=>{if(!vidOn()) return; $('video').hidden=true; $('ph').hidden=false; $('ph').innerHTML='이 영상은 여기서 재생할 수 없어요.<br>자막 작업은 그대로 할 수 있어요.'});
 // '이 구간 듣기': 끝 시각에서 정확히 멈추도록 timeupdate 대신 매 프레임 확인
@@ -933,6 +1061,7 @@ async function copyText(text,html){
   $('copyBox').value=text; $('copyDlg').showModal(); $('copyBox').select(); return false;
 }
 function openExport(){
+  if(!S.cues.length){toast('내보낼 자막이 없어요. SRT나 작업 파일을 먼저 불러와 주세요');return}
   const n=counts(); const over=n.over;
   $('exportSum').innerHTML=`<li>자막 ${n.all-n.del}줄 (강조자막 ${n.emph}줄 포함)</li><li>삭제 ${n.delSeg}구간</li><li>화면 가이드 ${guideAll().length}개${memoItems().length?` (메모 ${memoItems().length}개 포함)`:''}</li>`
     +(over?`<li>글자 수 기준을 넘는 줄이 ${over}줄 남아 있어요</li>`:'')+(n.cand?`<li>아직 보지 않은 강조 후보 ${n.cand}개 (SRT에는 들어가지 않아요)</li>`:'');
@@ -961,10 +1090,11 @@ $('cfYes').addEventListener('click',()=>{$('confirmDlg').close(); const f=cfYes;
 document.addEventListener('click',e=>{const b=e.target.closest('[data-close]'); if(b) b.closest('dialog').close()});
 $('btnSrt').addEventListener('click',()=>$('fileSrt').click());
 $('btnVid').addEventListener('click',()=>$('fileVid').click());
-$('fileSrt').addEventListener('change',async e=>{const f=e.target.files[0]; e.target.value=''; if(f) loadSrtText(await readSrtFile(f),f.name)});
+$('fileSrt').addEventListener('change',async e=>{const f=e.target.files[0]; e.target.value=''; if(f) openAnyFile(f)});
+async function openAnyFile(f){if(/\.json$/i.test(f.name)) loadProject(await f.text(),f.name); else loadSrtText(await readSrtFile(f),f.name)}
 $('fileVid').addEventListener('change',e=>{const f=e.target.files[0]; e.target.value=''; if(f) loadVideo(f)});
 $('btnAi').addEventListener('click',runSplit);
-$('limit').addEventListener('change',e=>{S.limit=Math.min(40,Math.max(8,parseInt(e.target.value,10)||20)); renderAll(); save()});
+$('limit').addEventListener('change',e=>{S.limit=Math.min(40,Math.max(8,parseInt(e.target.value,10)||26)); renderAll(); save()});
 $('tol').addEventListener('change',e=>{S.tol=Math.min(8,Math.max(0,parseInt(e.target.value,10)||0)); renderAll(); save()});
 $('dict').addEventListener('input',e=>{S.dict=e.target.value; save()});
 let dragN=0;
@@ -972,7 +1102,7 @@ document.addEventListener('dragenter',e=>{if(e.dataTransfer&&[...e.dataTransfer.
 document.addEventListener('dragleave',()=>{dragN=Math.max(0,dragN-1); if(!dragN) document.body.classList.remove('drag')});
 document.addEventListener('dragover',e=>{e.preventDefault()});
 document.addEventListener('drop',async e=>{e.preventDefault(); dragN=0; document.body.classList.remove('drag');
-  for(const f of e.dataTransfer.files){ if(/\.(srt|txt)$/i.test(f.name)) loadSrtText(await readSrtFile(f),f.name); else if(/^(video|audio)\//.test(f.type)) loadVideo(f); else toast('SRT나 영상 파일만 불러올 수 있어요') }});
+  for(const f of e.dataTransfer.files){ if(/\.(srt|txt|json)$/i.test(f.name)) openAnyFile(f); else if(/^audio\//.test(f.type)&&vidOn()) analyzeAudio(f); else if(/^(video|audio)\//.test(f.type)) loadVideo(f); else toast('SRT, 작업 파일(.작업대.json), 영상 파일만 불러올 수 있어요') }});
 
 /* ───────── 찾아 바꾸기 (자막 글자·서브자막, 삭제 줄 제외) ───────── */
 let hitIds=new Set(), hits=[], hitI=-1, curHitId=null, findT=null;
@@ -1014,7 +1144,7 @@ async function replaceAll(){
   if(!q){toast('찾을 말을 적어 주세요');$('fFind').focus();return}
   const n=findHits(q).length; if(!n){toast(`‘${q}’를 찾지 못했어요`);return}
   if(q===r){toast('찾을 말과 바꿀 말이 같아요');return}
-  await backup(`바꾸기 전 ‘${q}’`);
+  await backup(`바꾸기 전 ‘${q}’`); pushUndo();
   for(const c of S.cues){ if(c.del) continue; c.text=c.text.split(q).join(r); if(c.sub) c.sub=c.sub.split(q).join(r) }
   hitI=-1; curHitId=null; renderAll(); save(); refreshFind();
   toast(`‘${q}’ ${n}곳을 ‘${r}’${r?'(으)로':' 없이'} 바꿨어요. 되돌리려면 백업에서 ‘바꾸기 전’을 고르세요`,5500);
@@ -1038,6 +1168,15 @@ function updateSel(){
   $('list').querySelectorAll('.row').forEach(el=>el.classList.toggle('sel',sel.has(el.dataset.id)));
   $('selBar').hidden=!sel.size; $('selN').textContent=sel.size;
 }
+let anchorId=null; // Shift 범위의 기준 줄 = 마지막으로 그냥 누른(커서를 둔) 줄
+function rangeSel(id){
+  const ids=[...$('list').querySelectorAll('.row')].map(el=>el.dataset.id); // 지금 보이는 줄 순서 기준
+  const from=byId(anchorId)?anchorId:(byId(curId)?curId:id);
+  let a=ids.indexOf(from), b=ids.indexOf(id); if(a<0) a=b;
+  sel.clear(); for(const x of ids.slice(Math.min(a,b),Math.max(a,b)+1)) sel.add(x);
+  const ae=document.activeElement; if(ae&&ae!==document.body&&$('list').contains(ae)) ae.blur();
+  updateSel();
+}
 function toggleSel(id){
   if(!sel.size&&curId&&curId!==id&&byId(curId)) sel.add(curId); // 첫 Shift+클릭이면 커서가 있던 줄부터
   if(sel.has(id)) sel.delete(id); else sel.add(id);
@@ -1049,14 +1188,14 @@ function selAct(k){
   const cs=S.cues.filter(c=>sel.has(c.id)); if(!cs.length) return;
   if(k==='clear'){clearSel();return}
   if(k==='emph'||k==='del'){
-    const on=!cs.every(c=>c[k]); cs.forEach(c=>c[k]=on);
+    pushUndo(); const on=!cs.every(c=>c[k]); cs.forEach(c=>c[k]=on);
     sel.clear(); renderBar(); renderList(); save(); showCap();
     toast(`${cs.length}줄 ${k==='emph'?'강조':'삭제 표시'}를 ${on?'켰어요':'껐어요'}`); return}
   if(k==='merge'){
     const ix=cs.map(c=>idxOf(c.id)).sort((a,b)=>a-b);
     if(ix.length<2){toast('합칠 줄을 두 개 이상 골라 주세요');return}
     if(ix.some((v,j)=>v!==ix[0]+j)){toast('붙어 있는 줄만 합칠 수 있어요. 사이 줄도 함께 골라 주세요',4000);return}
-    const first=S.cues[ix[0]];
+    const first=S.cues[ix[0]]; pushUndo();
     for(let j=ix.length-1;j>=1;j--) act(S.cues[ix[j]].id,'merge');
     sel.clear(); curId=first.id; renderList(); focusTxt(first.id);
     toast(`${ix.length}줄을 한 줄로 합쳤어요`);
@@ -1068,6 +1207,11 @@ $('selBar').addEventListener('click',e=>{const b=e.target.closest('[data-sel]');
 document.addEventListener('keydown',e=>{
   const mod=e.ctrlKey||e.metaKey; if(e.isComposing||e.keyCode===229) return;
   if(mod&&e.code==='KeyF'){e.preventDefault(); openFind(); return}
+  if(mod&&e.code==='KeyZ'&&!document.querySelector('dialog[open]')){
+    const a=document.activeElement, inList=a&&$('list').contains(a)&&a.matches('textarea,input');
+    // 글자를 친 직후거나 찾기·가이드 같은 다른 입력 칸이면 브라우저 글자 되돌리기에 맡김
+    if(a&&a.matches&&a.matches(TYPING)&&!(inList&&!typedSinceOp)) return;
+    e.preventDefault(); stepUndo(e.shiftKey); return}
   if(!sel.size||document.querySelector('dialog[open]')) return;
   const a=document.activeElement; if(a&&a.matches&&a.matches(TYPING)) return;
   if(mod&&e.code==='KeyB'){e.preventDefault(); selAct('emph')}
@@ -1075,6 +1219,50 @@ document.addEventListener('keydown',e=>{
   else if(mod&&e.code==='KeyE'){e.preventDefault(); selAct('merge')}
   else if(e.key==='Escape'){e.preventDefault(); clearSel()}
 });
+
+/* ───────── 작업 파일 저장·열기, 초기화 ───────── */
+const PH_DEFAULT='영상 없이도 작업할 수 있어요.<br>선택한 줄의 자막이 아래에 보여요.';
+function saveProject(){
+  if(!S.cues.length){toast('저장할 자막이 없어요. SRT나 작업 파일을 먼저 불러와 주세요');return}
+  const base=(S.name||'작업').replace(/[\\/:*?"<>|]/g,'_');
+  const data={app:'subtitle-workbench',v:1,savedAt:new Date().toISOString(),state:S};
+  anchorSave(base+'.작업대.json',new Blob([JSON.stringify(data)],{type:'application/json'}));
+  toast('작업 파일을 내려받았어요. 나중에 ‘불러오기’로 열면 이 화면 그대로 이어서 할 수 있어요',4500);
+}
+function loadProject(txt,fname){
+  let d; try{d=JSON.parse(txt)}catch(e){toast(`작업대 작업 파일이 아니에요 (${e.name}: JSON 형식 아님)`,4500);return}
+  if(!d||d.app!=='subtitle-workbench'||!d.state||!Array.isArray(d.state.cues)){toast('작업대 작업 파일이 아니에요 (app 표시 없음). ‘작업 저장’으로 만든 .작업대.json을 골라 주세요',5000);return}
+  const go=async()=>{
+    await backup('작업 파일 열기 전');
+    applyState(d.state,true); S.demo=false; S.filter=S.filter||'all';
+    curId=S.cues[0]?S.cues[0].id:null; curSec='#전체'; secPinned=false; clearUndo(); sel.clear(); closeFind(); unloadVideo();
+    renderAll(); save();
+    toast(`작업을 열었어요 · 자막 ${S.cues.length}줄`+(S.video?` · 영상 ‘${S.video}’을 다시 불러와 주세요`:''),5000);
+  };
+  if(S.demo||!S.cues.length) go(); else ask('작업 파일을 열까요?',`‘${fname}’ 내용으로 바뀌어요. 지금 작업은 백업에 남아요.`,go);
+}
+function unloadVideo(){
+  const v=$('video'); v.pause(); v.removeAttribute('src'); v.load(); v.hidden=true;
+  if(vidUrl){URL.revokeObjectURL(vidUrl); vidUrl=null}
+  segEnd=null; playId=null; $('ph').hidden=false;
+  ENV=null; $('waveBox').hidden=true; $('btnSync').disabled=true;
+  $('ph').innerHTML=S.video?`작업에 쓰던 영상: ${esc(S.video)}<br>‘가편 영상 불러오기’로 다시 열어 주세요.`:PH_DEFAULT;
+}
+function resetAll(){
+  ask('작업 화면을 초기화할까요?','자막·화면 가이드·구간·영상이 모두 비워져요. 지우기 전 상태는 백업에 남아요. 검수 기준은 그대로예요.',async()=>{
+    await backup('초기화 전');
+    S={name:'새 작업',demo:false,limit:S.limit,tol:S.tol,dict:S.dict,cues:[],guide:[],chips:[],filter:'all',video:''};
+    curId=null; curSec='#전체'; secPinned=false; clearUndo(); sel.clear(); closeFind(); unloadVideo();
+    renderAll(); save(); toast('초기화했어요. 되돌리려면 백업에서 ‘초기화 전’을 고르세요',4500);
+  });
+}
+$('btnSaveProj').addEventListener('click',saveProject);
+$('btnReset').addEventListener('click',resetAll);
+
+$('btnAud').addEventListener('click',()=>$('fileAud').click());
+$('fileAud').addEventListener('change',e=>{const f=e.target.files[0]; e.target.value=''; if(f) analyzeAudio(f)});
+$('btnSync').addEventListener('click',()=>{pushUndo(); const n=resync(false); renderList(); save(); drawWave(); toast(n?`말하는 도중에 걸려 있던 경계 ${n}곳을 말 끊김으로 옮겼어요`:'옮길 경계가 없어요. 모두 말 끊김에 맞춰져 있어요',5000)});
+window.addEventListener('resize',()=>requestAnimationFrame(drawWave));
 
 // 스페이스: 글자를 입력하는 칸 밖이면 재생/일시정지 (버튼에 포커스가 있어도 버튼은 누르지 않음)
 const TYPING='textarea,select,[contenteditable=""],[contenteditable="true"],input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=file]):not([type=submit])';
@@ -1087,6 +1275,7 @@ document.addEventListener('keydown',e=>{
 });
 
 if(!restore()) S=demo(); else setSaved('저장된 작업을 불러왔어요',false);
+if(S.video) $('ph').innerHTML=`작업에 쓰던 영상: ${esc(S.video)}<br>‘가편 영상 불러오기’로 다시 열어 주세요.`;
 curId=S.cues[0]?S.cues[0].id:null;
 renderAll();
 </script>
