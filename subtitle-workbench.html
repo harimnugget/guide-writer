@@ -98,7 +98,7 @@ button{cursor:pointer}
 .wave{display:flex;flex-direction:column;gap:4px}
 .wave canvas{width:100%;height:56px;background:var(--field);border-radius:var(--r-xs);display:block}
 .wave .wcap{font-size:12px;color:var(--sub);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.screen .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--screen-mute);font-size:12.5px;text-align:center;padding:12px}
+.screen .ph,.wscreen .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--screen-mute);font-size:12.5px;text-align:center;padding:12px}
 .cap{position:absolute;left:0;right:0;bottom:7%;display:flex;flex-direction:column;align-items:center;gap:1cqw;pointer-events:none}
 .cap .c-sub{font-size:3cqw;color:var(--screen-emph);font-weight:700;text-shadow:0 0 .6cqw #000,0 0 .6cqw #000}
 .cap .c-txt{font-size:3.7cqw;font-weight:700;color:var(--screen-text);white-space:pre;text-align:center;line-height:1.3;text-shadow:0 0 .7cqw #000,0 0 .7cqw #000,0 0 .7cqw #000}
@@ -210,8 +210,57 @@ dialog ul{margin:0 0 14px;padding-left:18px;color:var(--sub)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 16px;border-radius:99px;font-size:13px;font-weight:500;max-width:calc(100vw - 32px);box-shadow:var(--shadow);z-index:20}
 body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 작업 파일 · 영상)';position:fixed;inset:10px;border:2px dashed var(--accent);border-radius:var(--r-lg);background:color-mix(in srgb,var(--accent-soft) 88%,transparent);display:grid;place-items:center;font-size:16px;font-weight:700;color:var(--accent);z-index:30;pointer-events:none}
 
+/* 단계 전환 · 1단계 시청 메모 */
+.stages{display:inline-flex;border:1px solid var(--border-strong);border-radius:var(--r-sm);overflow:hidden}
+.stages button{border:0;background:var(--card);padding:6px 12px;font-size:13px;font-weight:500;color:var(--sub);white-space:nowrap}
+.stages button+button{border-left:1px solid var(--border-strong)}
+.stages button:hover{background:var(--field)}
+.stages button.on{background:var(--accent);color:var(--on-accent);font-weight:700}
+body.stage-watch .main,body.stage-watch .w2{display:none!important}
+body:not(.stage-watch) #watch{display:none!important}
+.watch{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,27%);gap:12px}
+.wplayer{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:0 14px 14px}
+.wscreen{position:relative;flex:1;min-height:240px;background:var(--screen);border-radius:var(--r-sm);overflow:hidden}
+.wscreen video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--screen)}
+.wctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.wtime{font-family:var(--mono);font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+.wbar{position:relative;flex:1 1 260px;height:28px;cursor:pointer;touch-action:none}
+.wbar .trk{position:absolute;left:0;right:0;top:12px;height:4px;border-radius:99px;background:var(--field-strong)}
+.wbar .fill{position:absolute;left:0;top:12px;height:4px;border-radius:99px;background:var(--accent);width:0}
+.wbar .head{position:absolute;left:0;top:7px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--card);pointer-events:none}
+.wbar .dot{position:absolute;top:5px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--warn);border:2px solid var(--card);padding:0;z-index:2}
+.wbar .dot:hover{transform:scale(1.3)}
+.wbar .dot.done{opacity:.45}
+.wtip{position:absolute;bottom:30px;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:12px;line-height:1.45;padding:5px 9px;border-radius:var(--r-xs);width:max-content;max-width:260px;white-space:pre-wrap;pointer-events:none;z-index:5}
+.rates{display:inline-flex;gap:4px}
+.nedit{display:grid;grid-template-columns:118px minmax(0,1fr);gap:6px 8px;align-items:start;background:var(--warn-soft);border-radius:var(--r-sm);padding:10px}
+.nedit .inp{background:var(--card)}
+#nTc{font-family:var(--mono);font-size:13px;text-align:center;height:38px}
+#nText{resize:none;field-sizing:content;min-height:38px;max-height:200px;width:100%}
+.nedit .hint{grid-column:1/-1}
+.nhead{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:0 14px 10px;border-bottom:1px solid var(--border)}
+.nhead .sp{flex:1}
+.nlist{padding:6px 14px 14px}
+.nitem{display:grid;grid-template-columns:58px minmax(0,1fr) 22px;gap:4px;align-items:start;padding:3px 0;border-bottom:1px solid var(--border)}
+.ntc{border:0;background:none;font-family:var(--mono);font-size:12px;color:var(--accent);padding:5px 2px;text-align:left;font-variant-numeric:tabular-nums}
+.ntc:hover{text-decoration:underline}
+.ntx{border:1px solid transparent;background:transparent;border-radius:var(--r-xs);padding:4px 6px;resize:none;field-sizing:content;min-height:30px;width:100%;overflow:hidden}
+.ntx:hover{border-color:var(--border)}
+.ntx:focus{border-color:var(--accent);background:var(--card);outline:0}
+.nx{border:0;background:none;color:var(--mute);font-size:15px;line-height:1;padding:6px 0}
+.nx:hover{color:var(--danger)}
+/* 2단계 자막 목록 사이 시청 메모 (포스트잇) */
+.nrow{display:grid;grid-template-columns:auto 46px minmax(0,1fr) auto 22px;gap:4px 8px;align-items:start;margin:4px 10px;padding:5px 8px;background:color-mix(in srgb,#ffe27a 38%,var(--card));border:1px solid color-mix(in srgb,#e0b828 45%,var(--border));border-radius:var(--r-sm);cursor:pointer}
+.nrow .nlab{font-size:11px;font-weight:700;padding:2px 7px;margin-top:4px;border-radius:99px;background:var(--warn);color:var(--on-accent);white-space:nowrap}
+.nrow .ntx{background:transparent}
+.nrow .ntx:focus{background:var(--card)}
+.nrow .ndone{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--sub);white-space:nowrap;padding-top:5px;cursor:pointer}
+.nrow.done,.nitem.done{opacity:.5}
+
 @media (max-width:980px){
   html,body{height:auto}
+  .watch{grid-template-columns:minmax(0,1fr);flex:none}
+  .wscreen{flex:none;min-height:0;aspect-ratio:16/9}
   .main{grid-template-columns:minmax(0,1fr);flex:none}
   .panel{overflow:visible}
   .scroll{overflow:visible}
@@ -226,6 +275,7 @@ body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 작업 파
 
 <header class="top">
   <h1>자막 가이드 작업대</h1>
+  <div class="stages" role="tablist" aria-label="작업 단계"><button type="button" role="tab" data-stage="watch">1 시청 메모</button><button type="button" role="tab" data-stage="work">2 자막·가이드</button></div>
   <div class="file"><b id="fileName">예시 인터뷰</b><span class="tag" id="demoTag">예시 데이터</span></div>
   <span class="sp"></span>
   <span class="saved" id="savedAt" aria-live="polite"></span>
@@ -233,12 +283,40 @@ body.drag::after{content:'여기에 놓으면 불러옵니다 (SRT · 작업 파
   <button class="btn ghost" id="btnBk" type="button" title="3분마다 자동으로 쌓이는 백업에서 되돌리기">백업</button>
   <button class="btn" id="btnSaveProj" type="button" title="지금 작업 화면을 파일(.작업대.json)로 내려받기. 나중에 '불러오기'로 그대로 다시 열 수 있어요">작업 저장</button>
   <button class="btn" id="btnSrt" type="button" title="SRT 또는 작업 파일(.작업대.json)">불러오기</button>
-  <button class="btn" id="btnAi" type="button" title="글자 수 기준을 넘는 줄을 규칙으로 나눕니다">긴 줄 나누기</button>
-  <button class="btn pri" id="btnExport" type="button">내보내기</button>
+  <button class="btn w2" id="btnAi" type="button" title="글자 수 기준을 넘는 줄을 규칙으로 나눕니다">긴 줄 나누기</button>
+  <button class="btn pri w2" id="btnExport" type="button">내보내기</button>
   <input type="file" id="fileSrt" accept=".srt,.txt,.json" hidden>
   <input type="file" id="fileVid" accept="video/*,audio/*" hidden>
   <input type="file" id="fileAud" accept="audio/*,video/*" hidden>
 </header>
+
+<div class="watch" id="watch">
+  <section class="panel">
+    <h2>가편 보기 · 시청 메모</h2>
+    <div class="wplayer">
+      <div class="wscreen" id="wScreen">
+        <div class="ph" id="wPh">가편 영상을 올려 주세요. 자막 없이 영상만 보면서 메모를 남겨요.<br><button class="btn sm" id="wVidBtn" type="button" style="margin-top:10px">가편 영상 불러오기</button></div>
+      </div>
+      <div class="wctl">
+        <button class="btn sm" id="wPlay" type="button" aria-label="재생">▶</button>
+        <span class="wtime" id="wTime">00:00 / 00:00</span>
+        <div class="wbar" id="wBar" title="누르면 그 자리로 가서 멈추고 메모를 남겨요"><div class="trk"></div><div class="fill" id="wFill"></div><div id="wDots"></div><div class="head" id="wHead"></div><div class="wtip" id="wTip" hidden></div></div>
+        <span class="rates" id="wRates" aria-label="재생 속도"></span>
+      </div>
+      <div class="nedit" id="nEdit" hidden>
+        <input class="inp" id="nTc" aria-label="메모 타임코드 (고칠 수 있어요)" spellcheck="false">
+        <textarea class="inp" id="nText" rows="2" aria-label="시청 메모 내용" placeholder="여기 빼야 할 듯 · 앞에서 OO 얘기 빠진 것 같음 · 여기 웃기다"></textarea>
+        <p class="hint">Enter 저장하고 이어서 재생 · Shift+Enter 줄바꿈 · Esc 저장 안 하고 닫기</p>
+      </div>
+      <p class="hint">Space 멈추고 메모 / 멈춘 상태에선 재생 · 재생바 클릭 그 자리에 메모 · [ ] 속도 · ← → 5초</p>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>시청 메모 <b id="nCount">0</b></h2>
+    <div class="nhead"><button class="btn sm" id="nCopy" type="button" title="메모와 그 앞뒤 자막 한 줄씩을 텍스트로 복사 (AI 대화창에 붙여 넣기)">메모 복사</button><span class="sp"></span><button class="btn sm pri" id="nNext" type="button">다음 단계로 →</button></div>
+    <div class="scroll"><div class="nlist" id="nList"></div></div>
+  </section>
+</div>
 
 <div class="main">
   <section class="panel left">
@@ -295,7 +373,8 @@ Shift+클릭   기준 줄부터 그 줄까지 범위 선택
 ⌘/Ctrl+클릭  한 줄씩 넣고 빼기
 ⌘/Ctrl+Z     되돌리기 (⌘⇧Z 다시 실행)
 Esc          글자 칸에서 커서 빼기
-자막 추가    커서 줄 아래에 빈 자막 (재생바가 그 줄 안이면 거기서 나눔)</pre>
+자막 추가    커서 줄 아래에 빈 자막 (재생바가 그 줄 안이면 거기서 나눔)
+⋯ 여기에 시청 메모  그 줄 자리에 시청 메모 추가</pre>
       </details>
     </div>
   </section>
@@ -372,7 +451,7 @@ Esc          글자 칸에서 커서 빼기
 const $=id=>document.getElementById(id);
 const LS='subtitle-workbench-v1';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-let uid=1; const nid=()=>'c'+(uid++);
+let uid=1; const nid=()=>'c'+(uid++), nnid=()=>'n'+(uid++);
 
 /* ───────── 상태 ───────── */
 let S={name:'예시 인터뷰',demo:true,limit:26,tol:0,dict:'',cues:[],guide:[],chips:[],filter:'all'};
@@ -391,24 +470,34 @@ function demo(){
     mk(16000,19800,'아침에 얼음을 넣으면 저녁까지 그대로 있더라고요',{sub:'얼음 그대로',memo:'여기부터 BGM 밝게'}),
     mk(19800,22400,'그래서 주변에 선물도 몇 계 했어요'),
   ];
-  return {name:'예시 인터뷰',demo:true,limit:26,tol:0,dict:'',cues:c,filter:'all',chips:[],
+  return {name:'예시 인터뷰',demo:true,limit:26,tol:0,dict:'',cues:c,filter:'all',chips:[],stage:'work',
+    notes:[{id:nnid(),tc:12.5,text:'여기 버벅이는 부분 통으로 빼도 될 듯',done:false}],
     guide:[{id:nid(),sec:'#전체',tc:null,text:'지난 편과 같은 느낌으로 BGM, 효과음 부탁드려요'},
            {id:nid(),sec:'#인트로',tc:2,text:'이름 자막 넣어주세요'},
            {id:nid(),sec:'#첫 번째 물건',tc:9,text:'텀블러 누끼컷 띄워주시고 주변에 반짝이 효과'}]};
 }
 let saveT=null;
 let dirty=false; // 마지막 백업 뒤에 바뀐 게 있는지
-function save(){dirty=true; clearTimeout(saveT);saveT=setTimeout(()=>{
+function save(){dirty=true; clearTimeout(saveT); saveT=setTimeout(flushSave,400)}
+function flushSave(){
+  clearTimeout(saveT); saveT=null;
   try{localStorage.setItem(LS,JSON.stringify(S)); setSaved('저장됨 '+hhmm(Date.now()),false)}
-  catch(e){setSaved('저장 안 됨: 브라우저 저장 공간이 부족해요 ('+(e&&e.name||'오류')+')',true)}},400)}
+  catch(e){setSaved('저장 안 됨: 브라우저 저장 공간이 부족해요 ('+(e&&e.name||'오류')+')',true)}
+}
+// 저장을 기다리는 0.4초 사이에 창을 닫거나 새로고침해도 마지막 변경이 남도록
+window.addEventListener('pagehide',()=>{if(saveT) flushSave()});
 function setSaved(t,err){const el=$('savedAt'); el.textContent=t; el.classList.toggle('err',!!err)}
 const hhmm=t=>{const d=new Date(t);return p2(d.getHours())+':'+p2(d.getMinutes())};
 // 저장된 상태(localStorage·백업)를 S로 들임. 열림 같은 화면용 표시는 닫아 둠
 function applyState(d,allowEmpty){
   if(!d||!Array.isArray(d.cues)||(!d.cues.length&&!allowEmpty)) return false;
-  S=Object.assign({name:'',demo:false,limit:26,tol:0,dict:'',cues:[],guide:[],chips:[],filter:'all'},d); if(S.limit===20&&S.tol===2){S.limit=26;S.tol=0} // 예전 20자+2 기준을 26자로 S.guide=Array.isArray(d.guide)?d.guide:[]; S.chips=Array.isArray(d.chips)?d.chips:[];
-  let mx=0; for(const x of [...S.cues,...S.guide]){const n=parseInt(String(x.id).slice(1),10); if(n>mx) mx=n; if(x.open) x.open=false; if(x.subOn) x.subOn=false; if(x.tOpen) x.tOpen=false}
-  uid=mx+1; return true;
+  S=Object.assign({name:'',demo:false,limit:26,tol:0,dict:'',cues:[],guide:[],chips:[],notes:[],filter:'all',stage:'work'},d);
+  if(S.limit===20&&S.tol===2){S.limit=26;S.tol=0} // 예전 20자+2 기준을 26자로
+  S.guide=Array.isArray(d.guide)?d.guide:[]; S.chips=Array.isArray(d.chips)?d.chips:[];
+  S.notes=Array.isArray(d.notes)?d.notes.filter(n=>n&&isFinite(n.tc)).map(n=>({id:String(n.id||''),tc:+n.tc,text:String(n.text??''),done:!!n.done})):[];
+  let mx=0; for(const n of S.notes) if(!n.id) n.id='n0';
+  for(const x of [...S.cues,...S.guide,...S.notes]){const n=parseInt(String(x.id).slice(1),10); if(n>mx) mx=n; if(x.open) x.open=false; if(x.subOn) x.subOn=false; if(x.tOpen) x.tOpen=false}
+  uid=mx+1; for(const n of S.notes) if(n.id==='n0') n.id=nnid(); return true;
 }
 function restore(){
   try{const raw=localStorage.getItem(LS); if(!raw) return false; return applyState(JSON.parse(raw),true)}catch(e){return false} // 초기화한 빈 화면도 그대로
@@ -417,7 +506,7 @@ function restore(){
 /* ───────── 되돌리기 (⌘Z / ⌘⇧Z) ───────── */
 let undoStack=[], redoStack=[], typedSinceOp=false, undoPending=false;
 const UNDO_MAX=50;
-const snapState=()=>JSON.stringify({cues:S.cues,guide:S.guide,chips:S.chips});
+const snapState=()=>JSON.stringify({cues:S.cues,guide:S.guide,chips:S.chips,notes:S.notes});
 // 바꾸기 직전에 부름. 한 동작 안에서 여러 번 불려도(합치기 반복 등) 한 번만 쌓음
 function pushUndo(){
   if(undoPending) return; undoPending=true; queueMicrotask(()=>{undoPending=false});
@@ -428,7 +517,7 @@ function stepUndo(redo){
   const from=redo?redoStack:undoStack, to=redo?undoStack:redoStack, now=snapState();
   let snap; while(from.length&&(snap=from.pop())===now) snap=null; // 아무것도 안 바뀐 기록은 건너뜀
   if(!snap){toast(redo?'다시 실행할 작업이 없어요':'되돌릴 작업이 없어요');return}
-  to.push(now); const d=JSON.parse(snap); S.cues=d.cues; S.guide=d.guide; S.chips=d.chips;
+  to.push(now); const d=JSON.parse(snap); S.cues=d.cues; S.guide=d.guide; S.chips=d.chips; S.notes=d.notes||[];
   for(const c of S.cues){c.open=false;c.subOn=false;c.tOpen=false}
   if(!byId(curId)) curId=S.cues[0]?S.cues[0].id:null;
   sel.clear(); typedSinceOp=false; renderAll(); refreshFind(); save(); requestAnimationFrame(drawWave); toast(redo?'다시 실행했어요':'되돌렸어요',1500);
@@ -444,7 +533,7 @@ const bkDb=new Promise(res=>{
 });
 const bkReq=q=>new Promise((res,rej)=>{q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});
 async function backup(why){
-  if(S.demo||!S.cues.length) return false;
+  if(S.demo||(!S.cues.length&&!S.notes.length)) return false;
   const snap={t:Date.now(),name:S.name,n:S.cues.length,why,data:JSON.stringify(S)}; // await 전에 지금 상태를 떠 둠
   const db=await bkDb; if(!db) return false;
   try{
@@ -476,7 +565,7 @@ $('bkList').addEventListener('click',async e=>{
     await backup('되돌리기 전');
     let d; try{d=JSON.parse(snap.data)}catch(err){toast('백업 내용을 읽지 못했어요 ('+err.name+')');return}
     if(!applyState(d,true)){toast('백업 내용이 올바르지 않아 되돌리지 않았어요');return}
-    curId=S.cues[0]?S.cues[0].id:null; curSec='#전체'; secPinned=false; clearUndo(); sel.clear(); unloadVideo(); renderAll(); save(); toast(hhmm(snap.t)+' 백업으로 되돌렸어요');
+    curId=S.cues[0]?S.cues[0].id:null; curSec='#전체'; secPinned=false; clearUndo(); sel.clear(); unloadVideo(); renderAll(); setStage(S.stage==='watch'?'watch':'work',true); save(); toast(hhmm(snap.t)+' 백업으로 되돌렸어요');
   });
 });
 
@@ -545,6 +634,7 @@ function loadSrtText(txt,name){
   if(!cues.length){toast('자막을 찾지 못했어요. SRT 파일이 맞는지 확인해 주세요.');return}
   const go=async()=>{
     await backup('불러오기 전');
+    if(S.demo) S.notes=[]; // 예시 데이터의 예시 메모만 버림. 실제 시청 메모는 SRT를 새로 불러와도 그대로
     S.cues=cues;S.guide=[];S.chips=[];S.name=name.replace(/\.(srt|txt)$/i,'').replace(/_검수본$/,'');S.demo=false;S.filter='all';curId=cues[0].id;curSec='#전체';secPinned=false;
     // 검수본의 분할 표시(||)를 실제 줄로 나눔. 시간은 글자 수 비율.
     for(const c of [...S.cues]){
@@ -553,7 +643,7 @@ function loadSrtText(txt,name){
       if(parts.length<2||c.text.includes('\n')){c.text=c.text.replace(/\s*\|\|\s*/g,' ').trim();continue}
       replaceWithParts(c,parts,{orig:c.orig??parts.join(' '),n:parts.length,fixed:c.orig!=null});
     }
-    clearUndo(); sel.clear(); const n=counts(); renderAll(); save();
+    clearUndo(); sel.clear(); const n=counts(); renderAll(); if(isWatch()) setStage('work',true); save(); // 시청 메모는 그대로 둠
     toast(`자막 ${cues.length}줄을 불러왔어요`+(n.ai||n.cand?` · AI 수정 ${n.ai}줄 · 강조 후보 ${n.cand}개`:''),4000)};
   if(S.demo||!S.cues.length) go(); else ask('새 SRT를 불러올까요?','지금 작업 중인 자막과 화면 가이드가 지워져요.',go);
 }
@@ -649,14 +739,14 @@ function counts(){
     if(lenState(c)==='over') over++; if(c.g0||c.orig!=null) ai++; if(c.cand) cand++; if(c.emph) emph++;
     if(c.del){del++; if(!prevDel) delSeg++} prevDel=c.del;
   }
-  return {all:S.cues.length,over,ai,cand,del,emph,delSeg};
+  return {all:S.cues.length,over,ai,cand,del,emph,delSeg,notes:S.notes.length};
 }
-const FILTERS=[['all','전체'],['over','글자 수 초과'],['ai','AI 수정'],['cand','강조 후보'],['emph','강조자막'],['del','삭제']];
+const FILTERS=[['all','전체'],['over','글자 수 초과'],['ai','AI 수정'],['cand','강조 후보'],['emph','강조자막'],['del','삭제'],['notes','시청 메모']];
 function match(c){switch(S.filter){case 'over':return lenState(c)==='over';case 'ai':return !!(c.g0||c.grp||c.orig!=null);case 'cand':return !!c.cand;case 'emph':return c.emph;case 'del':return c.del;default:return true}}
 function renderBar(){
   const n=counts();
   $('bar').innerHTML=FILTERS.map(([k,l])=>`<button class="chip${S.filter===k?' on':''}" data-f="${k}" type="button">${l} <b>${k==='del'?n.delSeg+'구간':n[k]}</b></button>`).join('')
-    +`<span class="right">`+(n.ai?`<button class="lnk" data-f="clearai" type="button">AI 수정 표시 모두 지우기</button>`:'')
+    +`<span class="right">`+(n.notes?`<button class="lnk" data-ncopy type="button" title="시청 메모와 그 앞뒤 자막 한 줄씩을 텍스트로 복사">시청 메모 복사</button>`:'')+(n.ai?`<button class="lnk" data-f="clearai" type="button">AI 수정 표시 모두 지우기</button>`:'')
     +`<button class="btn sm" data-add type="button" title="글자 칸에 커서를 둔 줄 바로 아래에 빈 자막을 넣어요">자막 추가</button></span>`;
 }
 function rowHTML(c){
@@ -680,7 +770,7 @@ function rowHTML(c){
     +`<label><span>메모</span><input class="inp memo" value="${esc(c.memo)}" placeholder="BGM, 효과음 (화면 가이드로 나가요)"></label>`
     +(c.open?`<button class="lnk" data-act="split" type="button">커서에서 나누기 (Enter)</button><button class="lnk" data-act="merge" type="button">윗줄과 합치기</button><button class="lnk" data-act="mergenext" type="button">아랫줄과 합치기 (⌘E)</button>`
     +(c.sec==null?`<button class="lnk" data-act="sec" type="button">여기서 구간 시작</button>`:'')
-    +`<button class="lnk" data-act="toguide" type="button">화면 가이드 쓰기</button>`:'')+`</div>`;
+    +`<button class="lnk" data-act="toguide" type="button">화면 가이드 쓰기</button><button class="lnk" data-act="addnote" type="button">여기에 시청 메모</button>`:'')+`</div>`;
   if(c.g0) h+=`<div class="note ai"><span class="lab">AI</span><span>${c.g0.n}줄로 나눔${c.g0.fixed?' · 수정 전: '+diffOldGroup(c):''}</span><button class="lnk" data-act="revert" type="button">되돌리기</button><button class="lnk" data-act="okai" type="button">확인</button></div>`;
   else if(c.orig!=null) h+=`<div class="note ai"><span class="lab">AI</span><span>수정 전: ${diffOld(c.orig,c.text)}</span><button class="lnk" data-act="revert" type="button">되돌리기</button><button class="lnk" data-act="okai" type="button">확인</button></div>`;
   if(c.cand) h+=`<div class="note cand"><span class="lab">강조 후보</span><q>${esc(c.cand.phrase)}</q><button class="lnk" data-act="candok" type="button">강조자막으로</button><button class="lnk" data-act="candno" type="button">넘기기</button></div>`;
@@ -691,8 +781,19 @@ const NO_FS=!(window.CSS&&CSS.supports&&CSS.supports('field-sizing','content'));
 function autosize(el){if(!NO_FS) return; el.style.height='auto'; el.style.height=el.scrollHeight+'px'}
 function renderList(){
   const sc=$('listScroll'), top=sc.scrollTop;
-  const rows=S.cues.filter(match);
-  $('list').innerHTML=rows.length?rows.map(rowHTML).join(''):`<div class="empty">${S.cues.length?'이 조건에 해당하는 줄이 없어요.':'SRT나 작업 파일(.작업대.json)을 불러와 주세요. 이 화면에 끌어다 놓아도 돼요.'}</div>`;
+  let rows;
+  if(S.filter==='notes'){ // 시청 메모가 있는 자리: 메모와 그 앞뒤 자막만
+    const keep=new Set();
+    for(const n of S.notes){const k=noteSlot(n); if(S.cues[k-1]) keep.add(S.cues[k-1].id); if(S.cues[k]) keep.add(S.cues[k].id)}
+    rows=S.cues.filter(c=>keep.has(c.id));
+  } else rows=S.cues.filter(match);
+  // 시청 메모는 'TC보다 시작이 늦은 첫 자막' 바로 위에 끼움 (전체·시청 메모 보기에서만)
+  const ns=(S.filter==='all'||S.filter==='notes')?notesSorted():[];
+  let h='', ni=0;
+  for(const c of rows){ while(ni<ns.length&&ns[ni].tc*1000<c.s) h+=noteRowHTML(ns[ni++]); h+=rowHTML(c) }
+  while(ni<ns.length) h+=noteRowHTML(ns[ni++]);
+  const msg=!S.cues.length?(S.notes.length?'SRT를 불러오면 시청 메모가 자막 사이 제자리에 들어가요.':'SRT나 작업 파일(.작업대.json)을 불러와 주세요. 이 화면에 끌어다 놓아도 돼요.'):(!rows.length&&!ns.length?'이 조건에 해당하는 줄이 없어요.':'');
+  $('list').innerHTML=h+(msg?`<div class="empty">${msg}</div>`:'');
   if(NO_FS) $('list').querySelectorAll('textarea').forEach(autosize);
   sc.scrollTop=top; if(typeof updateSel==='function') updateSel();
 }
@@ -705,7 +806,7 @@ function refreshRow(id){
 function renderAll(){
   $('fileName').textContent=S.name; $('demoTag').hidden=!S.demo;
   $('limit').value=S.limit; $('tol').value=S.tol; if(document.activeElement!==$('dict')) $('dict').value=S.dict;
-  renderBar(); renderList(); renderChips(); renderGuide(); showCap();
+  renderBar(); renderList(); renderChips(); renderGuide(); showCap(); renderNotes();
 }
 function selectRow(id){
   anchorId=id; requestAnimationFrame(drawWave);
@@ -749,6 +850,12 @@ function act(id,a,ev){
       refreshRow(id); save(); if(c.subOn){const inp=$('list').querySelector(`.row[data-id="${id}"] .sub`); if(inp) inp.focus()} return}
     case 'sec': c.sec='#구간'; renderList(); renderChips(); save(); {const inp=$('list').querySelector(`.row[data-id="${id}"] .secname`); if(inp){inp.focus();inp.select()}} return;
     case 'unsec': c.sec=null; renderList(); renderChips(); save(); return;
+    case 'addnote':{
+      const v=$('video'), ph=vidOn()?v.currentTime*1000:null, ms=(ph!=null&&ph>=c.s&&ph<c.e)?ph:c.s;
+      pushUndo(); const n={id:nnid(),tc:Math.round(ms/10)/100,text:'',done:false}; S.notes.push(n);
+      if(S.filter!=='all'&&S.filter!=='notes') S.filter='all';
+      renderBar(); renderList(); renderNotes(); save();
+      const t=$('list').querySelector(`.nrow[data-n="${n.id}"] .ntx`); if(t) t.focus(); return}
     case 'toguide': selectRow(id); tcManual=false; setCurTime(c.s/1000); $('gText').focus(); return;
     case 'revert': revert(c); renderBar(); renderList(); save(); return;
     case 'okai':{ if(c.g0){const g=c.grp; for(const x of S.cues) if(x.grp===g){x.grp=null;x.g0=null}} c.orig=null; break}
@@ -864,6 +971,7 @@ function focusTxt(id){const t=$('list').querySelector(`.row[data-id="${id}"] .tx
 // 버튼을 눌러도 글자 칸 커서·선택 줄이 그대로 남도록 포커스 이동을 막음
 $('bar').addEventListener('mousedown',e=>{if(e.target.closest('[data-add]')) e.preventDefault()});
 $('bar').addEventListener('click',e=>{
+  if(e.target.closest('[data-ncopy]')){copyNotes();return}
   if(e.target.closest('[data-add]')){const c=byId(curId); if(!c){toast('자막을 넣을 줄의 글자 칸을 먼저 눌러 주세요');return} addCueAfter(c); return}
   const b=e.target.closest('[data-f]'); if(!b) return;
   if(b.dataset.f==='clearai'){pushUndo(); for(const c of S.cues){c.orig=null;c.g0=null;c.grp=null} if(S.filter==='ai') S.filter='all'}
@@ -889,7 +997,7 @@ function loadVideo(f){
   S.video=f.name; save();
   if(vidUrl) URL.revokeObjectURL(vidUrl); vidUrl=URL.createObjectURL(f);
   const v=$('video'); v.src=vidUrl; v.hidden=false; $('ph').hidden=true;
-  analyzeAudio(f);
+  placeVideo(); analyzeAudio(f);
 }
 
 /* ───────── 음성 파형: 말 끊김 찾기 ───────── */
@@ -975,6 +1083,7 @@ let segEnd=null;
 function watchSeg(){const v=$('video'); if(segEnd==null) return; if(v.paused&&v.currentTime>0&&!v.seeking){segEnd=null;return}
   if(v.currentTime>=segEnd){v.pause(); v.currentTime=segEnd; segEnd=null; return} requestAnimationFrame(watchSeg)}
 $('video').addEventListener('timeupdate',()=>{
+  updateWatchBar();
   const v=$('video'), ms=v.currentTime*1000, c=cueAt(ms);
   setCurTime(v.currentTime);
   const id=c?c.id:null;
@@ -1206,7 +1315,7 @@ $('selBar').addEventListener('click',e=>{const b=e.target.closest('[data-sel]');
 // ⌘F는 어디서든 찾기 바, 선택이 있으면 글자 칸 밖에서 ⌘B·⌘D·⌘E·Esc가 선택 전체에
 document.addEventListener('keydown',e=>{
   const mod=e.ctrlKey||e.metaKey; if(e.isComposing||e.keyCode===229) return;
-  if(mod&&e.code==='KeyF'){e.preventDefault(); openFind(); return}
+  if(mod&&e.code==='KeyF'){if(isWatch()) return; e.preventDefault(); openFind(); return}
   if(mod&&e.code==='KeyZ'&&!document.querySelector('dialog[open]')){
     const a=document.activeElement, inList=a&&$('list').contains(a)&&a.matches('textarea,input');
     // 글자를 친 직후거나 찾기·가이드 같은 다른 입력 칸이면 브라우저 글자 되돌리기에 맡김
@@ -1223,7 +1332,7 @@ document.addEventListener('keydown',e=>{
 /* ───────── 작업 파일 저장·열기, 초기화 ───────── */
 const PH_DEFAULT='영상 없이도 작업할 수 있어요.<br>선택한 줄의 자막이 아래에 보여요.';
 function saveProject(){
-  if(!S.cues.length){toast('저장할 자막이 없어요. SRT나 작업 파일을 먼저 불러와 주세요');return}
+  if(!S.cues.length&&!S.notes.length){toast('저장할 내용이 없어요. 시청 메모를 남기거나 SRT·작업 파일을 먼저 불러와 주세요');return}
   const base=(S.name||'작업').replace(/[\\/:*?"<>|]/g,'_');
   const data={app:'subtitle-workbench',v:1,savedAt:new Date().toISOString(),state:S};
   anchorSave(base+'.작업대.json',new Blob([JSON.stringify(data)],{type:'application/json'}));
@@ -1236,24 +1345,24 @@ function loadProject(txt,fname){
     await backup('작업 파일 열기 전');
     applyState(d.state,true); S.demo=false; S.filter=S.filter||'all';
     curId=S.cues[0]?S.cues[0].id:null; curSec='#전체'; secPinned=false; clearUndo(); sel.clear(); closeFind(); unloadVideo();
-    renderAll(); save();
-    toast(`작업을 열었어요 · 자막 ${S.cues.length}줄`+(S.video?` · 영상 ‘${S.video}’을 다시 불러와 주세요`:''),5000);
+    renderAll(); setStage(S.stage==='watch'?'watch':'work',true); save();
+    toast(`작업을 열었어요 · 자막 ${S.cues.length}줄`+(S.notes.length?` · 시청 메모 ${S.notes.length}개`:'')+(S.video?` · 영상 ‘${S.video}’을 다시 불러와 주세요`:''),5000);
   };
-  if(S.demo||!S.cues.length) go(); else ask('작업 파일을 열까요?',`‘${fname}’ 내용으로 바뀌어요. 지금 작업은 백업에 남아요.`,go);
+  if(S.demo||(!S.cues.length&&!S.notes.length)) go(); else ask('작업 파일을 열까요?',`‘${fname}’ 내용으로 바뀌어요. 지금 작업은 백업에 남아요.`,go);
 }
 function unloadVideo(){
   const v=$('video'); v.pause(); v.removeAttribute('src'); v.load(); v.hidden=true;
   if(vidUrl){URL.revokeObjectURL(vidUrl); vidUrl=null}
   segEnd=null; playId=null; $('ph').hidden=false;
-  ENV=null; $('waveBox').hidden=true; $('btnSync').disabled=true;
+  ENV=null; $('waveBox').hidden=true; $('btnSync').disabled=true; $('wPh').hidden=false; closeNoteEdit(); updateWatchBar(); renderDots();
   $('ph').innerHTML=S.video?`작업에 쓰던 영상: ${esc(S.video)}<br>‘가편 영상 불러오기’로 다시 열어 주세요.`:PH_DEFAULT;
 }
 function resetAll(){
-  ask('작업 화면을 초기화할까요?','자막·화면 가이드·구간·영상이 모두 비워져요. 지우기 전 상태는 백업에 남아요. 검수 기준은 그대로예요.',async()=>{
+  ask('작업 화면을 초기화할까요?','자막·화면 가이드·구간·시청 메모·영상이 모두 비워져요. 지우기 전 상태는 백업에 남아요. 검수 기준은 그대로예요.',async()=>{
     await backup('초기화 전');
-    S={name:'새 작업',demo:false,limit:S.limit,tol:S.tol,dict:S.dict,cues:[],guide:[],chips:[],filter:'all',video:''};
+    S={name:'새 작업',demo:false,limit:S.limit,tol:S.tol,dict:S.dict,cues:[],guide:[],chips:[],notes:[],filter:'all',video:'',stage:'watch'};
     curId=null; curSec='#전체'; secPinned=false; clearUndo(); sel.clear(); closeFind(); unloadVideo();
-    renderAll(); save(); toast('초기화했어요. 되돌리려면 백업에서 ‘초기화 전’을 고르세요',4500);
+    renderAll(); setStage('watch',true); save(); toast('초기화했어요. 되돌리려면 백업에서 ‘초기화 전’을 고르세요',4500);
   });
 }
 $('btnSaveProj').addEventListener('click',saveProject);
@@ -1269,15 +1378,171 @@ const TYPING='textarea,select,[contenteditable=""],[contenteditable="true"],inpu
 document.addEventListener('keydown',e=>{
   if(e.code!=='Space'||e.ctrlKey||e.metaKey||e.altKey||e.isComposing) return;
   const a=document.activeElement;
-  if(!vidOn()||(a&&a.matches&&(a.matches(TYPING)||a===$('video')))||document.querySelector('dialog[open]')) return;
+  if((a&&a.matches&&(a.matches(TYPING)||a===$('video')))||document.querySelector('dialog[open]')) return;
+  if(isWatch()){e.preventDefault(); if(a&&a!==document.body) a.blur(); watchSpace(); return}
+  if(!vidOn()) return;
   e.preventDefault(); if(a&&a!==document.body) a.blur();
   const v=$('video'); if(v.paused) v.play().catch(()=>{}); else v.pause();
+});
+
+/* ───────── 1단계 · 시청 메모 ───────── */
+// 메모 TC는 가편 기준 초. 자막 경계·삭제·SRT 다시 불러오기와 상관없이 그대로 둠
+const RATES=[1,1.25,1.5,2], RATE_KEY='subtitle-workbench-rate';
+let wRate=1; try{const r=parseFloat(localStorage.getItem(RATE_KEY)); if(RATES.includes(r)) wRate=r}catch(e){}
+let nEditId=null;
+const isWatch=()=>S.stage==='watch';
+const notesSorted=()=>[...S.notes].sort((a,b)=>a.tc-b.tc);
+const noteTc=n=>fmtTC(n.tc*1000);
+const noteById=id=>S.notes.find(n=>n.id===id);
+// 메모가 들어갈 자리 = 메모 TC보다 시작이 늦은 첫 자막의 위치(없으면 끝)
+function noteSlot(n){const ms=n.tc*1000; const k=S.cues.findIndex(c=>c.s>ms); return k<0?S.cues.length:k}
+function noteRowHTML(n){
+  return `<div class="nrow${n.done?' done':''}" data-n="${n.id}"><span class="nlab">시청 메모</span>`
+    +`<button class="ntc" data-nact="seek" type="button" title="이 지점으로 이동">${noteTc(n)}</button>`
+    +`<textarea class="ntx" rows="1" spellcheck="false" aria-label="시청 메모">${esc(n.text)}</textarea>`
+    +`<label class="ndone"><input type="checkbox" data-nact="done"${n.done?' checked':''}>반영함</label>`
+    +`<button class="nx" data-nact="del" type="button" aria-label="시청 메모 지우기" title="지우기">×</button></div>`;
+}
+function setStage(st,quiet){
+  S.stage=st; document.body.classList.toggle('stage-watch',st==='watch');
+  document.querySelectorAll('[data-stage]').forEach(b=>{const on=b.dataset.stage===st; b.classList.toggle('on',on); b.setAttribute('aria-selected',on)});
+  const v=$('video'); if(!v.paused) v.pause();
+  placeVideo();
+  if(st==='watch') renderNotes(); else {closeNoteEdit(); renderBar(); renderList(); requestAnimationFrame(drawWave)}
+  if(!quiet) save();
+}
+// 영상 요소 하나를 단계에 맞는 자리로 옮김. 1단계는 자체 재생바, 2단계는 기본 컨트롤
+function placeVideo(){
+  const v=$('video'), w=isWatch(), host=w?$('wScreen'):$('screen');
+  if(v.parentNode!==host) host.prepend(v);
+  v.controls=!w;
+  const r=w?wRate:1; v.defaultPlaybackRate=r; v.playbackRate=r;
+  $('wPh').hidden=vidOn(); updateWatchBar(); renderDots();
+}
+function setRate(r){
+  wRate=r; try{localStorage.setItem(RATE_KEY,String(r))}catch(e){}
+  if(isWatch()){const v=$('video'); v.defaultPlaybackRate=r; v.playbackRate=r}
+  renderRates();
+}
+function renderRates(){$('wRates').innerHTML=RATES.map(r=>`<button class="pill${r===wRate?' on':''}" data-rate="${r}" type="button" aria-pressed="${r===wRate}">${r}x</button>`).join('')}
+const vDur=()=>{const v=$('video'); return vidOn()&&isFinite(v.duration)?v.duration:0};
+function updateWatchBar(){
+  if(!isWatch()) return;
+  const v=$('video'), d=vDur(), t=vidOn()?v.currentTime:0, p=d?Math.min(1,t/d)*100:0;
+  $('wFill').style.width=p+'%'; $('wHead').style.left=p+'%';
+  $('wTime').textContent=fmtTC(t*1000)+' / '+fmtTC(d*1000);
+  $('wPlay').textContent=v.paused?'▶':'❚❚'; $('wPlay').setAttribute('aria-label',v.paused?'재생':'일시정지');
+}
+function renderDots(){
+  const d=vDur();
+  $('wDots').innerHTML=d?notesSorted().map(n=>`<button class="dot${n.done?' done':''}" data-n="${n.id}" type="button" style="left:${Math.min(100,n.tc/d*100)}%" aria-label="${noteTc(n)} 시청 메모 고치기"></button>`).join(''):'';
+}
+function renderNotes(){
+  $('nCount').textContent=S.notes.length;
+  const ns=notesSorted();
+  $('nList').innerHTML=ns.length?ns.map(n=>`<div class="nitem${n.done?' done':''}" data-n="${n.id}"><button class="ntc" data-nact="seek" type="button" title="이 지점으로 이동">${noteTc(n)}</button><textarea class="ntx" rows="1" aria-label="시청 메모">${esc(n.text)}</textarea><button class="nx" data-nact="del" type="button" aria-label="지우기" title="지우기">×</button></div>`).join('')
+    :`<p class="hint">재생하다가 Space를 누르면 그 순간 TC로 메모를 남겨요. 재생바를 눌러도 돼요.</p>`;
+  if(NO_FS) $('nList').querySelectorAll('textarea').forEach(autosize);
+  renderDots();
+}
+function openNoteEdit(n,tc){
+  const v=$('video'); if(!v.paused) v.pause();
+  nEditId=n?n.id:null; const t=n?n.tc:tc;
+  if(n&&vidOn()) v.currentTime=n.tc;
+  $('nEdit').hidden=false; $('nTc').value=fmtMs(t*1000); $('nText').value=n?n.text:'';
+  const ta=$('nText'); ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); updateWatchBar();
+}
+function closeNoteEdit(){$('nEdit').hidden=true; nEditId=null}
+function commitNoteEdit(){
+  const ms=parseMs($('nTc').value);
+  if(ms==null){toast('TC는 01:23.40 또는 83.4처럼 적어 주세요'); $('nTc').focus(); return false}
+  const text=$('nText').value.trim(), tc=Math.round(ms/10)/100;
+  if(text){
+    pushUndo();
+    const n=nEditId&&noteById(nEditId);
+    if(n){n.text=text; n.tc=tc} else S.notes.push({id:nnid(),tc,text,done:false});
+    save(); renderNotes(); renderBar(); if(!isWatch()) renderList();
+  }
+  closeNoteEdit(); return true;
+}
+// 1단계 Space: 재생 중이면 누른 순간 TC를 잡고 멈춘 뒤 입력칸, 멈춰 있으면 재생
+function watchSpace(){
+  const v=$('video'); if(!vidOn()){toast('가편 영상을 먼저 불러와 주세요');return}
+  if(!$('nEdit').hidden){$('nText').focus();return}
+  if(v.paused){v.play().catch(()=>{});return}
+  const t=v.currentTime; v.pause(); v.currentTime=t; openNoteEdit(null,t);
+}
+function copyNotes(){
+  if(!S.notes.length){toast('복사할 시청 메모가 없어요');return}
+  const C=S.cues, line=c=>`${fmtTC(c.s)} ${c.del?'[삭제] ':''}${c.text.replace(/\n/g,' / ')}`;
+  const txt=notesSorted().map(n=>{
+    let s=`- ${noteTc(n)} ${n.text.replace(/\n/g,' ')}`+(n.done?' (반영함)':'');
+    if(C.length){const k=noteSlot(n); if(C[k-1]) s+=`\n  앞 ${line(C[k-1])}`; if(C[k]) s+=`\n  뒤 ${line(C[k])}`}
+    return s}).join('\n')+'\n';
+  copyText(txt).then(ok=>{if(ok) toast(`시청 메모 ${S.notes.length}개를 복사했어요`)});
+}
+let wLoop=false;
+function watchLoop(){const v=$('video'); if(!isWatch()||v.paused){wLoop=false;return} updateWatchBar(); requestAnimationFrame(watchLoop)}
+for(const ev of ['play','pause','seeked','loadedmetadata','durationchange','ratechange']) $('video').addEventListener(ev,()=>{
+  updateWatchBar(); if(ev==='loadedmetadata'||ev==='durationchange') renderDots();
+  if(ev==='play'&&!wLoop){wLoop=true; requestAnimationFrame(watchLoop)}
+});
+document.querySelectorAll('[data-stage]').forEach(b=>b.addEventListener('click',()=>setStage(b.dataset.stage)));
+$('nNext').addEventListener('click',()=>setStage('work'));
+$('nCopy').addEventListener('click',copyNotes);
+$('wVidBtn').addEventListener('click',()=>$('fileVid').click());
+$('wPlay').addEventListener('click',()=>{const v=$('video'); if(!vidOn()){$('fileVid').click();return} if(v.paused){closeNoteEdit(); v.play().catch(()=>{})} else v.pause()});
+$('wRates').addEventListener('click',e=>{const b=e.target.closest('[data-rate]'); if(b) setRate(+b.dataset.rate)});
+$('wBar').addEventListener('click',e=>{
+  if(!vidOn()){toast('가편 영상을 먼저 불러와 주세요');return}
+  const dot=e.target.closest('.dot'); if(dot){const n=noteById(dot.dataset.n); if(n) openNoteEdit(n); return}
+  const r=$('wBar').querySelector('.trk').getBoundingClientRect(), d=vDur(); if(!d) return;
+  const t=Math.max(0,Math.min(d,(e.clientX-r.left)/r.width*d)); const v=$('video');
+  v.pause(); v.currentTime=t; openNoteEdit(null,t);
+});
+$('wDots').addEventListener('mouseover',e=>{const dot=e.target.closest('.dot'); if(!dot) return; const n=noteById(dot.dataset.n); if(!n) return;
+  const tip=$('wTip'); tip.textContent=noteTc(n)+'  '+n.text; tip.style.left=dot.style.left; tip.hidden=false});
+$('wDots').addEventListener('mouseout',e=>{if(e.target.closest('.dot')) $('wTip').hidden=true});
+for(const id of ['nText','nTc']) $(id).addEventListener('keydown',e=>{
+  if(e.isComposing||e.keyCode===229) return; // 한글 조합 중 Enter는 글자 확정용
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault(); if(commitNoteEdit()){document.activeElement.blur(); if(vidOn()) $('video').play().catch(()=>{})}}
+  else if(e.key==='Escape'){e.preventDefault(); closeNoteEdit(); document.activeElement.blur()}
+});
+// 메모 목록(1단계)·자막 사이 메모(2단계) 공통: 이동·지우기·반영함·바로 고치기
+document.addEventListener('click',e=>{
+  const box=e.target.closest('.nitem,.nrow'); if(!box) return; const n=noteById(box.dataset.n); if(!n) return;
+  const b=e.target.closest('[data-nact]'), a=b?b.dataset.nact:null;
+  if(a==='del'){pushUndo(); S.notes=S.notes.filter(x=>x!==n); save(); renderNotes(); renderBar(); if(!isWatch()) renderList(); return}
+  if(a==='done') return; // change 이벤트에서 처리
+  if(a==='seek'||(!a&&box.classList.contains('nrow')&&!e.target.closest('textarea,input,label,button'))){
+    if(vidOn()) $('video').currentTime=n.tc; updateWatchBar();
+  }
+});
+document.addEventListener('change',e=>{
+  if(!e.target.matches('.nrow [data-nact="done"]')) return; const box=e.target.closest('.nrow'), n=noteById(box.dataset.n); if(!n) return;
+  pushUndo(); n.done=e.target.checked; box.classList.toggle('done',n.done); save(); renderNotes();
+});
+document.addEventListener('input',e=>{
+  if(!e.target.classList.contains('ntx')) return; const n=noteById(e.target.closest('[data-n]').dataset.n); if(!n) return;
+  n.text=e.target.value; autosize(e.target); save();
+});
+// 2단계에서 '여기에 시청 메모'로 만들고 비워 둔 채 나가면 지움
+document.addEventListener('focusout',e=>{
+  if(!e.target.matches('.nrow .ntx')) return; const n=noteById(e.target.closest('.nrow').dataset.n);
+  if(n&&!n.text.trim()){S.notes=S.notes.filter(x=>x!==n); save(); renderNotes(); e.target.closest('.nrow').remove(); const f=$('bar').querySelector('[data-f="notes"] b'); if(f) f.textContent=S.notes.length}
+});
+// 1단계 키: [ ] 속도, ← → 5초 (입력칸 밖에서만)
+document.addEventListener('keydown',e=>{
+  if(!isWatch()||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||document.querySelector('dialog[open]')) return;
+  const a=document.activeElement; if(a&&a.matches&&a.matches(TYPING)) return;
+  if(e.code==='BracketLeft'||e.code==='BracketRight'){e.preventDefault(); const i=RATES.indexOf(wRate); setRate(RATES[Math.max(0,Math.min(RATES.length-1,i+(e.code==='BracketRight'?1:-1)))])}
+  else if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&vidOn()){e.preventDefault(); const v=$('video'); v.currentTime=Math.max(0,Math.min(vDur(),v.currentTime+(e.key==='ArrowRight'?5:-5))); updateWatchBar()}
 });
 
 if(!restore()) S=demo(); else setSaved('저장된 작업을 불러왔어요',false);
 if(S.video) $('ph').innerHTML=`작업에 쓰던 영상: ${esc(S.video)}<br>‘가편 영상 불러오기’로 다시 열어 주세요.`;
 curId=S.cues[0]?S.cues[0].id:null;
-renderAll();
+renderAll(); renderRates(); setStage(S.stage==='watch'?'watch':'work',true);
 </script>
 </body>
 </html>
